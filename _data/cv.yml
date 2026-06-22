@@ -1,0 +1,94 @@
+cv:
+  name: Junsoo Lee
+  label: Assistant Professor of Mechanical Engineering
+  email: junsoo.lee@sc.edu
+  phone: (803) 777-2502
+  location: Columbia, SC
+  image: ""
+  summary: >
+    Assistant Professor of Mechanical Engineering at the University of South Carolina and
+    director of the Dynamics and Control Lab. Research in stability theory, optimal control,
+    multiagent and network systems, and stochastic systems and control.
+
+  social_networks:
+    - network: LinkedIn
+      username: junsoo-lee-95bb55173
+
+  address:
+    street: 300 Main Street, Room A132
+    city: Columbia
+    region: South Carolina
+    postalCode: SC 29208
+    countryCode: US
+
+  sections:
+    Education:
+      - institution: Georgia Institute of Technology
+        location: Atlanta, GA, USA
+        url: https://www.gatech.edu/
+        area: Aerospace Engineering
+        studyType: Ph.D.
+        start_date: 2018
+        end_date: 2022
+
+      - institution: Georgia Institute of Technology
+        location: Atlanta, GA, USA
+        url: https://www.gatech.edu/
+        area: Mathematics
+        studyType: M.S.
+        start_date: 2019
+        end_date: 2021
+
+      - institution: Seoul National University
+        location: Seoul, South Korea
+        url: https://en.snu.ac.kr/
+        area: Aerospace Engineering
+        studyType: M.S.
+        start_date: 2016
+        end_date: 2018
+
+      - institution: Seoul National University
+        location: Seoul, South Korea
+        url: https://en.snu.ac.kr/
+        area: Mechanical and Aerospace Engineering
+        studyType: B.S.
+        start_date: 2012
+        end_date: 2016
+
+    Experience:
+      - company: University of South Carolina
+        position: Assistant Professor, Department of Mechanical Engineering
+        location: Columbia, SC, USA
+        start_date: 2022-08-01
+        end_date: present
+        summary: Director of the Dynamics and Control Lab.
+        highlights:
+          - Research in stability theory, optimal control, and stochastic and network systems.
+          - Teaching undergraduate and graduate courses in dynamics, systems, and control.
+
+      - company: Georgia Institute of Technology
+        position: Graduate Research Assistant
+        location: Atlanta, GA, USA
+        start_date: 2018-08-01
+        end_date: 2022-07-31
+        summary: School of Aerospace Engineering, advised by Prof. Wassim M. Haddad.
+        highlights:
+          - Finite-, fixed-, and semistability theory for discrete-time and stochastic systems.
+
+    # TODO (Junsoo): replace these placeholders with your actual honors and awards.
+    Honors and Awards:
+      - title: "Add your honor or award here"
+        awarder: "Awarding organization"
+        date: 2022
+        summary: "Short description (optional)."
+
+    # TODO (Junsoo): list the courses you teach at USC (course number + title).
+    Teaching:
+      - name: "EMCH ### — Course Title"
+        summary: "Semester(s) taught."
+      - name: "EMCH ### — Course Title"
+        summary: "Semester(s) taught."
+
+    Research Interests:
+      - name: Topics
+        keywords: "Stability theory, Optimal control, Multiagent systems, Network consensus, Stochastic systems and control, Hybrid dynamical systems"

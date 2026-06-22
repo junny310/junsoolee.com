@@ -1,0 +1,9 @@
+# this file contains the social media links and usernames of the author
+# the socials will be displayed in the order they are defined here
+# for more information, please refer to the documentation of jekyll-socials plugin: https://github.com/george-gca/jekyll-socials
+cv_pdf: /assets/pdf/cv.pdf # path to your CV PDF file
+email: junsoo.lee@sc.edu # your email address
+scholar_userid: pQUguVYAAAAJ # your Google Scholar ID
+linkedin_username: junsoo-lee-95bb55173 # your LinkedIn username
+# orcid_id: 0000-0000-0000-0000 # uncomment and add your ORCID ID to show the ORCID icon
+# rss_icon: true # uncomment to show the RSS feed icon
