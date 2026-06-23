@@ -20,7 +20,7 @@ nav_order: 5
 <div class="table-responsive">
   <table class="table table-sm">
     <thead>
-      <tr><th>Conference</th><th>Dates</th><th>Location</th></tr>
+      <tr><th>Conference</th><th>Dates</th><th>Location</th><th>Deadline</th></tr>
     </thead>
     <tbody>
       {% for c in items %}
@@ -28,6 +28,7 @@ nav_order: 5
         <td><a href="{{ c.url }}" target="_blank" rel="noopener noreferrer">{{ c.name }}</a> — {{ c.full_name }}</td>
         <td>{{ c.dates }}</td>
         <td>{{ c.location }}</td>
+        <td>{{ c.deadline | default: "TBD" }}</td>
       </tr>
       {% endfor %}
     </tbody>

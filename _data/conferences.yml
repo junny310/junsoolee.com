@@ -1,6 +1,8 @@
 # Conferences relevant to the Dynamics and Control Lab.
 # `start` (YYYY-MM-DD) drives sorting and the homepage "next 5 upcoming" list.
 # `dates` is the human-readable display string. Add new entries any time.
+# `deadline` (optional) populates the Deadline column on the Conferences page;
+#   if omitted it shows "TBD". Example:  deadline: "September 23, 2025"
 
 - name: AAAI
   full_name: AAAI Conference on Artificial Intelligence
