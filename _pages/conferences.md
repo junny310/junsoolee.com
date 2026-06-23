@@ -25,7 +25,7 @@ nav_order: 5
     <tbody>
       {% for c in items %}
       <tr>
-        <td><a href="{{ c.url }}" target="_blank" rel="noopener noreferrer">{{ c.name }}</a> — {{ c.full_name }}</td>
+        <td>{% if c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener noreferrer">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %} — {{ c.full_name }}</td>
         <td>{{ c.dates }}</td>
         <td>{{ c.location }}</td>
         <td>{{ c.deadline | default: "TBD" }}</td>

@@ -130,3 +130,21 @@
   location: Philadelphia, PA, USA
   url: https://acc2027.a2c2.org/
   deadline: "September 25, 2026"
+
+- name: CDC
+  full_name: Conference on Decision and Control
+  category: Control Systems
+  year: 2027
+  start: 2027-12-14
+  dates: December 14–17, 2027
+  location: Lisbon, Portugal
+  url:
+
+- name: ICRA
+  full_name: Int'l Conference on Robotics and Automation
+  category: Robotics & Autonomous Systems
+  year: 2027
+  start: 2027-05-24
+  dates: May 24–28, 2027
+  location: Seoul, South Korea
+  url: https://2027.ieee-icra.org/

@@ -8,7 +8,7 @@
         {%- assign cnum = c.start | date: '%Y%m%d' | plus: 0 -%}
         {%- if cnum >= todaynum and shown < 5 -%}
           <tr>
-            <th scope="row" style="width: 22%"><a href="{{ c.url }}" target="_blank" rel="noopener noreferrer">{{ c.name }}</a></th>
+            <th scope="row" style="width: 22%">{% if c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener noreferrer">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</th>
             <td>{{ c.dates }} · {{ c.location }}</td>
           </tr>
           {%- assign shown = shown | plus: 1 -%}
