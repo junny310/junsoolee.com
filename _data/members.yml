@@ -1,0 +1,92 @@
+# Dynamics and Control Lab members.
+# `group` controls the section. `image` is relative to the site root.
+# Bios/topics are drafts grounded in each member's projects — edit freely.
+
+- name: Dr. Junsoo Lee
+  group: Director
+  image: /assets/img/prof_pic.jpg
+  bio: Assistant Professor of Mechanical Engineering at the University of South Carolina and director of the Dynamics and Control Lab.
+  topic: Stability theory, optimal control, and stochastic and networked systems.
+
+- name: Dario Handrick
+  group: Ph.D. Candidate
+  image: /assets/img/members/dario-handrick.jpg
+  bio: Ph.D. candidate developing versatile and robust tethered multirotor UAV systems.
+  topic: Tethered unmanned aerial vehicle systems.
+
+- name: Dan Walters
+  group: Undergraduate Researchers
+  image: /assets/img/members/dan-walters.jpg
+  bio: Undergraduate researcher studying long-term autonomy for uncrewed aerial vehicles.
+  topic: Long-term UAV autonomy and battery management.
+
+- name: Shashwat Yadav
+  group: Undergraduate Researchers
+  image: /assets/img/members/shashwat-yadav.jpg
+  bio: Undergraduate researcher working on robust control of retractable-tether multirotor UAVs.
+  topic: Robust control of tethered multirotor UAVs.
+
+- name: Andersen Spina
+  group: Undergraduate Researchers
+  image: /assets/img/members/andersen-spina.jpg
+  bio: Undergraduate researcher developing a flywheel-based, human-mounted fixed-wing UAV launcher.
+  topic: UAV launch mechanisms.
+
+- name: Bode DiMarzio
+  group: Undergraduate Researchers
+  image: /assets/img/members/bode-dimarzio.jpg
+  bio: Undergraduate researcher working on dynamic thermodynamic particle swarm optimization for ground swarms in confined spaces.
+  topic: Particle swarm optimization for ground swarms.
+
+- name: Peter Muir
+  group: Undergraduate Researchers
+  image: /assets/img/members/peter-muir.jpg
+  bio: Undergraduate researcher developing distributed particle swarm optimization for 3D aerial swarm systems.
+  topic: Distributed swarm optimization.
+
+- name: Ashton Keller
+  group: Undergraduate Researchers
+  image: /assets/img/members/ashton-keller.jpg
+  bio: Undergraduate researcher studying battery degradation in long-term UAV missions.
+  topic: UAV battery degradation.
+
+- name: Elisheba Lee
+  group: Undergraduate Researchers
+  image: /assets/img/members/elisheba-lee.jpg
+  bio: Undergraduate researcher applying thermodynamic particle swarm optimization to autonomous reconnaissance and search.
+  topic: Swarm optimization for autonomous search.
+
+- name: Shruti Jadhav
+  group: Alumni
+  image: /assets/img/members/shruti-jadhav.jpg
+  degree: M.S. in Mechanical Engineering
+  bio: Studied dual-process decision-making for long-term autonomous missions.
+  topic: Decision-making for long-term autonomy.
+
+- name: Kavan Bojappa
+  group: Alumni
+  image: /assets/img/members/kavan-bojappa.jpg
+  degree: B.S. in Mechanical Engineering
+  bio: Worked on Lyapunov-based particle swarm optimization for multi-agent rendezvous.
+  topic: Particle swarm optimization for multi-agent systems.
+
+- name: Evan Sill
+  group: Alumni
+  image: /assets/img/members/evan-sill.jpg
+  degree: B.S. in Mechanical Engineering
+  bio: Worked on thermodynamic particle swarm optimization for swarm search in dynamic environments.
+  topic: Thermodynamic swarm optimization.
+
+- name: Hanna Lutz
+  group: Alumni
+  image: /assets/img/members/hanna-lutz.jpg
+  degree: B.S. in Aerospace Engineering
+  bio: Worked on realizing digital finite-time control via implicit discretization.
+  topic: Digital finite-time control.
+
+- name: Tyler Hilbert
+  group: Alumni
+  image: /assets/img/members/tyler-hilbert.jpg
+  degree: B.S. in Aerospace Engineering
+  bio: Aerospace engineering graduate of the Dynamics and Control Lab.
+  topic: Dynamics and control.

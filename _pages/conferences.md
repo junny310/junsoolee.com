@@ -4,7 +4,7 @@ permalink: /conferences/
 title: Conferences
 description: A running list of conferences relevant to the Dynamics and Control Lab — control systems, robotics and autonomy, and machine learning. Submission deadlines change year to year; please confirm dates on each conference's official site.
 nav: true
-nav_order: 5
+nav_order: 6
 ---
 
 {% assign confs = site.data.conferences | sort: "start" %}
