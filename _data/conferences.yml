@@ -12,6 +12,7 @@
   dates: January 20–27, 2026
   location: Singapore
   url: https://aaai.org/conference/aaai/aaai-26/
+  deadline: "August 1, 2025"
 
 - name: ICLR
   full_name: Int'l Conference on Learning Representations
@@ -21,6 +22,7 @@
   dates: April 23–27, 2026
   location: Rio de Janeiro, Brazil
   url: https://iclr.cc/
+  deadline: "September 24, 2025"
 
 - name: ACC
   full_name: American Control Conference
@@ -30,6 +32,7 @@
   dates: May 26–29, 2026
   location: New Orleans, LA, USA
   url: https://acc2026.a2c2.org/
+  deadline: "September 26, 2025"
 
 - name: ICRA
   full_name: Int'l Conference on Robotics and Automation
@@ -39,6 +42,7 @@
   dates: June 1–5, 2026
   location: Vienna, Austria
   url: https://2026.ieee-icra.org/
+  deadline: "September 15, 2025"
 
 - name: ICUAS
   full_name: Int'l Conference on Unmanned Aircraft Systems
@@ -48,51 +52,7 @@
   dates: June 15–18, 2026
   location: Corfu, Greece
   url: https://uasconferences.com/2026_icuas/
-
-- name: ICML
-  full_name: Int'l Conference on Machine Learning
-  category: Machine Learning & AI
-  year: 2026
-  start: 2026-07-06
-  dates: July 6–11, 2026
-  location: Seoul, South Korea
-  url: https://icml.cc/
-
-- name: CCTA
-  full_name: Conference on Control Technology and Applications
-  category: Control Systems
-  year: 2026
-  start: 2026-08-12
-  dates: August 12–14, 2026
-  location: Vancouver, BC, Canada
-  url: https://ccta2026.ieeecss.org/
-
-- name: IROS
-  full_name: Int'l Conference on Intelligent Robots and Systems
-  category: Robotics & Autonomous Systems
-  year: 2026
-  start: 2026-09-27
-  dates: September 27 – October 1, 2026
-  location: Pittsburgh, PA, USA
-  url: https://2026.ieee-iros.org/
-
-- name: NeurIPS
-  full_name: Conference on Neural Information Processing Systems
-  category: Machine Learning & AI
-  year: 2026
-  start: 2026-12-06
-  dates: December 6–12, 2026
-  location: Sydney, Australia
-  url: https://neurips.cc/
-
-- name: CDC
-  full_name: Conference on Decision and Control
-  category: Control Systems
-  year: 2026
-  start: 2026-12-15
-  dates: December 15–18, 2026
-  location: Honolulu, HI, USA
-  url: https://cdc2026.ieeecss.org/
+  deadline: "February 27, 2026"
 
 - name: L4DC
   full_name: Learning for Dynamics & Control Conference
@@ -102,6 +62,57 @@
   dates: June 17–19, 2026
   location: Los Angeles, CA, USA
   url: https://sites.google.com/usc.edu/l4dc2026/
+  deadline: "November 8, 2025"
+
+- name: ICML
+  full_name: Int'l Conference on Machine Learning
+  category: Machine Learning & AI
+  year: 2026
+  start: 2026-07-06
+  dates: July 6–11, 2026
+  location: Seoul, South Korea
+  url: https://icml.cc/
+  deadline: "January 28, 2026"
+
+- name: CCTA
+  full_name: Conference on Control Technology and Applications
+  category: Control Systems
+  year: 2026
+  start: 2026-08-12
+  dates: August 12–14, 2026
+  location: Vancouver, BC, Canada
+  url: https://ccta2026.ieeecss.org/
+  deadline: "February 8, 2026"
+
+- name: IROS
+  full_name: Int'l Conference on Intelligent Robots and Systems
+  category: Robotics & Autonomous Systems
+  year: 2026
+  start: 2026-09-27
+  dates: September 27 – October 1, 2026
+  location: Pittsburgh, PA, USA
+  url: https://2026.ieee-iros.org/
+  deadline: "March 2, 2026"
+
+- name: NeurIPS
+  full_name: Conference on Neural Information Processing Systems
+  category: Machine Learning & AI
+  year: 2026
+  start: 2026-12-06
+  dates: December 6–12, 2026
+  location: Sydney, Australia
+  url: https://neurips.cc/
+  deadline: "May 6, 2026"
+
+- name: CDC
+  full_name: Conference on Decision and Control
+  category: Control Systems
+  year: 2026
+  start: 2026-12-15
+  dates: December 15–18, 2026
+  location: Honolulu, HI, USA
+  url: https://cdc2026.ieeecss.org/
+  deadline: "March 31, 2026"
 
 - name: AIAA SciTech
   full_name: AIAA SciTech Forum
