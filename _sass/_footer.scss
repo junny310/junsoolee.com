@@ -1,0 +1,38 @@
+/*******************************************************************************
+ * Footer styles
+ * Local override: light footer (dark text on light background) so the site
+ * uses no white text anywhere.
+ ******************************************************************************/
+
+footer.fixed-bottom {
+  background-color: #f7f7f7;
+  border-top: 1px solid var(--global-divider-color);
+  font-size: 0.75rem;
+
+  .container {
+    color: var(--global-text-color);
+    padding-top: 9px;
+    padding-bottom: 8px;
+    text-align: center;
+  }
+
+  a {
+    color: var(--global-theme-color);
+
+    &:hover {
+      color: var(--global-theme-color);
+      text-decoration: underline;
+    }
+  }
+}
+
+footer.sticky-bottom {
+  border-top: 1px solid var(--global-divider-color);
+  padding-top: 40px;
+  padding-bottom: 40px;
+  font-size: 0.9rem;
+
+  .container {
+    text-align: center;
+  }
+}
