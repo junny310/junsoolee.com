@@ -38,6 +38,6 @@ nav_order: 5
 {% endfor %}
 {% endfor %}
 
-<h2>2027</h2>
+<h2>Other venues we follow</h2>
 
-<p>Dates and locations for the next cycle are announced on a rolling basis. The lab typically targets the same venues — <strong>ACC</strong>, <strong>CDC</strong>, <strong>CCTA</strong>, <strong>L4DC</strong>, and <strong>MED</strong> (control); <strong>AIAA SciTech</strong> and <strong>IMECE</strong> (aerospace &amp; mechanical); <strong>ICRA</strong> and <strong>IROS</strong> (robotics); and <strong>ICML</strong>, <strong>NeurIPS</strong>, <strong>ICLR</strong>, and <strong>AAAI</strong> (machine learning). Check each conference's website for the latest call for papers.</p>
+<p>Beyond the editions listed above, the lab also regularly targets <strong>CDC</strong>, <strong>CCTA</strong>, <strong>L4DC</strong>, and <strong>MED</strong> (control); <strong>AIAA SciTech</strong> and <strong>IMECE</strong> (aerospace &amp; mechanical); <strong>ICRA</strong> and <strong>IROS</strong> (robotics); and <strong>ICML</strong>, <strong>NeurIPS</strong>, <strong>ICLR</strong>, and <strong>AAAI</strong> (machine learning). New editions are announced on a rolling basis — check each conference's website for the latest call for papers.</p>

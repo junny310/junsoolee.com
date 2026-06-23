@@ -120,3 +120,13 @@
   dates: November 8–12, 2026
   location: Vancouver, BC, Canada
   url: https://event.asme.org/IMECE
+
+- name: ACC
+  full_name: American Control Conference
+  category: Control Systems
+  year: 2027
+  start: 2027-07-07
+  dates: July 7–9, 2027
+  location: Philadelphia, PA, USA
+  url: https://acc2027.a2c2.org/
+  deadline: "September 25, 2026"
