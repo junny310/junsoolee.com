@@ -4,7 +4,7 @@ permalink: /publications/
 title: publications
 description: Journal articles, conference papers, and books in reverse chronological order. See also my <a href="https://scholar.google.com/citations?user=pQUguVYAAAAJ">Google Scholar</a> profile.
 nav: true
-nav_order: 1
+nav_order: 2
 ---
 
 <!-- _pages/publications.md -->
