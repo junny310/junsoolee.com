@@ -8,7 +8,8 @@ cv:
   summary: >
     Assistant Professor of Mechanical Engineering at the University of South Carolina and
     director of the Dynamics and Control Lab. Research in stability theory, optimal control,
-    multiagent and network systems, and stochastic systems and control.
+    and stochastic systems, with application to autonomous and networked systems, multiagent
+    coordination, swarm optimization, and uncrewed aerial vehicles (UAVs).
 
   social_networks:
     - network: LinkedIn
@@ -62,33 +63,50 @@ cv:
         start_date: 2022-08-01
         end_date: present
         summary: Director of the Dynamics and Control Lab.
-        highlights:
-          - Research in stability theory, optimal control, and stochastic and network systems.
-          - Teaching undergraduate and graduate courses in dynamics, systems, and control.
 
       - company: Georgia Institute of Technology
-        position: Graduate Research Assistant
+        position: Graduate Research Assistant, School of Aerospace Engineering
         location: Atlanta, GA, USA
-        start_date: 2018-08-01
-        end_date: 2022-07-31
-        summary: School of Aerospace Engineering, advised by Prof. Wassim M. Haddad.
-        highlights:
-          - Finite-, fixed-, and semistability theory for discrete-time and stochastic systems.
+        start_date: 2019
+        end_date: 2022
 
-    # TODO (Junsoo): replace these placeholders with your actual honors and awards.
-    Honors and Awards:
-      - title: "Add your honor or award here"
-        awarder: "Awarding organization"
-        date: 2022
-        summary: "Short description (optional)."
+      - company: Georgia Institute of Technology
+        position: Graduate Teaching Assistant, School of Aerospace Engineering
+        location: Atlanta, GA, USA
+        start_date: 2018
+        end_date: 2019
 
-    # TODO (Junsoo): list the courses you teach at USC (course number + title).
+      - company: Seoul National University
+        position: Graduate Research Assistant, Department of Aerospace Engineering
+        location: Seoul, South Korea
+        start_date: 2016
+        end_date: 2018
+
     Teaching:
-      - name: "EMCH ### — Course Title"
-        summary: "Semester(s) taught."
-      - name: "EMCH ### — Course Title"
-        summary: "Semester(s) taught."
+      - bullet: "**Instructor, University of South Carolina** — AESP 420: Flight & Orbital Mechanics; AESP 466: Flight Dynamics & Control; EMCH 367: Controls; EMCH 792: Nonlinear Control"
+      - bullet: "**Teaching Assistant, Georgia Institute of Technology** — Dynamics and Control Laboratory (2018–2019)"
+      - bullet: "**Teaching Assistant, Seoul National University** — Theory of Flight Vehicle Guidance and Control (2017)"
+
+    Invited Talks:
+      - bullet: "*Designing Autonomous Networked Systems* — Universidad San Francisco de Quito (online), February 2026"
+      - bullet: "*Achieving Finite Time Stability* — Smart Air Mobility Seminar, Korea Aerospace University (online), July 2024"
+      - bullet: "*Application of Dynamical System Theory to Stochastic Dynamical Systems* — Smart Air Mobility Seminar, Korea Aerospace University (online), July 2023"
+      - bullet: "*Networked Control Systems: A Dynamical Systems Approach* — University of South Carolina Research Seminar Series, Columbia, SC, March 2023"
+      - bullet: "*Research Outside of Boundary* — BC–UofSC exploreCSR 2022–2023, Columbia, SC, February 2023"
+      - bullet: "*Navigating Graduate School Admissions and Challenges of Academia* — KSEA YGNITE, San Jose, CA, January 2023"
+      - bullet: "*Dynamical Systems Approach on Network Systems* — SNU Aerospace Seminar, Seoul National University, Seoul, Republic of Korea, December 2022"
+      - bullet: "*Dynamical Systems Approach on Network Systems* — CNU Aerospace BK21 & Colloquium Series, Chungnam National University, Daejeon, Republic of Korea, December 2022"
+      - bullet: "*Dynamical Network Systems: Consensus Problem* — Smart Air Mobility Seminar, Korea Aerospace University (online), July 2022"
+
+    Professional Service:
+      - bullet: "**Editorial & conference roles** — Associate Editor, International Conference on Unmanned Aircraft Systems (ICUAS), 2024 & 2023; Session Chair, IEEE American Control Conference (ACC), 2023; Session Co-Chair, IEEE Conference on Control Technology and Applications (CCTA), 2021"
+      - bullet: "**Journal reviewing** — Automatica; IEEE TAC, L-CSS, TCNS, and TSMC: Systems; SIAM Journal on Control & Optimization; Int. J. of Robust & Nonlinear Control; Int. J. of Control; European Journal of Control; Systems & Control Letters; Nonlinear Analysis: Hybrid Systems; and others (20+ journals)"
+      - bullet: "**Conference & proposal review** — IEEE ACC, CDC, and CCTA; AIAA SciTech; NSF review panels (ECCS, FRR, DCSD)"
+      - bullet: "**Professional memberships** — IEEE (Control Systems Society; Systems, Man, and Cybernetics Society); SIAM (Activity Groups on Control & Systems Theory and Dynamical Systems); AIAA; ASME; KSEA"
 
     Research Interests:
-      - name: Topics
-        keywords: "Stability theory, Optimal control, Multiagent systems, Network consensus, Stochastic systems and control, Hybrid dynamical systems"
+      - bullet: "Stability theory — finite-, fixed-, and semistability of discrete-time, hybrid, and stochastic systems"
+      - bullet: "Optimal feedback control and Lyapunov-based design"
+      - bullet: "Stochastic systems and control under uncertainty and communication noise"
+      - bullet: "Multiagent systems, network consensus, and networked control"
+      - bullet: "Autonomous systems and UAVs — motion planning, reinforcement learning, and swarm optimization"

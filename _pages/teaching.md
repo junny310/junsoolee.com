@@ -7,16 +7,16 @@ nav: true
 nav_order: 3
 ---
 
-<!-- TODO (Junsoo): replace the placeholder courses below with the courses you teach
-     (course number, title, level, and the semesters offered). -->
-
 ## Courses
 
-- **EMCH ### — Course Title** · _Undergraduate_ · Fall / Spring
-  A one- or two-sentence description of the course.
+As an instructor at the University of South Carolina, I have taught:
 
-- **EMCH ### — Course Title** · _Graduate_ · Fall / Spring
-  A one- or two-sentence description of the course.
+- **AESP 420 — Flight & Orbital Mechanics**
+- **AESP 466 — Flight Dynamics & Control**
+- **EMCH 367 — Controls**
+- **EMCH 792 — Nonlinear Control**
+
+Earlier, I served as a teaching assistant for the *Dynamics and Control Laboratory* at the Georgia Institute of Technology and for *Theory of Flight Vehicle Guidance and Control* at Seoul National University.
 
 ## Advising
 
