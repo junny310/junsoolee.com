@@ -5,4 +5,4 @@ inline: true
 related_posts: false
 ---
 
-I was nominated for the 2026 Distinguished Undergraduate Research Mentor Award. 🎉
+Junsoo Lee was nominated for the 2026 Distinguished Undergraduate Research Mentor Award. 🎉
