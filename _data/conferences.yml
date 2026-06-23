@@ -104,6 +104,16 @@
   url: https://neurips.cc/
   deadline: "May 6, 2026"
 
+- name: MECC
+  full_name: Modeling, Estimation and Control Conference
+  category: Control Systems
+  year: 2026
+  start: 2026-10-25
+  dates: October 25–28, 2026
+  location: Phoenix, AZ, USA
+  url: https://mecc2026.a2c2.org/
+  deadline: "March 21, 2026"
+
 - name: CDC
   full_name: Conference on Decision and Control
   category: Control Systems
