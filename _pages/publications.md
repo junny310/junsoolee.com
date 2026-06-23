@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /publications/
-title: publications
+title: Publications
 description: Journal articles, conference papers, and books in reverse chronological order. See also my <a href="https://scholar.google.com/citations?user=pQUguVYAAAAJ">Google Scholar</a> profile.
 nav: true
 nav_order: 3

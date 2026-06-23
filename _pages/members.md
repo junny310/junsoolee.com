@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /members/
-title: members
+title: Members
 description: The Dynamics and Control Lab at the University of South Carolina.
 nav: true
 nav_order: 2
