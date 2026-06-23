@@ -1,6 +1,6 @@
 ---
 layout: about
-title: about
+title: Main
 permalink: /
 subtitle: Assistant Professor, <a href='https://sc.edu/study/colleges_schools/engineering_and_computing/'>Mechanical Engineering</a>, University of South Carolina. Director, Dynamics and Control Lab.
 
