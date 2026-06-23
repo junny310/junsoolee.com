@@ -64,6 +64,14 @@ layout: default
       {% include selected_papers.liquid %}
     {% endif %}
 
+    <!-- Upcoming conferences -->
+    {% if site.data.conferences %}
+      <h2>
+        <a href="{{ '/conferences/' | relative_url }}" style="color: inherit">Upcoming Conferences</a>
+      </h2>
+      {% include upcoming_conferences.liquid %}
+    {% endif %}
+
     <!-- Social -->
     {% if page.social %}
       <div class="social">

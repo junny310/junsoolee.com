@@ -1,0 +1,22 @@
+{%- assign todaynum = site.time | date: '%Y%m%d' | plus: 0 -%}
+{%- assign sorted = site.data.conferences | sort: 'start' -%}
+<div class="table-responsive">
+  <table class="table table-sm table-borderless">
+    <tbody>
+      {%- assign shown = 0 -%}
+      {%- for c in sorted -%}
+        {%- assign cnum = c.start | date: '%Y%m%d' | plus: 0 -%}
+        {%- if cnum >= todaynum and shown < 5 -%}
+          <tr>
+            <th scope="row" style="width: 22%"><a href="{{ c.url }}" target="_blank" rel="noopener noreferrer">{{ c.name }}</a></th>
+            <td>{{ c.dates }} · {{ c.location }}</td>
+          </tr>
+          {%- assign shown = shown | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if shown == 0 -%}
+        <tr><td>No upcoming conferences listed right now — see the <a href="{{ '/conferences/' | relative_url }}">Conferences</a> page.</td></tr>
+      {%- endif -%}
+    </tbody>
+  </table>
+</div>
