@@ -28,17 +28,18 @@ latest_posts:
   limit: 3 # leave blank to include all the blog posts
 ---
 
-I am an Assistant Professor in the Department of [Mechanical Engineering](https://sc.edu/study/colleges_schools/engineering_and_computing/) at the [University of South Carolina](https://sc.edu/), where I direct the **Dynamics and Control Lab**. My research develops the mathematical foundations of dynamical systems and control, with an emphasis on **stability theory, optimal control, multiagent and network systems, and stochastic systems**.
+I am an Assistant Professor in the Department of [Mechanical Engineering](https://sc.edu/study/colleges_schools/engineering_and_computing/) at the [University of South Carolina](https://sc.edu/), where I direct the **Dynamics and Control Lab**. My research develops the mathematical foundations of dynamical systems and control — stability theory, optimal control, and stochastic systems — and applies them to **autonomous and networked systems**, including multiagent coordination, swarm optimization, and uncrewed aerial vehicles (UAVs).
 
 Before joining USC in 2022, I earned my Ph.D. in Aerospace Engineering and an M.S. in Mathematics from the [Georgia Institute of Technology](https://www.gatech.edu/), and my B.S. and M.S. in Aerospace Engineering from [Seoul National University](https://en.snu.ac.kr/).
 
 ### Research interests
 
-My work centers on the analysis and control of nonlinear and stochastic dynamical systems. Current themes include:
+My work spans the theory and application of nonlinear and stochastic dynamical systems. Current themes include:
 
-- **Finite-, fixed-, and semistability** of discrete-time and hybrid systems
+- **Finite-, fixed-, and semistability** of discrete-time, hybrid, and stochastic systems
 - **Optimal feedback control** and Lyapunov-based design
 - **Stochastic systems and control** under uncertainty and communication noise
-- **Multiagent systems and network consensus**
+- **Multiagent systems, network consensus, and networked control**
+- **Autonomous systems and UAVs** — motion planning, reinforcement learning, and swarm optimization
 
 I am always glad to hear from prospective students and collaborators interested in dynamics and control — please reach out by [email](mailto:junsoo.lee@sc.edu).
