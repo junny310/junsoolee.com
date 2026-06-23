@@ -56,15 +56,6 @@
   location: Seoul, South Korea
   url: https://icml.cc/
 
-- name: ECC
-  full_name: European Control Conference
-  category: Control Systems
-  year: 2026
-  start: 2026-07-07
-  dates: July 7–10, 2026
-  location: Reykjavík, Iceland
-  url: https://ecc26.euca-ecc.org/
-
 - name: CCTA
   full_name: Conference on Control Technology and Applications
   category: Control Systems
@@ -100,3 +91,30 @@
   dates: December 15–18, 2026
   location: Honolulu, HI, USA
   url: https://cdc2026.ieeecss.org/
+
+- name: L4DC
+  full_name: Learning for Dynamics & Control Conference
+  category: Control Systems
+  year: 2026
+  start: 2026-06-17
+  dates: June 17–19, 2026
+  location: Los Angeles, CA, USA
+  url: https://sites.google.com/usc.edu/l4dc2026/
+
+- name: AIAA SciTech
+  full_name: AIAA SciTech Forum
+  category: Aerospace & Mechanical
+  year: 2026
+  start: 2026-01-12
+  dates: January 12–16, 2026
+  location: Orlando, FL, USA
+  url: https://www.aiaa.org/SciTech
+
+- name: IMECE
+  full_name: ASME Int'l Mechanical Engineering Congress & Exposition
+  category: Aerospace & Mechanical
+  year: 2026
+  start: 2026-11-08
+  dates: November 8–12, 2026
+  location: Vancouver, BC, Canada
+  url: https://event.asme.org/IMECE

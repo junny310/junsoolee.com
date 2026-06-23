@@ -9,7 +9,7 @@ nav_order: 5
 
 {% assign confs = site.data.conferences | sort: "start" %}
 {% assign year_groups = confs | group_by: "year" %}
-{% assign cats = "Control Systems,Robotics & Autonomous Systems,Machine Learning & AI" | split: "," %}
+{% assign cats = "Control Systems,Aerospace & Mechanical,Robotics & Autonomous Systems,Machine Learning & AI" | split: "," %}
 
 {% for yg in year_groups %}
 <h2>{{ yg.name }}</h2>
@@ -39,4 +39,4 @@ nav_order: 5
 
 <h2>2027</h2>
 
-<p>Dates and locations for the next cycle are announced on a rolling basis. The lab typically targets the same venues — <strong>ACC</strong>, <strong>ECC</strong>, <strong>CDC</strong>, and <strong>CCTA</strong> (control); <strong>ICRA</strong> and <strong>IROS</strong> (robotics); and <strong>ICML</strong>, <strong>NeurIPS</strong>, <strong>ICLR</strong>, and <strong>AAAI</strong> (machine learning) — along with <strong>MED</strong> (Mediterranean Conference on Control and Automation). Check each conference's website for the latest call for papers.</p>
+<p>Dates and locations for the next cycle are announced on a rolling basis. The lab typically targets the same venues — <strong>ACC</strong>, <strong>CDC</strong>, <strong>CCTA</strong>, <strong>L4DC</strong>, and <strong>MED</strong> (control); <strong>AIAA SciTech</strong> and <strong>IMECE</strong> (aerospace &amp; mechanical); <strong>ICRA</strong> and <strong>IROS</strong> (robotics); and <strong>ICML</strong>, <strong>NeurIPS</strong>, <strong>ICLR</strong>, and <strong>AAAI</strong> (machine learning). Check each conference's website for the latest call for papers.</p>
