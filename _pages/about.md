@@ -19,8 +19,8 @@ social: true # includes social icons at the bottom of the page
 
 announcements:
   enabled: true # includes a list of news items
-  scrollable: true # shows up to 10 items, then adds a vertical scroll bar (see _includes/news.liquid)
-  limit: # leave blank to include all the news in the `_news` folder
+  scrollable: false # show the items in normal flow (no scroll box); full list lives on /news/
+  limit: 10 # show only the 10 most recent on the homepage
 
 latest_posts:
   enabled: false
