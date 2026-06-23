@@ -5,4 +5,4 @@ inline: true
 related_posts: false
 ---
 
-Kavan Bojappa and Evan Sill graduated with a Bachelor of Science in Mechanical Engineering, and Hanna Lutz graduated with a Bachelor of Science in Aerospace Engineering. Congratulations! 🎓
+Kavan Bojappa and Evan Sill graduated with a Bachelor of Science in Mechanical Engineering, and Hanna Lutz and Tyler Hilbert graduated with a Bachelor of Science in Aerospace Engineering. Congratulations! 🎓
