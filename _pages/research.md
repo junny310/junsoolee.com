@@ -24,6 +24,7 @@ The Dynamics and Control Lab develops the mathematical foundations of dynamical 
 
 ## Hardware
 
-- **Tethered multirotor UAV (MUAV) systems** — robust control frameworks for retractable-tether platforms enabling persistent aerial operations.
-- **Long-term autonomous UAV missions** — battery-degradation–aware planning for continuous, long-duration field monitoring.
-- **UAV launch systems** — a flywheel-based, human-mounted fixed-wing UAV launcher.
+- **Swarm system using Thymio Wireless** — physical multi-robot swarm experiments on Thymio wireless robots.
+- **Battery-degradation–aware long-term agent** — hardware agents that plan around battery degradation for long-duration missions.
+- **Tethered MUAV & retractable TMUAV** — tethered multirotor UAV platforms, including retractable-tether systems.
+- **Human-mountable fixed-wing UAV launcher** — a flywheel-based, human-mounted launcher for fixed-wing UAVs.
