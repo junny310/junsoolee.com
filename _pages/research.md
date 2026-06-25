@@ -2,37 +2,28 @@
 layout: page
 permalink: /research/
 title: Research Projects
-description: Ongoing research in the Dynamics and Control Lab, spanning control theory and its application to autonomous and networked systems.
+description: Ongoing research in the Dynamics and Control Lab, organized into control theory, numerical study, and hardware.
 nav: true
 nav_order: 3
 ---
 
-The Dynamics and Control Lab develops the mathematical foundations of dynamical systems and control and applies them to autonomous and networked systems. Current projects include:
+The Dynamics and Control Lab develops the mathematical foundations of dynamical systems and control and applies them to autonomous and networked systems. Our work spans three areas:
 
-## Tethered Multirotor UAV Systems
+## Control Theory
 
-Designing versatile, robust tethered multirotor UAV (MUAV) platforms and robust control frameworks for retractable-tether systems, enabling persistent, power-stable aerial operations.
-*Team: Dario Handrick, Shashwat Yadav.*
+- **Semistability analysis** — convergence to a set of equilibria, with application to network consensus.
+- **Stochastic stability** — Lyapunov theorems for stability and semistability of discrete-time stochastic systems.
+- **Finite- and fixed-time stability** — settling-time guarantees and optimal stabilization for nonlinear, hybrid, and stochastic systems.
+- **Nontangency analysis** — nontangency-based Lyapunov tests for convergence and stability in discrete-time systems.
 
-## Long-Term Autonomous UAV Missions
+## Numerical Study
 
-Multi-layered decision-making and battery-degradation–aware planning for continuous, long-duration UAV field monitoring — extending autonomy over extended missions.
-*Team: Dan Walters, Ashton Keller.*
+- **Thermodynamic particle swarm optimization** — for swarm robotics systems across ground and aerial platforms.
+- **Long-term autonomous missions** — decision-making inspired by Dual Process Theory (DPT).
+- **Tether modeling** — modeling the tether for tethered multirotor UAVs (TMUAVs).
 
-## Swarm Robotics & Swarm Intelligence
+## Hardware
 
-Distributed and thermodynamic particle swarm optimization for aerial and ground swarms, including autonomous rendezvous, reconnaissance, and search in unknown or confined environments.
-*Team: Peter Muir, Bode DiMarzio, Elisheba Lee; alumni Kavan Bojappa, Evan Sill.*
-
-## Stability & Optimal Control of Discrete-Time and Stochastic Systems
-
-Finite-, fixed-, and semistability theory and optimal stabilization for nonlinear, hybrid, and stochastic dynamical systems — the theoretical core of the lab's work.
-
-## Networked & Multiagent Control
-
-Consensus and semistability of nonlinear network systems under uncertainty and random communication noise, with thermodynamic-based control architectures.
-
-## Aerial Robotics & UAV Launch Systems
-
-Mechanisms and control for fixed-wing and multirotor platforms, including a flywheel-based, human-mounted fixed-wing UAV launcher.
-*Team: Andersen Spina.*
+- **Tethered multirotor UAV (MUAV) systems** — robust control frameworks for retractable-tether platforms enabling persistent aerial operations.
+- **Long-term autonomous UAV missions** — battery-degradation–aware planning for continuous, long-duration field monitoring.
+- **UAV launch systems** — a flywheel-based, human-mounted fixed-wing UAV launcher.
