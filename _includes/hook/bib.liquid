@@ -1,0 +1,24 @@
+{%- comment -%}
+  Append full bibliographic details (volume, number, pages) to the periodical
+  line for published works. al-folio's default bib.liquid only renders
+  "<journal>, <year>"; this hook adds the missing fields so published papers
+  show volume/issue/pages. Runs just before the periodical is assembled, so it
+  extends the `entrytype` capture in the parent template.
+{%- endcomment -%}
+{%- assign proceedings = 'inproceedings,incollection' | split: ',' -%}
+{%- if entry.type == 'article' -%}
+  {%- if entry.volume -%}
+    {%- capture entrytype -%}{{ entrytype }}, {{ entry.volume }}{%- if entry.number -%}({{ entry.number }}){%- endif -%}{%- endcapture -%}
+  {%- elsif entry.number -%}
+    {%- capture entrytype -%}{{ entrytype }}, no. {{ entry.number }}{%- endcapture -%}
+  {%- endif -%}
+  {%- if entry.pages -%}
+    {%- assign pages_fmt = entry.pages | replace: '--', '&ndash;' -%}
+    {%- capture entrytype -%}{{ entrytype }}, {{ pages_fmt }}{%- endcapture -%}
+  {%- endif -%}
+{%- elsif proceedings contains entry.type -%}
+  {%- if entry.pages -%}
+    {%- assign pages_fmt = entry.pages | replace: '--', '&ndash;' -%}
+    {%- capture entrytype -%}{{ entrytype }}, pp. {{ pages_fmt }}{%- endcapture -%}
+  {%- endif -%}
+{%- endif -%}
