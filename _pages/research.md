@@ -42,6 +42,13 @@ Classical asymptotic stability only guarantees convergence as time tends to infi
 
 Certifying convergence and (semi)stability for nonlinear systems with a continuum of equilibria is difficult using classical strict-Lyapunov arguments alone. We develop nontangency-based tests — geometric conditions on how the system's motion approaches the set of equilibria — that establish convergence and stability in discrete-time dynamical systems, complementing and in some cases relaxing standard Lyapunov requirements.
 
+<div class="research-figs">
+  <figure>
+    <img src="{{ '/assets/img/research/nontangency.jpg' | relative_url }}" alt="Nontangency of a trajectory to the set of equilibria" loading="lazy">
+    <figcaption>Nontangency of a trajectory to the equilibria set (SIADS 2025).</figcaption>
+  </figure>
+</div>
+
 *Related publications:* [SIADS 2025](/publications/#lee2025nontangency), [ACC 2023](/publications/#lee2023accnontangency), [ACC 2025](/publications/#lee2025accstability).
 
 ## Numerical Study
