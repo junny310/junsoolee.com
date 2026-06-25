@@ -9,6 +9,13 @@ toc:
   sidebar: left
 ---
 
+<style>
+  .research-figs { display: flex; flex-wrap: wrap; gap: 1rem; margin: 0.75rem 0 1.25rem; }
+  .research-figs figure { margin: 0; text-align: center; }
+  .research-figs img { max-height: 200px; width: auto; border-radius: 8px; border: 1px solid var(--global-divider-color); background: #fff; }
+  .research-figs figcaption { font-size: 0.85rem; color: var(--global-text-color-light); margin-top: 0.35rem; }
+</style>
+
 The Dynamics and Control Lab develops the mathematical foundations of dynamical systems and control and applies them to autonomous and networked systems. Our work spans three areas: **control theory**, **numerical study**, and **hardware**.
 
 ## Control Theory
@@ -60,6 +67,13 @@ Tethered multirotor UAVs (TMUAVs) trade some mobility for effectively unlimited 
 ### Swarm system using Thymio Wireless
 
 We validate swarm-intelligence and PSO algorithms on physical multi-robot testbeds built from Thymio wireless robots, closing the gap between numerical study and real hardware that is subject to limited sensing, communication, and energy.
+
+<div class="research-figs">
+  <figure>
+    <img src="{{ '/assets/img/research/thymio-swarm.jpg' | relative_url }}" alt="Wireless Thymio robot" loading="lazy">
+    <figcaption>Wireless Thymio</figcaption>
+  </figure>
+</div>
 
 *Related publications:* [MECC 2025](/publications/#bojappa2025tpso), [IEEE/CAA JAS 2025](/publications/#bojappa2025pso).
 
