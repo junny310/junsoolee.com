@@ -40,6 +40,9 @@ My work spans the theory and application of nonlinear and stochastic dynamical s
 - **Optimal feedback control** and Lyapunov-based design
 - **Stochastic systems and control** under uncertainty and communication noise
 - **Multiagent systems, network consensus, and networked control**
+- **Swarm robotics and swarm intelligence**
+- **Robust control**
+- **Aerial robotics** — tethered multirotor UAVs (MUAVs)
 - **Autonomous systems and UAVs** — motion planning, reinforcement learning, and swarm optimization
 
 I am always glad to hear from prospective students and collaborators interested in dynamics and control — please reach out by [email](mailto:junsoo.lee@sc.edu).

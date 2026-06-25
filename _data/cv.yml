@@ -109,4 +109,7 @@ cv:
       - bullet: "Optimal feedback control and Lyapunov-based design"
       - bullet: "Stochastic systems and control under uncertainty and communication noise"
       - bullet: "Multiagent systems, network consensus, and networked control"
+      - bullet: "Swarm robotics and swarm intelligence"
+      - bullet: "Robust control"
+      - bullet: "Aerial robotics — tethered multirotor UAVs (MUAVs)"
       - bullet: "Autonomous systems and UAVs — motion planning, reinforcement learning, and swarm optimization"
