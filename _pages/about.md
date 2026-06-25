@@ -43,6 +43,6 @@ My work spans the theory and application of nonlinear and stochastic dynamical s
 - **Swarm robotics and swarm intelligence**
 - **Robust control**
 - **Aerial robotics** — tethered multirotor UAVs (MUAVs)
-- **Autonomous systems and UAVs** — motion planning, reinforcement learning, and swarm optimization
+- **Autonomous systems and UAVs** — long-term missions, motion planning, reinforcement learning, and swarm optimization
 
 I am always glad to hear from prospective students and collaborators interested in dynamics and control — please reach out by [email](mailto:junsoo.lee@sc.edu).

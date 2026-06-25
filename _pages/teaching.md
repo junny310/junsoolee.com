@@ -4,7 +4,7 @@ permalink: /teaching/
 title: Teaching
 description: Courses I teach in the Department of Mechanical Engineering at the University of South Carolina.
 nav: true
-nav_order: 5
+nav_order: 6
 ---
 
 ## Courses
