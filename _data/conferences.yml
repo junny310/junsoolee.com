@@ -112,7 +112,7 @@
   dates: October 25–28, 2026
   location: Phoenix, AZ, USA
   url: https://mecc2026.a2c2.org/
-  deadline: "March 21, 2026"
+  deadline: "March 14, 2026"
 
 - name: CDC
   full_name: Conference on Decision and Control
@@ -133,6 +133,16 @@
   location: Orlando, FL, USA
   url: https://www.aiaa.org/SciTech
 
+- name: AIAA SciTech
+  full_name: AIAA Science and Technology Forum and Exposition
+  category: Aerospace & Mechanical
+  year: 2027
+  start: 2027-01-11
+  dates: January 11–15, 2027
+  location: Orlando, FL, USA
+  url: https://scitech.aiaa.org/
+  deadline: "May 21, 2026"
+
 - name: IMECE
   full_name: ASME Int'l Mechanical Engineering Congress & Exposition
   category: Aerospace & Mechanical
@@ -141,6 +151,7 @@
   dates: November 8–12, 2026
   location: Vancouver, BC, Canada
   url: https://event.asme.org/IMECE
+  deadline: "March 10, 2026"
 
 - name: ACC
   full_name: American Control Conference
