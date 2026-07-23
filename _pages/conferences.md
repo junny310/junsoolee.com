@@ -11,6 +11,12 @@ nav_order: 7
 {% assign year_groups = confs | group_by: "year" %}
 {% assign cats = "Control Systems,Aerospace & Mechanical,Robotics & Autonomous Systems,Machine Learning & AI" | split: "," %}
 
+<style>
+  /* Keep every conference table's columns identical regardless of content */
+  .conf-table { table-layout: fixed; width: 100%; min-width: 34rem; }
+  .conf-table th, .conf-table td { overflow-wrap: break-word; word-break: normal; }
+</style>
+
 {% for yg in year_groups %}
 <h2>{{ yg.name }}</h2>
 {% for cat in cats %}
@@ -18,7 +24,13 @@ nav_order: 7
 {% if items.size > 0 %}
 <h3>{{ cat }}</h3>
 <div class="table-responsive">
-  <table class="table table-sm">
+  <table class="table table-sm conf-table">
+    <colgroup>
+      <col style="width: 40%">
+      <col style="width: 20%">
+      <col style="width: 22%">
+      <col style="width: 18%">
+    </colgroup>
     <thead>
       <tr><th>Conference</th><th>Dates</th><th>Location</th><th>Deadline</th></tr>
     </thead>
