@@ -5,4 +5,4 @@ inline: true
 related_posts: false
 ---
 
-**Dan Walters** presented *Battery-Aware Multi-Layer Decision Making Framework for Multirotor Unmanned Aerial Vehicle Long-Term Autonomous Mission*, with Ashton Keller, at the 2026 Summer Research Symposium. 🎓
+[Dan Walters](/assets/pdf/walters-summer-symposium-2026.pdf) presented *Battery-Aware Multi-Layer Decision Making Framework for Multirotor Unmanned Aerial Vehicle Long-Term Autonomous Mission*, with Ashton Keller, at the 2026 Summer Research Symposium. 🎓
