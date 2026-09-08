@@ -1,0 +1,38 @@
+{%- comment -%}
+  Auto-listing file directory for a course.
+  Usage: {% include course_files.liquid dir="/assets/courses/<slug>/" titles=page.file_titles %}
+  Lists every static file under `dir` — drop a file in the folder and it appears
+  here on the next build; no edit to the page needed.
+  Optionally add a `file_titles:` map in the page front matter (keyed by the
+  file's basename) to show a friendlier name; anything unlisted falls back to
+  the filename.
+{%- endcomment -%}
+{%- assign dir = include.dir -%}
+{%- assign files = site.static_files | where_exp: "f", "f.path contains dir" | where_exp: "f", "f.name != '.gitkeep'" | sort: "name" -%}
+{%- if files.size == 0 -%}
+<p>No files posted yet.</p>
+{%- else -%}
+<div class="table-responsive">
+  <table class="table table-sm" style="table-layout: fixed; width: 100%; min-width: 30rem;">
+    <colgroup>
+      <col style="width: 56%">
+      <col style="width: 14%">
+      <col style="width: 30%">
+    </colgroup>
+    <thead>
+      <tr><th>File</th><th>Type</th><th>Updated</th></tr>
+    </thead>
+    <tbody>
+      {%- for f in files -%}
+      {%- assign nice = f.basename | replace: '_', ' ' | capitalize -%}
+      {%- if include.titles and include.titles[f.basename] -%}{%- assign nice = include.titles[f.basename] -%}{%- endif -%}
+      <tr>
+        <td style="overflow-wrap: break-word;"><a href="{{ f.path | relative_url }}">{{ nice }}</a></td>
+        <td>{{ f.extname | remove: '.' | upcase }}</td>
+        <td>{{ f.modified_time | date: '%b %d, %Y' }}</td>
+      </tr>
+      {%- endfor -%}
+    </tbody>
+  </table>
+</div>
+{%- endif -%}

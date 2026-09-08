@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wind-Tunnel Model vs Full-Scale Aircraft</title>
+<style>
+  :root{
+    --surface:#fcfcfb; --panel:#ffffff; --ink:#1c1a19; --ink2:#4a4542; --muted:#6b6663;
+    --rule:#e3e0dc; --grid:#eeebe7;
+    --garnet:#862633; --serA:#A32B41; --serB:#1F6FB2;
+    --good:#1e7a52; --warn:#9a6212;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--surface);color:var(--ink);
+    font-family:"Segoe UI",Tahoma,-apple-system,Helvetica,Arial,sans-serif;}
+  .stage{width:1920px;height:1080px;padding:26px 44px 16px;display:flex;flex-direction:column;}
+  .hdr{display:flex;align-items:flex-start;gap:28px}
+  h1{margin:0;font-size:34px;letter-spacing:-.01em;font-weight:700;}
+  .sub{margin:6px 0 0;font-size:18px;color:var(--ink2);max-width:1360px;line-height:1.35}
+  .rule{height:5px;background:var(--garnet);width:132px;margin:12px 0 14px;border-radius:3px}
+  .controls{background:var(--panel);border:1px solid var(--rule);border-radius:12px;
+    padding:10px 18px;margin-bottom:13px;display:flex;flex-direction:column;gap:8px}
+  .crow{display:flex;align-items:center;gap:16px;flex-wrap:nowrap}
+  .chip{font-size:14.5px;font-weight:800;padding:4px 11px;border-radius:999px;white-space:nowrap;
+    min-width:150px;text-align:center}
+  .chip.a{background:#fbeef0;color:var(--serA);border:1px solid #eccdd4}
+  .chip.b{background:#eef5fb;color:var(--serB);border:1px solid #cadff0}
+  .ctl{display:flex;align-items:center;gap:9px}
+  .ctl label{font-size:14.5px;color:var(--ink2);font-weight:600;white-space:nowrap}
+  input[type=range]{width:118px;accent-color:var(--serB)}
+  input[type=range].ra{accent-color:var(--serA)}
+  .val{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;min-width:78px}
+  .der{font-size:14px;color:var(--muted);font-weight:600;white-space:nowrap}
+  .der b{color:var(--ink);font-variant-numeric:tabular-nums}
+  button{font:inherit;font-size:14.5px;font-weight:600;padding:7px 13px;border-radius:8px;
+    border:1px solid var(--serB);background:#eef5fb;color:#14507f;cursor:pointer}
+  button:hover{background:#e2eefa}
+  .badge{font-size:16px;font-weight:700;padding:8px 16px;border-radius:999px;
+    display:flex;align-items:center;gap:9px;border:1px solid;white-space:nowrap}
+  .badge.ok{background:#eaf6f0;border-color:#bfe0d0;color:var(--good)}
+  .badge.no{background:#fdf4e6;border-color:#eed9b3;color:var(--warn)}
+  .dot{width:11px;height:11px;border-radius:50%;background:currentColor}
+  .charts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;flex:0 0 auto}
+  .card{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:14px 16px 8px;position:relative}
+  .card h2{margin:0 0 2px;font-size:19px;font-weight:700}
+  .card .cap{margin:0 0 5px;font-size:13.5px;color:var(--muted);min-height:19px}
+  .legend{display:flex;gap:18px;margin:0 0 3px;font-size:13.5px;color:var(--ink2);font-weight:600;min-height:18px}
+  .key{display:flex;align-items:center;gap:8px}
+  .swatch{width:26px;height:0;border-top-width:3px;border-top-style:solid;display:inline-block}
+  .geo{font-size:13px;color:var(--ink2);margin:6px 0 0;line-height:1.4}
+  .geo b{color:var(--ink)}
+  .tiles{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:12px}
+  .tile{background:var(--panel);border:1px solid var(--rule);border-radius:11px;padding:11px 12px}
+  .tile .k{font-size:12.5px;color:var(--muted);font-weight:700;text-transform:uppercase;line-height:1.25;min-height:31px}
+  .tile .rows{display:flex;justify-content:space-between;margin-top:6px;font-size:14.5px}
+  .tile .rows span:first-child{color:var(--ink2);font-weight:600}
+  .num{font-variant-numeric:tabular-nums;font-weight:700}
+  .A{color:var(--serA)} .B{color:var(--serB)}
+  .tile.same{border-color:#bfe0d0;background:#f6fbf8}
+  .tile.diff{border-color:#eed9b3;background:#fffaf1}
+  .flag{font-size:12px;font-weight:700;text-transform:uppercase;margin-top:8px}
+  .flag.same{color:var(--good)} .flag.diff{color:var(--warn)}
+  .punch{margin-top:11px;font-size:19px;line-height:1.42;color:var(--ink);
+    border-left:5px solid var(--garnet);padding:6px 0 6px 16px;font-weight:600}
+  .foot{margin-top:auto;padding-top:9px;font-size:13px;color:var(--muted);line-height:1.42;border-top:1px solid var(--rule)}
+  text{font-family:inherit}
+  .tip{position:absolute;pointer-events:none;background:#1c1a19;color:#fff;font-size:13px;
+    padding:7px 10px;border-radius:7px;opacity:0;transition:opacity .08s;white-space:nowrap;
+    font-variant-numeric:tabular-nums;z-index:5}
+</style>
+</head>
+<body data-palette="#A32B41,#1F6FB2">
+<div class="stage">
+  <div class="hdr">
+    <div>
+      <h1>Designing a wind-tunnel test: a 1:N model that flies like the real aircraft</h1>
+      <p class="sub">A scale model is only a valid stand-in for the full-scale aircraft if the flow over it is <em>dynamically similar</em> &mdash; same geometry and &alpha;, same Reynolds number Re = &rho;Vc/&mu;, and same Mach number. Get those right and the measured c<sub>l</sub> and c<sub>d</sub> transfer to the aircraft unchanged.</p>
+    </div>
+    <div class="badge ok" id="badge" style="margin-left:auto;flex:0 0 auto"><span class="dot"></span><span id="badgeTxt">Valid test</span></div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="controls">
+    <div class="crow">
+      <span class="chip a">Aircraft (full scale)</span>
+      <div class="ctl"><label for="cA">mean chord</label>
+        <input id="cA" class="ra" type="range" min="0.8" max="8" step="0.05" value="3">
+        <span class="val A" id="cAv">3.00 m</span></div>
+      <div class="ctl"><label for="hA">altitude</label>
+        <input id="hA" class="ra" type="range" min="0" max="14" step="0.1" value="10">
+        <span class="val A" id="hAv">10.0 km</span></div>
+      <div class="ctl"><label for="vA">true airspeed</label>
+        <input id="vA" class="ra" type="range" min="60" max="300" step="1" value="235">
+        <span class="val A" id="vAv">235 m/s</span></div>
+      <span class="der" id="derA"></span>
+    </div>
+    <div class="crow">
+      <span class="chip b">Wind-tunnel model</span>
+      <div class="ctl"><label for="nB">scale 1:</label>
+        <input id="nB" type="range" min="4" max="50" step="1" value="20">
+        <span class="val B" id="nBv">20</span></div>
+      <div class="ctl"><label for="rB">tunnel &rho;</label>
+        <input id="rB" type="range" min="0.3" max="10" step="0.01" value="6.16">
+        <span class="val B" id="rBv">6.16</span></div>
+      <div class="ctl"><label for="tB">tunnel T</label>
+        <input id="tB" type="range" min="100" max="330" step="1" value="110">
+        <span class="val B" id="tBv">110 K</span></div>
+      <div class="ctl"><label for="vB">tunnel speed</label>
+        <input id="vB" type="range" min="20" max="320" step="1" value="165">
+        <span class="val B" id="vBv">165 m/s</span></div>
+      <button id="matchRe">Match Re</button>
+      <button id="matchBoth">Match Re &amp; Mach</button>
+      <button id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="card">
+      <h2>The airfoil in the flow</h2>
+      <p class="cap">Streamlines from the exact potential-flow solution &mdash; identical for model and aircraft</p>
+      <div class="legend"><span class="key">&alpha; = 6&deg; &nbsp;&middot;&nbsp; non&#8209;dimensional (x/c)</span></div>
+      <svg id="flowChart" width="566" height="300" role="img" aria-label="Streamlines around the airfoil section"></svg>
+      <p class="geo" id="geo"></p>
+    </div>
+    <div class="card">
+      <h2>What each one physically feels</h2>
+      <p class="cap">Gauge pressure &Delta;p = p &minus; p<sub>&infin;</sub> along the real chord of each</p>
+      <div class="legend">
+        <span class="key"><span class="swatch" style="border-top-color:var(--serA)"></span>Aircraft</span>
+        <span class="key"><span class="swatch" style="border-top-color:var(--serB);border-top-style:dashed"></span>Model</span>
+      </div>
+      <svg id="dimChart" width="566" height="300" role="img" aria-label="Dimensional pressure versus chordwise distance"></svg>
+      <p class="geo" id="dimNote"></p>
+    </div>
+    <div class="card">
+      <h2>What the data book records</h2>
+      <p class="cap">C<sub>p</sub> against x/c &mdash; one curve, so the model's coefficients <em>are</em> the aircraft's</p>
+      <div class="legend">
+        <span class="key"><span class="swatch" style="border-top-color:var(--serA)"></span>Aircraft</span>
+        <span class="key"><span class="swatch" style="border-top-color:var(--serB);border-top-style:dashed"></span>Model</span>
+      </div>
+      <svg id="cpChart" width="566" height="300" role="img" aria-label="Pressure coefficient versus normalized chord"></svg>
+      <div class="tip" id="tipC"></div>
+      <p class="geo" id="cpNote"></p>
+    </div>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+  <p class="punch" id="punch"></p>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+/* ---------- physics: exact Joukowski potential flow ---------- */
+const A_MAP=1, MUX=-0.09, MUY=0.02;
+const R=Math.hypot(A_MAP-MUX, MUY);
+const BETA=Math.asin(MUY/R);
+const ALPHA=6*Math.PI/180;
+const RHO0=1.173, MU0=1.846e-5, ASND=347.19;
+
+function surface(alpha){
+  const G=4*Math.PI*R*Math.sin(alpha+BETA);      // Gamma / V_inf
+  const thTE=Math.atan2(-MUY, A_MAP-MUX), eps=0.021;
+  const pts=[], N=460;
+  for(let i=0;i<=N;i++){
+    const th=thTE+eps+(2*Math.PI-2*eps)*i/N;
+    const zx=MUX+R*Math.cos(th), zy=MUY+R*Math.sin(th);   // zeta
+    // z = zeta + a^2/zeta
+    const d=zx*zx+zy*zy;
+    const x=zx+A_MAP*A_MAP*zx/d, y=zy-A_MAP*A_MAP*zy/d;
+    // dW/dzeta = e^{-ia} - R^2 e^{ia}/(zeta-mu)^2 + i G /(2 pi (zeta-mu))
+    const px=R*Math.cos(th), py=R*Math.sin(th);            // zeta - mu
+    const p2=px*px-py*py, q2=2*px*py, m2=p2*p2+q2*q2;      // (zeta-mu)^2
+    const ca=Math.cos(alpha), sa=Math.sin(alpha);
+    let wx=ca - R*R*(ca*p2+sa*q2)/m2;
+    let wy=-sa - R*R*(sa*p2-ca*q2)/m2;
+    const pm=px*px+py*py;
+    wx += (G/(2*Math.PI))*(py/pm);
+    wy += (G/(2*Math.PI))*(px/pm);
+    // dz/dzeta = 1 - a^2/zeta^2
+    const zz2=zx*zx-zy*zy, zz2i=2*zx*zy, zm=zz2*zz2+zz2i*zz2i;
+    const dx=1-A_MAP*A_MAP*zz2/zm, dy=A_MAP*A_MAP*zz2i/zm;
+    const den=dx*dx+dy*dy;
+    const ux=(wx*dx+wy*dy)/den, uy=(wy*dx-wx*dy)/den;
+    let cp=1-(ux*ux+uy*uy);
+    if(!isFinite(cp)) cp=1;
+    cp=Math.max(-4.2,Math.min(1.05,cp));
+    pts.push({x,y,cp});
+  }
+  const xs=pts.map(p=>p.x), xmin=Math.min(...xs), xmax=Math.max(...xs), chord=xmax-xmin;
+  pts.forEach(p=>{p.xc=(p.x-xmin)/chord; p.yc=p.y/chord;});
+  const cl=2*G/chord;
+  let iLE=0; pts.forEach((p,i)=>{if(p.x===xmin) iLE=i;});
+  return {pts,cl,iLE};
+}
+const SURF=surface(ALPHA);
+const CL=SURF.cl;
+const cdOf=Re=>2*(0.074/Math.pow(Re,0.2))+0.002;
+
+
+/* ---------- atmosphere & gas properties ---------- */
+const RGAS=287.0, GAM=1.4;
+function isa(hkm){                       // standard atmosphere, troposphere + lower stratosphere
+  const h=hkm*1000;
+  let T,p;
+  if(h<=11000){ T=288.15-0.0065*h; p=101325*Math.pow(T/288.15,5.2559); }
+  else { T=216.65; p=22632*Math.exp(-9.80665*(h-11000)/(RGAS*T)); }
+  return {T,p,rho:p/(RGAS*T)};
+}
+const muOf=T=>1.458e-6*Math.pow(T,1.5)/(T+110.4);   // Sutherland
+const aOf =T=>Math.sqrt(GAM*RGAS*T);
+
+/* ---------- the two configurations ---------- */
+const AC={c:3.0,h:10.0,V:235};                       // aircraft: chord, altitude km, TAS
+const MD={N:20,rho:6.16,T:110,V:165};                // model: scale 1:N, tunnel rho, T, speed
+function aircraft(){
+  const at=isa(AC.h), mu=muOf(at.T), a=aOf(at.T);
+  const q=0.5*at.rho*AC.V*AC.V, Re=at.rho*AC.V*AC.c/mu;
+  return {tag:"Aircraft",c:AC.c,V:AC.V,rho:at.rho,mu,a,T:at.T,q,Re,M:AC.V/a,
+          cd:cdOf(Re),L:q*AC.c*CL,D:q*AC.c*cdOf(Re)};
+}
+function model(){
+  const c=AC.c/MD.N, mu=muOf(MD.T), a=aOf(MD.T);
+  const q=0.5*MD.rho*MD.V*MD.V, Re=MD.rho*MD.V*c/mu;
+  return {tag:"Model",c,V:MD.V,rho:MD.rho,mu,a,T:MD.T,q,Re,M:MD.V/a,
+          cd:cdOf(Re),L:q*c*CL,D:q*c*cdOf(Re)};
+}
+/* ---------- svg helpers ---------- */
+const NS="http://www.w3.org/2000/svg";
+const el=(n,a={})=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const fmt=(v,d=2)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const sci=v=>{const e=Math.floor(Math.log10(Math.abs(v)));return (v/Math.pow(10,e)).toFixed(2)+"×10"+sup(e);};
+const sup=n=>String(n).replace(/[0-9]/g,d=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[+d]);
+
+const M0={l:76,r:14,t:14,b:46};
+function frame(svg,W,H,xd,yd,xlab,ylab,xticks,yticks,fmtY){
+  svg.innerHTML="";
+  const iw=W-M0.l-M0.r, ih=H-M0.t-M0.b;
+  const X=v=>M0.l+(v-xd[0])/(xd[1]-xd[0])*iw;
+  const Y=v=>M0.t+(v-yd[0])/(yd[1]-yd[0])*ih;      // yd[0] at top (inverted for Cp)
+  yticks.forEach(t=>{
+    svg.appendChild(el("line",{x1:M0.l,x2:M0.l+iw,y1:Y(t),y2:Y(t),stroke:"var(--grid)","stroke-width":1}));
+    svg.appendChild(el("text",{x:M0.l-11,y:Y(t)+4.5,"text-anchor":"end","font-size":13.5,fill:"var(--muted)"}))
+      .textContent=fmtY?fmtY(t):(Math.abs(t)>=1000?t.toLocaleString('en-US'):t);
+  });
+  xticks.forEach(t=>{
+    svg.appendChild(el("text",{x:X(t),y:H-M0.b+22,"text-anchor":"middle","font-size":13.5,fill:"var(--muted)"})).textContent=t;
+  });
+  // zero line
+  if(yd[0]*yd[1]<0) svg.appendChild(el("line",{x1:M0.l,x2:M0.l+iw,y1:Y(0),y2:Y(0),stroke:"var(--rule)","stroke-width":1.5}));
+  svg.appendChild(el("line",{x1:M0.l,x2:M0.l+iw,y1:M0.t+ih,y2:M0.t+ih,stroke:"var(--rule)","stroke-width":1.5}));
+  svg.appendChild(el("text",{x:M0.l+iw/2,y:H-6,"text-anchor":"middle","font-size":15,fill:"var(--ink2)","font-weight":600})).textContent=xlab;
+  const yl=el("text",{x:16,y:M0.t+ih/2,"text-anchor":"middle","font-size":15,fill:"var(--ink2)","font-weight":600,
+    transform:`rotate(-90 16 ${M0.t+ih/2})`}); yl.textContent=ylab; svg.appendChild(yl);
+  return {X,Y,iw,ih};
+}
+function curve(svg,pts,sc,col,w,dash){
+  const seg=(from,to)=>{
+    let d="";
+    for(let i=from;i<=to;i++){const p=pts[i];d+=(i===from?"M":"L")+sc.X(p.px).toFixed(2)+" "+sc.Y(p.py).toFixed(2);}
+    const a={d,fill:"none",stroke:col,"stroke-width":w,"stroke-linejoin":"round","stroke-linecap":"round"};
+    if(dash)a["stroke-dasharray"]=dash;
+    svg.appendChild(el("path",a));
+  };
+  seg(0,SURF.iLE); seg(SURF.iLE,pts.length-1);
+}
+
+
+/* ---------- airfoil geometry (from the mapped surface) ---------- */
+function geometry(){
+  const iLE=SURF.iLE, pts=SURF.pts;
+  const srt=b=>b.map(p=>[p.xc,p.yc]).sort((A,B)=>A[0]-B[0]);
+  const o1=srt(pts.slice(0,iLE+1)), o2=srt(pts.slice(iLE));
+  const ip=(o,q)=>{
+    if(q<=o[0][0]) return o[0][1];
+    for(let i=1;i<o.length;i++) if(o[i][0]>=q){
+      const [x0,y0]=o[i-1],[x1,y1]=o[i];
+      return y0+(y1-y0)*(q-x0)/((x1-x0)||1e-12);
+    }
+    return o[o.length-1][1];
+  };
+  let tmax=0,tx=0,cmax=0,cx=0;
+  for(let k=1;k<500;k++){
+    const q=k/500, yA=ip(o1,q), yB=ip(o2,q);
+    const up=Math.max(yA,yB), lo=Math.min(yA,yB);
+    const th=up-lo, cm=(up+lo)/2;
+    if(th>tmax){tmax=th;tx=q;}
+    if(Math.abs(cm)>Math.abs(cmax)){cmax=cm;cx=q;}
+  }
+  return {t:tmax,tx:tx,cam:cmax,camx:cx,aL0:-BETA*180/Math.PI};
+}
+const GEO=geometry();
+
+/* ---------- streamlines (integrated in the circle plane, mapped to z) ---------- */
+function dWdz(px,py,alpha,G){                       // px,py = zeta - mu
+  const p2=px*px-py*py, q2=2*px*py, m2=p2*p2+q2*q2, pm=px*px+py*py;
+  const ca=Math.cos(alpha), sa=Math.sin(alpha);
+  let re=ca - R*R*(ca*p2+sa*q2)/m2 + (G/(2*Math.PI))*(py/pm);
+  let im=-sa - R*R*(sa*p2-ca*q2)/m2 + (G/(2*Math.PI))*(px/pm);
+  return [re,-im];                                  // (u,v)
+}
+function streamlines(alpha){
+  const G=4*Math.PI*R*Math.sin(alpha+BETA);
+  const xs=SURF.pts.map(p=>p.x), xmin=Math.min(...xs), xmax=Math.max(...xs), chord=xmax-xmin;
+  const lines=[], ds=0.035;
+  const seeds=[];
+  for(let k=-11;k<=11;k++) seeds.push(k*0.24);
+  seeds.forEach(y0=>{
+    let px=-3.4-MUX, py=y0-MUY;
+    const pts=[];
+    for(let n=0;n<520;n++){
+      const r=Math.hypot(px,py);
+      if(r<R*1.0005){ break; }
+      const zx=MUX+px, zy=MUY+py, d=zx*zx+zy*zy;
+      const X=zx+A_MAP*A_MAP*zx/d, Y=zy-A_MAP*A_MAP*zy/d;
+      pts.push([(X-xmin)/chord,Y/chord]);
+      if(zx>4.2) break;
+      const [u,v]=dWdz(px,py,alpha,G);
+      const sp=Math.hypot(u,v); if(!isFinite(sp)||sp<1e-5) break;
+      // RK2
+      const mx=px+0.5*ds*u/sp, my=py+0.5*ds*v/sp;
+      if(Math.hypot(mx,my)<R*1.0005) break;
+      const [u2,v2]=dWdz(mx,my,alpha,G);
+      const sp2=Math.hypot(u2,v2); if(!isFinite(sp2)||sp2<1e-5) break;
+      px+=ds*u2/sp2; py+=ds*v2/sp2;
+    }
+    if(pts.length>8) lines.push(pts);
+  });
+  return lines;
+}
+function drawFlow(){
+  const svg=document.getElementById("flowChart"); svg.innerHTML="";
+  const W=566,H=300, pad={l:12,r:12,t:10,b:26};
+  const iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  const yHalf=0.42, sc=ih/(2*yHalf);                 // equal aspect: px per unit x/c
+  const xHalfSpan=iw/sc, x0=-0.30, x1=x0+xHalfSpan;
+  const X=v=>pad.l+(v-x0)*sc, Y=v=>pad.t+ih/2-v*sc;
+  svg.appendChild(el("rect",{x:pad.l,y:pad.t,width:iw,height:ih,fill:"#fbfaf9",stroke:"var(--rule)","stroke-width":1,rx:6}));
+  const clip=el("clipPath",{id:"fclip"});
+  clip.appendChild(el("rect",{x:pad.l,y:pad.t,width:iw,height:ih,rx:6}));
+  svg.appendChild(clip);
+  const g=el("g",{"clip-path":"url(#fclip)"}); svg.appendChild(g);
+  // streamlines
+  streamlines(ALPHA).forEach(L=>{
+    let d="";
+    L.forEach((q,i)=>{ d+=(i?"L":"M")+X(q[0]).toFixed(1)+" "+Y(q[1]).toFixed(1); });
+    g.appendChild(el("path",{d,fill:"none",stroke:"#8d9aa6","stroke-width":1.35,"stroke-linecap":"round"}));
+  });
+  // airfoil
+  let ad="";
+  SURF.pts.forEach((q,i)=>{ ad+=(i?"L":"M")+X(q.xc).toFixed(2)+" "+Y(q.yc).toFixed(2); });
+  g.appendChild(el("path",{d:ad+"Z",fill:"#2c2a28",stroke:"#2c2a28","stroke-width":1}));
+  // chord line + freestream arrow
+  g.appendChild(el("line",{x1:X(0),y1:Y(0),x2:X(1),y2:Y(0),stroke:"#f0ede9","stroke-width":1.2,"stroke-dasharray":"5 4"}));
+  const ax=X(x0)+14, ay=Y(0.28), len=58, aa=ALPHA;
+  g.appendChild(el("line",{x1:ax,y1:ay,x2:ax+len*Math.cos(aa),y2:ay+len*Math.sin(aa),
+    stroke:"var(--ink2)","stroke-width":2.2}));
+  const hx=ax+len*Math.cos(aa), hy=ay+len*Math.sin(aa);
+  g.appendChild(el("path",{d:`M${hx} ${hy} L${hx-9*Math.cos(aa-0.4)} ${hy-9*Math.sin(aa-0.4)} L${hx-9*Math.cos(aa+0.4)} ${hy-9*Math.sin(aa+0.4)} Z`,
+    fill:"var(--ink2)"}));
+  const lab=el("text",{x:ax+2,y:ay-9,"font-size":13.5,fill:"var(--ink2)","font-weight":700}); lab.textContent="V∞"; g.appendChild(lab);
+  const xl=el("text",{x:pad.l+iw/2,y:H-6,"text-anchor":"middle","font-size":13.5,fill:"var(--ink2)","font-weight":600});
+  xl.textContent="x/c  (equal axis scale)"; svg.appendChild(xl);
+  document.getElementById("geo").innerHTML=
+    `<b>Joukowski section</b> (conformal map z = &zeta; + a&sup2;/&zeta;) &nbsp;&middot;&nbsp; max thickness <b>${(GEO.t*100).toFixed(1)}% c</b> at x/c = ${GEO.tx.toFixed(2)}
+     &nbsp;&middot;&nbsp; max camber <b>${(GEO.cam*100).toFixed(2)}% c</b> at x/c = ${GEO.camx.toFixed(2)}
+     &nbsp;&middot;&nbsp; zero-lift angle <b>${GEO.aL0.toFixed(2)}&deg;</b> &nbsp;&middot;&nbsp; c<sub>l</sub>(6&deg;) = <b>${CL.toFixed(3)}</b>`;
+}
+
+
+/* ---------- render ---------- */
+const cpMinG=Math.min(...SURF.pts.map(p=>p.cp));
+function render(){
+  const a=aircraft(), b=model();
+  document.getElementById("cAv").textContent=fmt(AC.c,2)+" m";
+  document.getElementById("hAv").textContent=fmt(AC.h,1)+" km";
+  document.getElementById("vAv").textContent=Math.round(AC.V)+" m/s";
+  document.getElementById("nBv").textContent=MD.N;
+  document.getElementById("rBv").textContent=fmt(MD.rho,2);
+  document.getElementById("tBv").textContent=Math.round(MD.T)+" K";
+  document.getElementById("vBv").textContent=Math.round(MD.V)+" m/s";
+  document.getElementById("derA").innerHTML=
+    `ISA: T <b>${a.T.toFixed(1)} K</b> &middot; &rho; <b>${a.rho.toFixed(3)}</b> kg/m&sup3; &middot; &mu; <b>${(a.mu*1e5).toFixed(3)}</b>&times;10<sup>&minus;5</sup> &middot; a <b>${a.a.toFixed(0)}</b> m/s`;
+  const pkA=cpMinG*aircraft().q, pkB=cpMinG*model().q;
+  const kk=v=>Math.abs(v)>=20000?(v/1000).toFixed(0)+" kPa":v.toFixed(0)+" Pa";
+  document.getElementById("dimNote").innerHTML=
+    `Aircraft chord <b>${a.c.toFixed(2)} m</b> over model chord <b>${(b.c*100).toFixed(1)} cm</b> (1:${MD.N}) &nbsp;&middot;&nbsp;
+     peak suction: aircraft <b>${kk(pkA)}</b>, model <b>${kk(pkB)}</b>`;
+
+  const reR=Math.max(a.Re,b.Re)/Math.min(a.Re,b.Re);
+  const reMatch=reR<1.02;
+  const mMatch=Math.abs(a.M-b.M)<0.02 || (a.M<0.3&&b.M<0.3);
+  const ok=reMatch&&mMatch;
+  const badge=document.getElementById("badge");
+  badge.className="badge "+(ok?"ok":"no");
+  document.getElementById("badgeTxt").textContent = ok
+    ? "Valid test — Re and Mach both matched"
+    : "Invalid test — "+[!reMatch?"Re":null,!mMatch?"Mach":null].filter(Boolean).join(" and ")+" not matched";
+
+  /* dimensional pressures */
+  const svgD=document.getElementById("dimChart");
+  const cps=SURF.pts.map(p=>p.cp), cpMin=Math.min(...cps);
+  const xmaxD=Math.max(a.c,b.c);
+  const qMax=Math.max(a.q,b.q);
+  const ydD=[cpMin*qMax*1.08, qMax*1.08];
+  const st=niceStep((ydD[1]-ydD[0])/5), ticksD=[];
+  for(let t=Math.ceil(ydD[0]/st)*st;t<=ydD[1];t+=st) ticksD.push(Math.round(t));
+  const xs=niceStep(xmaxD/4), xtD=[];
+  for(let t=0;t<=xmaxD+1e-9;t+=xs) xtD.push(+t.toFixed(2));
+  const big=Math.max(Math.abs(ydD[0]),Math.abs(ydD[1]))>=20000;
+  const uDiv=big?1000:1, uLab=big?"kPa":"Pa";
+  const scD=frame(svgD,566,300,[0,xmaxD],ydD,"chordwise distance x  (m)",
+                  "Δp  ("+uLab+")   —  suction upward",xtD,ticksD,
+                  t=>(t/uDiv).toFixed(0));
+  curve(svgD,SURF.pts.map(p=>({px:p.xc*a.c,py:p.cp*a.q})),scD,"var(--serA)",3);
+  curve(svgD,SURF.pts.map(p=>({px:p.xc*b.c,py:p.cp*b.q})),scD,"var(--serB)",2.5,"7 5");
+  label(svgD,scD,SURF.pts,a,"Aircraft",0.62,"var(--serA)");
+  label(svgD,scD,SURF.pts,b,"Model",0.62,"var(--serB)");
+
+  /* non-dimensional */
+  const svgC=document.getElementById("cpChart");
+  const ydC=[Math.min(-3.0,Math.floor(cpMin*2)/2),1.2], ytC=[];
+  for(let t=Math.ceil(ydC[0]);t<=ydC[1];t+=0.5) ytC.push(+t.toFixed(1));
+  const scC=frame(svgC,566,300,[0,1],ydC,"x/c","Cₚ   —  suction upward",[0,0.25,0.5,0.75,1.0],ytC);
+  curve(svgC,SURF.pts.map(p=>({px:p.xc,py:p.cp})),scC,"var(--serA)",3.4);
+  curve(svgC,SURF.pts.map(p=>({px:p.xc,py:p.cp})),scC,"var(--serB)",2.4,"7 5");
+  const nt=el("text",{x:scC.X(0.34),y:scC.Y(-2.5),"font-size":14.5,fill:"var(--ink2)","font-weight":700});
+  nt.textContent="model and aircraft — one curve"; svgC.appendChild(nt);
+  document.getElementById("cpNote").innerHTML=
+    `Measured on the model: c<sub>l</sub> = <b>${CL.toFixed(3)}</b>, c<sub>d</sub> = <b>${b.cd.toFixed(4)}</b> &rarr; applied to the aircraft unchanged`;
+
+  /* tiles */
+  const near=(x,y)=>Math.abs(x-y)/Math.max(Math.abs(x),Math.abs(y))<0.02;
+  const t=(k,av,bv,good,flag)=>`<div class="tile ${good?'same':'diff'}"><div class="k">${k}</div>
+     <div class="rows"><span>Aircraft</span><span class="num A">${av}</span></div>
+     <div class="rows"><span>Model</span><span class="num B">${bv}</span></div>
+     <div class="flag ${good?'same':'diff'}">${flag}</div></div>`;
+  document.getElementById("tiles").innerHTML=
+    t("chord c (m)",fmt(a.c,2),fmt(b.c,3),false,`1:${MD.N} scale`)+
+    t("density &rho; / viscosity &mu; (&times;10<sup>&minus;5</sup>)",
+      fmt(a.rho,3)+" / "+fmt(a.mu*1e5,3),fmt(b.rho,3)+" / "+fmt(b.mu*1e5,3),false,"differs by design")+
+    t("speed V (m/s)",Math.round(a.V),Math.round(b.V),false,"differs")+
+    t("Reynolds number",sci(a.Re),sci(b.Re),reMatch,reMatch?"matched":`off by ${fmt(reR,1)}×`)+
+    t("Mach number",fmt(a.M,3),fmt(b.M,3),mMatch,mMatch?"matched":"not matched")+
+    t("c<sub>l</sub> / c<sub>d</sub>",fmt(CL,3)+" / "+fmt(a.cd,4),fmt(CL,3)+" / "+fmt(b.cd,4),
+      reMatch,reMatch?"transferable":"c_d not transferable")+
+    t("lift per span L&prime; (N/m)",fmt(a.L,0),fmt(b.L,0),false,`aircraft = ${fmt(a.L/b.L,1)}× model`);
+
+  /* punchline */
+  const P=document.getElementById("punch");
+  if(ok){
+    P.innerHTML=`A <b>1:${MD.N}</b> model (chord ${(b.c*100).toFixed(1)} cm) tested at <b>${Math.round(b.V)} m/s</b> in a tunnel at
+      &rho; = ${fmt(b.rho,2)} kg/m&sup3; and ${Math.round(b.T)} K reproduces the aircraft's Re = ${sci(a.Re)} <em>and</em> Mach ${fmt(a.M,3)}.
+      So c<sub>l</sub> = ${CL.toFixed(3)} measured on the model is the aircraft's c<sub>l</sub>: multiplying by the flight q<sub>&infin;</sub> and chord predicts
+      <b>${fmt(a.L,0)} N/m</b> of lift on the aircraft, ${fmt(a.L/b.L,1)}&times; what the model itself produced.`;
+  } else {
+    const need=a.Re*b.mu/(b.rho*b.c);
+    P.innerHTML=`This test is <b>not</b> valid: ${!reMatch?`Re is off by ${fmt(reR,1)}&times;`:""}${(!reMatch&&!mMatch)?" and ":""}${!mMatch?`Mach is ${fmt(b.M,3)} instead of ${fmt(a.M,3)}`:""}.
+      To match Re at this scale and these tunnel conditions the speed would have to be <b>${need>1e4?"&gt;10,000":Math.round(need)} m/s</b> (Mach ${fmt(need/b.a,2)}).
+      That is exactly why high-Re tunnels are <em>pressurized</em> (raises &rho;) and <em>cryogenic</em> (lowers &mu;) &mdash; raise &rho; or lower T instead of chasing speed.`;
+  }
+  document.getElementById("foot").innerHTML=
+    `<strong>How this is computed.</strong> Exact incompressible potential flow past a Joukowski airfoil via the conformal map z = &zeta; + a&sup2;/&zeta;, Kutta condition &Gamma; = 4&pi;V<sub>&infin;</sub>R&thinsp;sin(&alpha;+&beta;), C<sub>p</sub> = 1 &minus; |w/V<sub>&infin;</sub>|&sup2;, c<sub>l</sub> = 2&Gamma;/(V<sub>&infin;</sub>c). Aircraft &rho;, T, &mu;, a from the ISA standard atmosphere with Sutherland's law; tunnel &mu; and a from the tunnel temperature.
+     <strong>Caveats.</strong> The inviscid C<sub>p</sub> depends on shape and &alpha; only; Re enters through the boundary layer, so c<sub>d</sub> uses the labelled turbulent estimate c<sub>d</sub> &asymp; 2(0.074/Re<sup>0.2</sup>)+0.002 &mdash; it is the quantity that stops transferring when Re is not matched, along with transition, separation and c<sub>l,max</sub>. Real tests also require matching wall interference, support interference and surface roughness.`;
+}
+function label(svg,sc,pts,k,txt,xc,col){
+  const i=Math.round(xc*(pts.length-1)*0.5);
+  const p=pts[i];
+  const tx=sc.X(p.xc*k.c), ty=sc.Y(p.cp*k.q);
+  const g=el("text",{x:tx+8,y:ty-8,"font-size":16,"font-weight":700,fill:col});
+  g.textContent=txt; svg.appendChild(g);
+}
+function niceStep(r){const p=Math.pow(10,Math.floor(Math.log10(r)));const n=r/p;
+  return (n<=1?1:n<=2?2:n<=5?5:10)*p;}
+
+
+/* ---------- interaction ---------- */
+const bind=(id,fn)=>document.getElementById(id).addEventListener("input",e=>{fn(+e.target.value);render();});
+bind("cA",v=>AC.c=v); bind("hA",v=>AC.h=v); bind("vA",v=>AC.V=v);
+bind("nB",v=>MD.N=v); bind("rB",v=>MD.rho=v); bind("tB",v=>MD.T=v); bind("vB",v=>MD.V=v);
+document.getElementById("matchRe").addEventListener("click",()=>{
+  const a=aircraft(), c=AC.c/MD.N, mu=muOf(MD.T);
+  MD.V=Math.min(320,Math.max(20,Math.round(a.Re*mu/(MD.rho*c))));
+  document.getElementById("vB").value=MD.V; render();
+});
+document.getElementById("matchBoth").addEventListener("click",()=>{
+  const a=aircraft(), c=AC.c/MD.N, mu=muOf(MD.T);
+  MD.V=Math.min(320,Math.max(20,Math.round(a.M*aOf(MD.T))));            // match Mach first
+  const need=a.Re*mu/(MD.V*c);                                          // then density for Re
+  MD.rho=Math.min(10,Math.max(0.3,+need.toFixed(2)));
+  document.getElementById("vB").value=MD.V;
+  document.getElementById("rB").value=MD.rho; render();
+});
+document.getElementById("reset").addEventListener("click",()=>{
+  AC.c=3.0;AC.h=10.0;AC.V=235; MD.N=20;MD.rho=6.16;MD.T=110;MD.V=165;
+  cA.value=3.0;hA.value=10.0;vA.value=235;nB.value=20;rB.value=6.16;tB.value=110;vB.value=165;
+  render();
+});
+(function(){
+  const svg=document.getElementById("cpChart"), tip=document.getElementById("tipC");
+  svg.addEventListener("mousemove",ev=>{
+    const r=svg.getBoundingClientRect(), iw=566-M0.l-M0.r;
+    const xc=(ev.clientX-r.left-M0.l)/iw;
+    if(xc<0||xc>1){tip.style.opacity=0;return;}
+    let best=SURF.pts[0],bd=9;
+    SURF.pts.forEach(p=>{const d=Math.abs(p.xc-xc);if(d<bd){bd=d;best=p;}});
+    const a=aircraft(),b=model();
+    tip.innerHTML=`x/c ${best.xc.toFixed(3)} &middot; C<sub>p</sub> ${best.cp.toFixed(3)}<br>
+      &Delta;p aircraft ${(best.cp*a.q).toFixed(0)} Pa &middot; model ${(best.cp*b.q).toFixed(0)} Pa`;
+    tip.style.left=(ev.clientX-r.left+14)+"px"; tip.style.top=(ev.clientY-r.top-46)+"px";
+    tip.style.opacity=1;
+  });
+  svg.addEventListener("mouseleave",()=>tip.style.opacity=0);
+})();
+drawFlow();
+render();
+</script>
+</body>
+</html>

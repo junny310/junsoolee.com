@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reflected Inertia</title>
+<meta name="description" content="Example 2-14 made interactive: a motor driving a load through gears, and why the load's inertia and damping arrive at the motor shaft scaled by n squared.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* ============================================================
+   TOKENS - a technical-drawing ground: near-neutral cool paper,
+   true line-work ink, one hue for the motor side and one for the
+   load side (both validated, dataviz six checks, in both modes).
+   ============================================================ */
+:root{
+  color-scheme: light;
+
+  --paper:   #F2F4F5;
+  --surface: #FAFBFB;
+  --raised:  #FFFFFF;
+  --ink:     #101418;
+  --ink-2:   #4A555C;
+  --muted:   #7D888E;
+  --rule:    #DCE1E4;
+  --grid:    #E8ECEE;
+  --hatch:   #C8CFD3;
+
+  --chrome:      #2A3A87;
+  --chrome-ink:  #FFFFFF;
+  --chrome-soft: #E7EAF6;
+
+  --motor: #34479E;    /* motor side */
+  --load:  #A8710A;    /* load side  */
+  --motor-soft: #E4E7F5;
+  --load-soft:  #F4EBDA;
+
+  --good:     #0A7A52;
+  --good-bg:  #E4F3EC;
+  --critical: #B3261E;
+  --critical-bg: #F8E6E3;
+
+  --shadow: 0 1px 2px rgba(16,20,24,.06), 0 8px 24px -12px rgba(16,20,24,.18);
+
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --prose: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --measure: 68ch;
+  --wide: 1120px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:   #101314;
+    --surface: #16191A;
+    --raised:  #1D2123;
+    --ink:     #EDF1F2;
+    --ink-2:   #A7B1B6;
+    --muted:   #7A848A;
+    --rule:    #262C2F;
+    --grid:    #1E2325;
+    --hatch:   #333B3F;
+    --chrome:      #8C9AEE;
+    --chrome-ink:  #0B0F1E;
+    --chrome-soft: #1A2036;
+    --motor: #7787DD;
+    --load:  #BC871F;
+    --motor-soft: #1B2136;
+    --load-soft:  #2C2413;
+    --good:     #34B27E;
+    --good-bg:  #102A22;
+    --critical: #E56B5C;
+    --critical-bg: #2E1A17;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:   #101314;
+  --surface: #16191A;
+  --raised:  #1D2123;
+  --ink:     #EDF1F2;
+  --ink-2:   #A7B1B6;
+  --muted:   #7A848A;
+  --rule:    #262C2F;
+  --grid:    #1E2325;
+  --hatch:   #333B3F;
+  --chrome:      #8C9AEE;
+  --chrome-ink:  #0B0F1E;
+  --chrome-soft: #1A2036;
+  --motor: #7787DD;
+  --load:  #BC871F;
+  --motor-soft: #1B2136;
+  --load-soft:  #2C2413;
+  --good:     #34B27E;
+  --good-bg:  #102A22;
+  --critical: #E56B5C;
+  --critical-bg: #2E1A17;
+  --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -14px rgba(0,0,0,.7);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--prose); font-size:17px; line-height:1.62; font-optical-sizing:auto;
+}
+img{ max-width:100%; }
+:focus-visible{ outline:2px solid var(--chrome); outline-offset:2px; border-radius:2px; }
+
+.wrap{ max-width:var(--wide); margin:0 auto; padding:0 24px; }
+.measure{ max-width:var(--measure); }
+p{ margin:0 0 1em; } p:last-child{ margin-bottom:0; }
+a{ color:var(--chrome); text-underline-offset:2px; }
+
+h1,h2,h3,h4{ font-family:var(--display); font-weight:600; text-wrap:balance; margin:0; line-height:1.14; letter-spacing:-.012em; }
+h1{ font-size:clamp(2rem,4.2vw,3rem); font-weight:700; letter-spacing:-.028em; }
+h2{ font-size:clamp(1.4rem,2.4vw,1.8rem); }
+h3{ font-size:1.05rem; }
+.eyebrow{
+  font-family:var(--display); font-size:.7rem; font-weight:600;
+  letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin:0;
+}
+.num{ font-family:var(--data); font-variant-numeric:tabular-nums; }
+
+/* ============================================================
+   TITLE BLOCK - the masthead borrows a drawing sheet's own device
+   ============================================================ */
+.sheet{ background:var(--surface); border-bottom:1px solid var(--rule); padding:34px 0 0; }
+.tb{ border:1.5px solid var(--ink-2); border-radius:2px; margin-bottom:-1px; background:var(--raised); }
+.tb-main{ padding:24px 24px 22px; border-bottom:1.5px solid var(--ink-2); }
+.tb-main h1{ margin-bottom:12px; }
+.tb-main .standfirst{ font-size:1.1rem; color:var(--ink-2); max-width:62ch; margin:0; }
+.tb-main .standfirst strong{ color:var(--ink); font-weight:600; }
+.tb-fields{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+@media (min-width:760px){ .tb-fields{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
+.tb-f{ padding:9px 16px 10px; border-right:1.5px solid var(--ink-2); }
+.tb-f:last-child{ border-right:0; }
+@media (max-width:759px){
+  .tb-f:nth-child(2n){ border-right:0; }
+  .tb-f:nth-child(-n+2){ border-bottom:1.5px solid var(--ink-2); }
+}
+.tb-f .k{
+  display:block; font-family:var(--display); font-size:.62rem; font-weight:600;
+  letter-spacing:.14em; color:var(--muted); margin-bottom:1px;
+}
+.tb-f .v{ font-family:var(--data); font-size:.86rem; color:var(--ink); }
+
+section{ padding:54px 0; border-bottom:1px solid var(--rule); }
+section:last-of-type{ border-bottom:0; }
+.sec-head{ display:flex; flex-direction:column; gap:10px; margin-bottom:26px; }
+.sec-head .lede{ color:var(--ink-2); max-width:var(--measure); margin:0; }
+
+/* ============================================================
+   PANELS
+   ============================================================ */
+.panel{
+  background:var(--surface); border:1px solid var(--rule); border-radius:3px;
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.panel-grid{
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size:22px 22px; background-position:-1px -1px;
+}
+.stage{ display:block; width:100%; height:auto; }
+.panel-bar{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px;
+  padding:11px 16px; border-bottom:1px solid var(--rule); background:var(--raised);
+}
+.panel-bar.bottom{ border-bottom:0; border-top:1px solid var(--rule); }
+.panel-title{
+  font-family:var(--display); font-size:.7rem; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-2); margin-right:auto;
+}
+.btn{
+  font-family:var(--display); font-size:.8rem; font-weight:600;
+  padding:7px 15px; border-radius:2px; border:1px solid var(--rule);
+  background:var(--surface); color:var(--ink); cursor:pointer;
+  transition:background .12s, border-color .12s, color .12s;
+}
+.btn:hover{ border-color:var(--chrome); color:var(--chrome); }
+.btn.primary{ background:var(--chrome); border-color:var(--chrome); color:var(--chrome-ink); }
+.btn.primary:hover{ filter:brightness(1.1); color:var(--chrome-ink); }
+
+.sliders{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:12px 24px; padding:16px; border-top:1px solid var(--rule); background:var(--raised);
+}
+.slider label{
+  display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  min-height:2.4em;
+  font-family:var(--display); font-size:.72rem; font-weight:600;
+  letter-spacing:.03em; color:var(--muted); margin-bottom:4px;
+}
+.slider label .v{
+  font-family:var(--data); font-size:.83rem; font-weight:500;
+  letter-spacing:0; text-transform:none; color:var(--ink); font-variant-numeric:tabular-nums;
+}
+.slider.motor label .v{ color:var(--motor); }
+.slider.load label .v{ color:var(--load); }
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:18px;
+  background:transparent; cursor:pointer; margin:0; display:block;
+}
+input[type=range]::-webkit-slider-runnable-track{ height:3px; background:var(--rule); border-radius:2px; }
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:15px; height:15px; margin-top:-6px; border-radius:50%;
+  background:var(--chrome); border:2px solid var(--raised); box-shadow:0 0 0 1px var(--chrome);
+}
+input[type=range]::-moz-range-track{ height:3px; background:var(--rule); border-radius:2px; }
+input[type=range]::-moz-range-thumb{
+  width:13px; height:13px; border-radius:50%; background:var(--chrome);
+  border:2px solid var(--raised); box-shadow:0 0 0 1px var(--chrome);
+}
+
+.readouts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); border-top:1px solid var(--rule); }
+.ro{ padding:12px 16px; border-right:1px solid var(--rule); background:var(--surface); display:flex; flex-direction:column; gap:3px; }
+.ro:last-child{ border-right:0; }
+.ro .k{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.11em; color:var(--muted); }
+.ro .n{ font-family:var(--data); font-size:1.14rem; font-weight:500; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.ro .u{ font-size:.74rem; color:var(--muted); font-weight:400; }
+
+.legend{ display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; }
+.legend .item{ display:inline-flex; align-items:center; gap:7px; font-family:var(--display); font-size:.74rem; font-weight:500; color:var(--ink-2); }
+.legend .swatch{ width:16px; height:3px; border-radius:2px; flex:none; }
+
+/* ============================================================
+   REFLECTION METERS - a composition bar, not a card
+   ============================================================ */
+.meters{ display:grid; grid-template-columns:minmax(0,1fr); gap:26px; }
+@media (min-width:820px){ .meters{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:38px; } }
+.meter h3{ display:flex; align-items:baseline; gap:10px; margin-bottom:3px; }
+.meter h3 .tot{ font-family:var(--data); font-size:1.02rem; font-weight:500; color:var(--ink); margin-left:auto; }
+.meter .sub{ font-family:var(--data); font-size:.74rem; color:var(--muted); margin-bottom:12px; }
+.bar{ display:flex; height:26px; gap:2px; margin-bottom:10px; }
+.bar span{ display:block; border-radius:2px; min-width:2px; transition:flex-basis .18s ease; }
+.bar .a{ background:var(--motor); }
+.bar .b{ background:var(--load); }
+.meter table{ width:100%; border-collapse:collapse; font-family:var(--data); font-size:.82rem; }
+.meter td{ padding:5px 0; border-bottom:1px solid var(--rule); font-variant-numeric:tabular-nums; text-align:right; }
+.meter td:first-child{ text-align:left; font-family:var(--display); font-size:.72rem; font-weight:600; letter-spacing:.04em; color:var(--ink-2); }
+.meter tr:last-child td{ border-bottom:0; font-weight:600; }
+.meter .dot{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:7px; vertical-align:baseline; }
+
+.callout{
+  border:1px solid var(--rule); border-left:2px solid var(--chrome); border-radius:0 2px 2px 0;
+  background:var(--raised); padding:16px 20px; margin-top:28px;
+}
+.callout h3{ margin-bottom:6px; }
+.callout p{ color:var(--ink-2); font-size:.97rem; }
+
+table.parts{ width:100%; border-collapse:collapse; margin-top:26px; font-size:.95rem; }
+table.parts th, table.parts td{ padding:10px 12px; border-bottom:1px solid var(--rule); text-align:left; vertical-align:top; }
+table.parts thead th{
+  font-family:var(--display); font-size:.66rem; font-weight:600; color:var(--muted);
+  letter-spacing:.1em; border-bottom:1px solid var(--ink-2);
+}
+table.parts th:first-child, table.parts td:first-child{ width:38px; padding-right:0; }
+table.parts td:nth-child(2){ font-family:var(--display); font-size:.9rem; font-weight:600; white-space:nowrap; }
+table.parts td:nth-child(4){ color:var(--ink-2); }
+table.parts tbody tr:last-child td{ border-bottom:0; }
+table.parts .badge{
+  display:inline-grid; place-items:center; width:21px; height:21px; border-radius:50%;
+  background:var(--chrome); color:var(--chrome-ink);
+  font-family:var(--display); font-size:.7rem; font-weight:700;
+}
+table.parts .sym{ font-family:var(--data); font-weight:600; white-space:nowrap; }
+table.parts .sym.m{ color:var(--motor); }
+table.parts .sym.l{ color:var(--load); }
+
+/* ============================================================
+   DERIVATION
+   ============================================================ */
+.derive{ display:grid; grid-template-columns:minmax(0,1fr); gap:28px; }
+@media (min-width:900px){ .derive{ grid-template-columns:minmax(0,400px) minmax(0,1fr); gap:40px; align-items:start; } }
+.fbd{ background:var(--surface); border:1px solid var(--rule); border-radius:3px; padding:14px; box-shadow:var(--shadow); }
+.fbd svg{ display:block; width:100%; height:auto; }
+.fbd figcaption{ font-family:var(--display); font-size:.72rem; font-weight:500; color:var(--muted); margin-top:10px; line-height:1.45; }
+.steps{ counter-reset:step; display:flex; flex-direction:column; gap:22px; margin:0; padding:0; list-style:none; }
+.steps li{ counter-increment:step; display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; align-items:start; }
+.steps .body{ min-width:0; }
+.steps li::before{
+  content:counter(step); font-family:var(--data); font-size:.8rem; font-weight:600;
+  color:var(--chrome); border:1px solid var(--rule); border-radius:50%;
+  width:28px; height:28px; display:grid; place-items:center; margin-top:1px;
+}
+.steps h3{ margin:0 0 6px; }
+.steps p{ margin:0 0 .55em; color:var(--ink-2); }
+.eq{
+  font-family:var(--data); font-size:.94rem; line-height:2.1; overflow-x:auto;
+  padding:12px 14px; margin:10px 0 12px; background:var(--raised);
+  border:1px solid var(--rule); border-left:2px solid var(--chrome);
+  border-radius:0 2px 2px 0; color:var(--ink);
+}
+.eq.center{ text-align:center; }
+.eq .tag{ float:right; color:var(--muted); font-size:.8rem; }
+.frac{ display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 .28em; line-height:1.35; }
+.frac>span:first-child{ padding:0 .45em .12em; }
+.frac>span:last-child{ padding:.14em .45em 0; border-top:1px solid currentColor; }
+
+/* ============================================================
+   CHARTS
+   ============================================================ */
+.chart-wrap{ overflow-x:auto; }
+.chart-wrap svg{ display:block; width:100%; height:auto; min-width:460px; }
+.two-charts{ display:grid; grid-template-columns:minmax(0,1fr); gap:30px; }
+@media (min-width:820px){ .two-charts{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:38px; } }
+.two-charts h3{ margin-bottom:3px; }
+.two-charts .cap{ font-family:var(--data); font-size:.74rem; color:var(--muted); margin-bottom:12px; }
+.rel{ position:relative; }
+.tt{
+  position:absolute; pointer-events:none; opacity:0; transform:translate(-50%,-118%);
+  background:var(--raised); border:1px solid var(--rule); border-radius:2px;
+  box-shadow:var(--shadow); padding:7px 10px; white-space:nowrap;
+  font-family:var(--data); font-size:.78rem; line-height:1.5; color:var(--ink);
+  font-variant-numeric:tabular-nums; transition:opacity .1s; z-index:5;
+}
+.tt .h{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:block; }
+
+.pill{
+  display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:2px;
+  font-family:var(--display); font-size:.7rem; font-weight:600; letter-spacing:.04em; white-space:nowrap;
+}
+.pill.good{ background:var(--good-bg); color:var(--good); }
+.pill.critical{ background:var(--critical-bg); color:var(--critical); }
+
+.tryit{ display:grid; grid-template-columns:minmax(0,1fr); gap:0; border:1px solid var(--rule); border-radius:3px; overflow:hidden; background:var(--surface); }
+@media (min-width:720px){ .tryit{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.tryit .q{ padding:18px 20px; border-bottom:1px solid var(--rule); }
+@media (min-width:720px){
+  .tryit .q:nth-child(odd){ border-right:1px solid var(--rule); }
+  .tryit .q:nth-last-child(-n+2){ border-bottom:0; }
+}
+@media (max-width:719px){ .tryit .q:last-child{ border-bottom:0; } }
+.tryit h3{ margin-bottom:5px; }
+.tryit p{ color:var(--ink-2); font-size:.96rem; margin:0; }
+.caveat{
+  border-left:2px solid var(--load); background:var(--load-soft);
+  padding:14px 18px; border-radius:0 2px 2px 0; font-size:.95rem; color:var(--ink); margin-top:24px;
+}
+.caveat strong{ font-family:var(--display); font-weight:600; }
+footer{ padding:34px 0 60px; color:var(--muted); font-size:.86rem; }
+footer .wrap{ display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline; border-top:1px solid var(--rule); padding-top:20px; }
+footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
+@media (prefers-reduced-motion:reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+</style>
+</head>
+<body>
+
+<header class="sheet">
+  <div class="wrap">
+    <div class="tb">
+      <div class="tb-main">
+        <p class="eyebrow" style="margin-bottom:10px">Example 2-14 &mdash; a motor connected to a load through gears</p>
+        <h1>Reflected Inertia</h1>
+        <p class="standfirst">Two shafts turning at different speeds, and one equation of motion. Put a
+        gearbox between a motor and its load and the load&rsquo;s inertia and damping still arrive at the motor
+        shaft &mdash; but <strong>scaled by the square of the gear ratio</strong>. That single factor
+        <span class="num">n&sup2;</span> is what lets a small motor move a large load, and what decides the
+        ratio you should choose.</p>
+      </div>
+      <div class="tb-fields">
+        <div class="tb-f"><span class="k">COURSE</span><span class="v">EMCH 367 &middot; Controls</span></div>
+        <div class="tb-f"><span class="k">MODEL</span><span class="v">2 rotating masses, viscous damping</span></div>
+        <div class="tb-f"><span class="k">FIND</span><span class="v">&theta;<sub>m</sub>/T<sub>m</sub> and &theta;<sub>L</sub>/T<sub>m</sub></span></div>
+        <div class="tb-f"><span class="k">RATIO</span><span class="v">n = N&#8321;/N&#8322;, &nbsp;&theta;<sub>L</sub>/&theta;<sub>m</sub> = n</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== 1. THE MECHANISM ==================== -->
+<section id="drive">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The mechanism</p>
+      <h2>One drive train, two shafts</h2>
+      <p class="lede">A step torque <span class="num">T<sub>m</sub></span> is applied to the motor at
+      <span class="num">t = 0</span>. Change the tooth counts and watch both the speeds and the
+      <em>equivalent</em> inertia change &mdash; the gears turn at whatever ratio you set, but what the motor
+      actually has to accelerate is the number in the <span class="num">J<sub>e</sub></span> tile.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-bar">
+        <span class="panel-title">Gear train &mdash; step torque at the motor</span>
+        <span class="num" id="clock" style="font-size:.78rem;color:var(--muted)">t = 0.00 s</span>
+        <button type="button" class="btn primary" id="playBtn">Pause</button>
+        <button type="button" class="btn" id="restartBtn">Restart from rest</button>
+      </div>
+
+      <div class="panel-grid"><canvas id="stage" class="stage" width="1080" height="356"
+        role="img" aria-label="Animated gear train: a motor disk and pinion driving a larger gear and a load disk, each with a damper to ground"></canvas></div>
+
+      <div class="sliders">
+        <div class="slider"><label for="sN1"><span>Pinion teeth N&#8321;</span> <span class="v"><span id="vN1">15</span></span></label>
+          <input type="range" id="sN1" min="8" max="20" step="1" value="15"></div>
+        <div class="slider"><label for="sN2"><span>Gear teeth N&#8322;</span> <span class="v"><span id="vN2">30</span></span></label>
+          <input type="range" id="sN2" min="8" max="40" step="1" value="30"></div>
+        <div class="slider"><label for="sT"><span>Motor torque T<sub>m</sub></span> <span class="v"><span id="vT">2.00</span> N&middot;m</span></label>
+          <input type="range" id="sT" min="0.2" max="8" step="0.05" value="2"></div>
+        <div class="slider motor"><label for="sJm"><span>Motor inertia J<sub>m</sub></span> <span class="v"><span id="vJm">0.020</span> kg&middot;m&sup2;</span></label>
+          <input type="range" id="sJm" min="0.002" max="0.2" step="0.002" value="0.02"></div>
+        <div class="slider load"><label for="sJL"><span>Load inertia J<sub>L</sub></span> <span class="v"><span id="vJL">0.300</span> kg&middot;m&sup2;</span></label>
+          <input type="range" id="sJL" min="0.02" max="3" step="0.01" value="0.3"></div>
+        <div class="slider motor"><label for="sbm"><span>Motor damping b<sub>m</sub></span> <span class="v"><span id="vbm">0.0100</span></span></label>
+          <input type="range" id="sbm" min="0.002" max="0.1" step="0.001" value="0.01"></div>
+        <div class="slider load"><label for="sbL"><span>Load damping b<sub>L</sub></span> <span class="v"><span id="vbL">0.0800</span></span></label>
+          <input type="range" id="sbL" min="0.005" max="0.4" step="0.005" value="0.08"></div>
+      </div>
+
+      <div class="readouts">
+        <div class="ro"><span class="k">n = N&#8321;/N&#8322;</span><span class="n" id="roN">0.500</span></div>
+        <div class="ro"><span class="k">J<sub>e</sub></span><span class="n" id="roJe">0.0950 <span class="u">kg&middot;m&sup2;</span></span></div>
+        <div class="ro"><span class="k">b<sub>e</sub></span><span class="n" id="roBe">0.0300</span></div>
+        <div class="ro"><span class="k">&tau; = J<sub>e</sub>/b<sub>e</sub></span><span class="n" id="roTau">3.17 <span class="u">s</span></span></div>
+        <div class="ro"><span class="k">&omega;<sub>m</sub> NOW</span><span class="n" id="roWm" style="color:var(--motor)">0.0 <span class="u">rad/s</span></span></div>
+        <div class="ro"><span class="k">&omega;<sub>L</sub> NOW</span><span class="n" id="roWL" style="color:var(--load)">0.0 <span class="u">rad/s</span></span></div>
+      </div>
+
+      <div class="panel-bar bottom">
+        <div class="legend">
+          <span class="item"><span class="swatch" style="background:var(--motor)"></span>Motor shaft <span class="num">&theta;<sub>m</sub>, &omega;<sub>m</sub></span></span>
+          <span class="item"><span class="swatch" style="background:var(--load)"></span>Load shaft <span class="num">&theta;<sub>L</sub>, &omega;<sub>L</sub></span></span>
+        </div>
+        <span class="num" style="margin-left:auto;font-size:.72rem;color:var(--muted)">rotation drawn at 1/24 rate &middot; speeds and times are true</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 1b. IN HARDWARE ==================== -->
+<section id="hardware">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">In hardware</p>
+      <h2>The same drive train, as it is actually built</h2>
+      <p class="lede">Every symbol in the model is standing in for a real object. Here is a gearmotor
+      driving a conveyor drum &mdash; the commonest place this exact problem turns up &mdash; with the six
+      parts numbered, and the same six numbers on the idealised model underneath. Note which side of the
+      gearbox each part lands on: that is what decides whether its inertia gets multiplied by
+      <span class="num">n&sup2;</span> or not.</p>
+    </div>
+
+    <figure class="fbd" style="padding:18px">
+        <svg viewBox="0 0 1000 492" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A gearmotor driving a conveyor drum through a pinion and gear, with each hardware component numbered and matched to its symbol in the idealised rotational model below">
+          <defs>
+            <linearGradient id="gBody" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" style="stop-color:var(--raised)"></stop>
+              <stop offset="0.42" style="stop-color:var(--surface)"></stop>
+              <stop offset="1" style="stop-color:var(--hatch)"></stop>
+            </linearGradient>
+            <linearGradient id="gShaft" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" style="stop-color:var(--hatch)"></stop>
+              <stop offset="0.4" style="stop-color:var(--raised)"></stop>
+              <stop offset="1" style="stop-color:var(--hatch)"></stop>
+            </linearGradient>
+            <linearGradient id="gDrum" x1="0" y1="0" x2="0.3" y2="1">
+              <stop offset="0" style="stop-color:var(--raised)"></stop>
+              <stop offset="0.55" style="stop-color:var(--load-soft)"></stop>
+              <stop offset="1" style="stop-color:var(--hatch)"></stop>
+            </linearGradient>
+            <marker id="hw-ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0 1 L9 5 L0 9 z" fill="var(--ink-2)"></path>
+            </marker>
+          </defs>
+          <!-- foundation -->
+          <path d="M16.0 298.0 L26.0 288.0 M22.0 302.0 L36.0 288.0 M32.0 302.0 L46.0 288.0 M42.0 302.0 L56.0 288.0 M52.0 302.0 L66.0 288.0 M62.0 302.0 L76.0 288.0 M72.0 302.0 L86.0 288.0 M82.0 302.0 L96.0 288.0 M92.0 302.0 L106.0 288.0 M102.0 302.0 L116.0 288.0 M112.0 302.0 L126.0 288.0 M122.0 302.0 L136.0 288.0 M132.0 302.0 L146.0 288.0 M142.0 302.0 L156.0 288.0 M152.0 302.0 L166.0 288.0 M162.0 302.0 L176.0 288.0 M172.0 302.0 L186.0 288.0 M182.0 302.0 L196.0 288.0 M192.0 302.0 L206.0 288.0 M202.0 302.0 L216.0 288.0 M212.0 302.0 L226.0 288.0 M222.0 302.0 L236.0 288.0 M232.0 302.0 L246.0 288.0 M242.0 302.0 L256.0 288.0 M252.0 302.0 L266.0 288.0 M262.0 302.0 L276.0 288.0 M272.0 302.0 L286.0 288.0 M282.0 302.0 L296.0 288.0 M292.0 302.0 L306.0 288.0 M302.0 302.0 L316.0 288.0 M312.0 302.0 L326.0 288.0 M322.0 302.0 L336.0 288.0 M332.0 302.0 L346.0 288.0 M342.0 302.0 L356.0 288.0 M352.0 302.0 L366.0 288.0 M362.0 302.0 L376.0 288.0 M372.0 302.0 L386.0 288.0 M382.0 302.0 L396.0 288.0 M392.0 302.0 L406.0 288.0 M402.0 302.0 L416.0 288.0 M412.0 302.0 L426.0 288.0 M422.0 302.0 L436.0 288.0 M432.0 302.0 L446.0 288.0 M442.0 302.0 L456.0 288.0 M452.0 302.0 L466.0 288.0 M462.0 302.0 L476.0 288.0 M472.0 302.0 L486.0 288.0 M490.0 302.0 L496.0 288.0 M492.0 302.0 L506.0 288.0 M502.0 302.0 L516.0 288.0 M512.0 302.0 L526.0 288.0 M522.0 302.0 L536.0 288.0 M532.0 302.0 L546.0 288.0 M542.0 302.0 L556.0 288.0 M552.0 302.0 L566.0 288.0 M562.0 302.0 L576.0 288.0 M572.0 302.0 L586.0 288.0 M582.0 302.0 L596.0 288.0 M592.0 302.0 L606.0 288.0 M602.0 302.0 L616.0 288.0 M612.0 302.0 L626.0 288.0 M622.0 302.0 L636.0 288.0 M632.0 302.0 L646.0 288.0 M642.0 302.0 L656.0 288.0 M652.0 302.0 L666.0 288.0 M662.0 302.0 L676.0 288.0 M672.0 302.0 L686.0 288.0 M682.0 302.0 L696.0 288.0 M692.0 302.0 L706.0 288.0 M702.0 302.0 L716.0 288.0 M712.0 302.0 L726.0 288.0 M722.0 302.0 L736.0 288.0 M732.0 302.0 L746.0 288.0 M742.0 302.0 L756.0 288.0 M752.0 302.0 L766.0 288.0 M762.0 302.0 L776.0 288.0 M772.0 302.0 L786.0 288.0 M782.0 302.0 L796.0 288.0 M792.0 302.0 L806.0 288.0 M802.0 302.0 L816.0 288.0 M812.0 302.0 L826.0 288.0 M822.0 302.0 L836.0 288.0 M832.0 302.0 L846.0 288.0 M842.0 302.0 L856.0 288.0 M852.0 302.0 L866.0 288.0 M862.0 302.0 L876.0 288.0 M872.0 302.0 L886.0 288.0 M882.0 302.0 L896.0 288.0 M892.0 302.0 L906.0 288.0 M902.0 302.0 L916.0 288.0 M912.0 302.0 L926.0 288.0 M922.0 302.0 L936.0 288.0 M932.0 302.0 L946.0 288.0 M942.0 302.0 L956.0 288.0 M952.0 302.0 L966.0 288.0 M962.0 302.0 L976.0 288.0 M972.0 302.0 L984.0 290.0 M982.0 302.0 L984.0 300.0" fill="none" stroke="var(--hatch)" stroke-width="1.2"></path>
+          <rect x="16" y="268" width="968" height="20" rx="2" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1.4"></rect>
+          <ellipse cx="70" cy="278" rx="5" ry="3.4" fill="var(--ink-2)" opacity="0.45"></ellipse>
+          <ellipse cx="300" cy="278" rx="5" ry="3.4" fill="var(--ink-2)" opacity="0.45"></ellipse>
+          <ellipse cx="540" cy="278" rx="5" ry="3.4" fill="var(--ink-2)" opacity="0.45"></ellipse>
+          <ellipse cx="790" cy="278" rx="5" ry="3.4" fill="var(--ink-2)" opacity="0.45"></ellipse>
+          <ellipse cx="940" cy="278" rx="5" ry="3.4" fill="var(--ink-2)" opacity="0.45"></ellipse>
+          <!-- motor pedestals -->
+          <rect x="78" y="148" width="26" height="120" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1.3"></rect>
+          <rect x="196" y="148" width="26" height="120" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1.3"></rect>
+          <!-- motor: ribbed housing, end bell, terminal box, output shaft -->
+          <rect x="120" y="24" width="58" height="22" rx="2" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1.3"></rect>
+          <rect x="140" y="14" width="16" height="10" rx="1.5" fill="var(--ink-2)"></rect>
+          <ellipse cx="46" cy="96" rx="14" ry="52" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1.4"></ellipse>
+          <rect x="44" y="44" width="204" height="104" rx="7" fill="url(#gBody)" stroke="var(--ink-2)" stroke-width="1.6"></rect>
+          <path d="M60 50 L60 142 M71 50 L71 142 M82 50 L82 142 M93 50 L93 142 M104 50 L104 142 M115 50 L115 142 M126 50 L126 142 M137 50 L137 142 M148 50 L148 142 M159 50 L159 142 M170 50 L170 142 M181 50 L181 142 M192 50 L192 142 M203 50 L203 142 M214 50 L214 142 M225 50 L225 142 M236 50 L236 142" fill="none" stroke="var(--ink-2)" stroke-width="1" opacity="0.3"></path>
+          <rect x="248" y="36" width="18" height="120" rx="2" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1.4"></rect>
+          <circle cx="257" cy="48" r="3.6" fill="var(--ink-2)" opacity="0.55"></circle>
+          <circle cx="257" cy="144" r="3.6" fill="var(--ink-2)" opacity="0.55"></circle>
+          <rect x="266" y="90" width="110" height="12" rx="1.5" fill="url(#gShaft)" stroke="var(--ink-2)" stroke-width="1.2"></rect>
+          <rect x="330" y="90" width="26" height="4" fill="var(--ink-2)" opacity="0.4"></rect>
+          <!-- load shaft, drawn before the drum and belt so it passes behind them -->
+          <rect x="470" y="192" width="246" height="12" rx="1.5" fill="url(#gShaft)" stroke="var(--ink-2)" stroke-width="1.2"></rect>
+          <!-- belt wrap behind the shaft line -->
+          <path d="M760 140 A 58 58 0 0 0 760 256" fill="none" stroke="var(--ink-2)" stroke-width="9" stroke-linecap="butt" opacity="0.9"></path>
+          <!-- pillow blocks -->
+          <path d="M500 268 L500 196 Q500 176 522 176 Q544 176 544 196 L544 268 Z" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1.4"></path>
+          <circle cx="522" cy="198" r="13" fill="var(--surface)" stroke="var(--ink-2)" stroke-width="1.3"></circle>
+          <circle cx="522" cy="198" r="6" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1"></circle>
+          <ellipse cx="508" cy="262" rx="4" ry="2.8" fill="var(--ink-2)" opacity="0.45"></ellipse>
+          <ellipse cx="536" cy="262" rx="4" ry="2.8" fill="var(--ink-2)" opacity="0.45"></ellipse>
+          <path d="M616 268 L616 196 Q616 176 638 176 Q660 176 660 196 L660 268 Z" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1.4"></path>
+          <circle cx="638" cy="198" r="13" fill="var(--surface)" stroke="var(--ink-2)" stroke-width="1.3"></circle>
+          <circle cx="638" cy="198" r="6" fill="var(--hatch)" stroke="var(--ink-2)" stroke-width="1"></circle>
+          <ellipse cx="624" cy="262" rx="4" ry="2.8" fill="var(--ink-2)" opacity="0.45"></ellipse>
+          <ellipse cx="652" cy="262" rx="4" ry="2.8" fill="var(--ink-2)" opacity="0.45"></ellipse>
+          <!-- the meshing pair -->
+          <path d="M392.0 137.0 L392.9 136.9 L393.7 136.7 L394.5 136.6 L394.9 126.2 L400.0 125.6 L402.5 135.7 L403.3 135.7 L404.2 135.7 L405.0 135.7 L405.0 135.7 L405.8 135.7 L406.7 135.7 L407.5 135.7 L410.0 125.6 L415.1 126.2 L415.5 136.6 L416.3 136.7 L417.1 136.9 L418.0 137.0 L418.0 137.0 L418.8 137.2 L419.6 137.4 L420.4 137.6 L424.9 128.3 L429.9 129.9 L428.1 140.1 L428.8 140.4 L429.6 140.7 L430.4 141.1 L430.4 141.1 L431.1 141.4 L431.9 141.7 L432.6 142.1 L439.0 133.9 L443.5 136.5 L439.6 146.2 L440.3 146.6 L441.0 147.1 L441.6 147.6 L441.6 147.6 L442.3 148.1 L443.0 148.6 L443.6 149.1 L451.6 142.4 L455.4 145.9 L449.6 154.5 L450.2 155.1 L450.8 155.7 L451.3 156.3 L451.3 156.3 L451.9 156.9 L452.4 157.5 L452.9 158.2 L462.1 153.3 L465.2 157.5 L457.7 164.7 L458.1 165.4 L458.6 166.1 L459.0 166.8 L459.0 166.8 L459.4 167.6 L459.8 168.3 L460.2 169.0 L470.2 166.2 L472.3 170.9 L463.5 176.4 L463.8 177.2 L464.0 178.0 L464.3 178.7 L464.3 178.7 L464.5 179.5 L464.8 180.3 L465.0 181.1 L475.4 180.4 L476.4 185.5 L466.7 189.0 L466.8 189.8 L466.9 190.7 L467.0 191.5 L467.0 191.5 L467.1 192.3 L467.1 193.1 L467.2 194.0 L477.5 195.4 L477.5 200.6 L467.2 202.0 L467.1 202.9 L467.1 203.7 L467.0 204.5 L467.0 204.5 L466.9 205.3 L466.8 206.2 L466.7 207.0 L476.4 210.5 L475.4 215.6 L465.0 214.9 L464.8 215.7 L464.5 216.5 L464.3 217.3 L464.3 217.3 L464.0 218.0 L463.8 218.8 L463.5 219.6 L472.3 225.1 L470.2 229.8 L460.2 227.0 L459.8 227.7 L459.4 228.4 L459.0 229.2 L459.0 229.2 L458.6 229.9 L458.1 230.6 L457.7 231.3 L465.2 238.5 L462.1 242.7 L452.9 237.8 L452.4 238.5 L451.9 239.1 L451.3 239.7 L451.3 239.7 L450.8 240.3 L450.2 240.9 L449.6 241.5 L455.4 250.1 L451.6 253.6 L443.6 246.9 L443.0 247.4 L442.3 247.9 L441.6 248.4 L441.6 248.4 L441.0 248.9 L440.3 249.4 L439.6 249.8 L443.5 259.5 L439.0 262.1 L432.6 253.9 L431.9 254.3 L431.1 254.6 L430.4 254.9 L430.4 254.9 L429.6 255.3 L428.8 255.6 L428.1 255.9 L429.9 266.1 L424.9 267.7 L420.4 258.4 L419.6 258.6 L418.8 258.8 L418.0 259.0 L418.0 259.0 L417.1 259.1 L416.3 259.3 L415.5 259.4 L415.1 269.8 L410.0 270.4 L407.5 260.3 L406.7 260.3 L405.8 260.3 L405.0 260.3 L405.0 260.3 L404.2 260.3 L403.3 260.3 L402.5 260.3 L400.0 270.4 L394.9 269.8 L394.5 259.4 L393.7 259.3 L392.9 259.1 L392.0 259.0 L392.0 259.0 L391.2 258.8 L390.4 258.6 L389.6 258.4 L385.1 267.7 L380.1 266.1 L381.9 255.9 L381.2 255.6 L380.4 255.3 L379.6 254.9 L379.6 254.9 L378.9 254.6 L378.1 254.3 L377.4 253.9 L371.0 262.1 L366.5 259.5 L370.4 249.8 L369.7 249.4 L369.0 248.9 L368.4 248.4 L368.4 248.4 L367.7 247.9 L367.0 247.4 L366.4 246.9 L358.4 253.6 L354.6 250.1 L360.4 241.5 L359.8 240.9 L359.2 240.3 L358.7 239.7 L358.7 239.7 L358.1 239.1 L357.6 238.5 L357.1 237.8 L347.9 242.7 L344.8 238.5 L352.3 231.3 L351.9 230.6 L351.4 229.9 L351.0 229.2 L351.0 229.2 L350.6 228.4 L350.2 227.7 L349.8 227.0 L339.8 229.8 L337.7 225.1 L346.5 219.6 L346.2 218.8 L346.0 218.0 L345.7 217.3 L345.7 217.3 L345.5 216.5 L345.2 215.7 L345.0 214.9 L334.6 215.6 L333.6 210.5 L343.3 207.0 L343.2 206.2 L343.1 205.3 L343.0 204.5 L343.0 204.5 L342.9 203.7 L342.9 202.9 L342.8 202.0 L332.5 200.6 L332.5 195.4 L342.8 194.0 L342.9 193.1 L342.9 192.3 L343.0 191.5 L343.0 191.5 L343.1 190.7 L343.2 189.8 L343.3 189.0 L333.6 185.5 L334.6 180.4 L345.0 181.1 L345.2 180.3 L345.5 179.5 L345.7 178.7 L345.7 178.7 L346.0 178.0 L346.2 177.2 L346.5 176.4 L337.7 170.9 L339.8 166.2 L349.8 169.0 L350.2 168.3 L350.6 167.6 L351.0 166.8 L351.0 166.8 L351.4 166.1 L351.9 165.4 L352.3 164.7 L344.8 157.5 L347.9 153.3 L357.1 158.2 L357.6 157.5 L358.1 156.9 L358.7 156.3 L358.7 156.3 L359.2 155.7 L359.8 155.1 L360.4 154.5 L354.6 145.9 L358.4 142.4 L366.4 149.1 L367.0 148.6 L367.7 148.1 L368.4 147.6 L368.4 147.6 L369.0 147.1 L369.7 146.6 L370.4 146.2 L366.5 136.5 L371.0 133.9 L377.4 142.1 L378.1 141.7 L378.9 141.4 L379.6 141.1 L379.6 141.1 L380.4 140.7 L381.2 140.4 L381.9 140.1 L380.1 129.9 L385.1 128.3 L389.6 137.6 L390.4 137.4 L391.2 137.2 L392.0 137.0 Z" fill="var(--load-soft)" stroke="var(--load)" stroke-width="1.7"></path>
+          <circle cx="405" cy="198" r="20" fill="var(--surface)" stroke="var(--load)" stroke-width="1.5"></circle>
+          <circle cx="405" cy="198" r="7.5" fill="var(--hatch)" stroke="var(--load)" stroke-width="1.2"></circle>
+          <circle cx="445.6" cy="208.8" r="6" fill="var(--surface)" stroke="var(--load)" stroke-width="1.1" opacity="0.85"></circle>
+          <circle cx="415.9" cy="238.5" r="6" fill="var(--surface)" stroke="var(--load)" stroke-width="1.1" opacity="0.85"></circle>
+          <circle cx="375.4" cy="227.8" r="6" fill="var(--surface)" stroke="var(--load)" stroke-width="1.1" opacity="0.85"></circle>
+          <circle cx="364.4" cy="187.2" r="6" fill="var(--surface)" stroke="var(--load)" stroke-width="1.1" opacity="0.85"></circle>
+          <circle cx="394.1" cy="157.5" r="6" fill="var(--surface)" stroke="var(--load)" stroke-width="1.1" opacity="0.85"></circle>
+          <circle cx="434.6" cy="168.2" r="6" fill="var(--surface)" stroke="var(--load)" stroke-width="1.1" opacity="0.85"></circle>
+          <path d="M410.9 123.7 L410.2 123.9 L409.4 124.0 L408.7 124.1 L407.7 134.4 L402.3 134.4 L401.3 124.1 L400.6 124.0 L399.8 123.9 L399.1 123.7 L399.1 123.7 L398.4 123.5 L397.6 123.4 L396.9 123.2 L391.9 132.2 L386.9 130.0 L390.2 120.2 L389.6 119.8 L389.0 119.4 L388.3 118.9 L388.3 118.9 L387.7 118.5 L387.2 118.0 L386.6 117.5 L378.3 123.8 L374.6 119.7 L381.7 112.1 L381.2 111.4 L380.8 110.8 L380.5 110.2 L380.5 110.2 L380.1 109.5 L379.7 108.8 L379.4 108.2 L369.3 110.5 L367.6 105.3 L377.1 101.2 L377.0 100.5 L376.9 99.7 L376.8 99.0 L376.8 99.0 L376.8 98.2 L376.7 97.5 L376.7 96.7 L366.5 94.7 L367.1 89.3 L377.4 89.4 L377.6 88.7 L377.8 88.0 L378.1 87.2 L378.1 87.2 L378.3 86.5 L378.6 85.8 L378.8 85.1 L370.3 79.2 L373.1 74.4 L382.5 78.8 L383.0 78.2 L383.4 77.6 L383.9 77.0 L383.9 77.0 L384.5 76.5 L385.0 76.0 L385.5 75.4 L380.2 66.5 L384.6 63.3 L391.5 71.1 L392.1 70.8 L392.8 70.4 L393.5 70.1 L393.5 70.1 L394.2 69.8 L394.9 69.5 L395.6 69.3 L394.3 59.0 L399.7 57.8 L402.7 67.8 L403.5 67.7 L404.2 67.7 L405.0 67.7 L405.0 67.7 L405.8 67.7 L406.5 67.7 L407.3 67.8 L410.3 57.8 L415.7 59.0 L414.4 69.3 L415.1 69.5 L415.8 69.8 L416.5 70.1 L416.5 70.1 L417.2 70.4 L417.9 70.8 L418.5 71.1 L425.4 63.3 L429.8 66.5 L424.5 75.4 L425.0 76.0 L425.5 76.5 L426.1 77.0 L426.1 77.0 L426.6 77.6 L427.0 78.2 L427.5 78.8 L436.9 74.4 L439.7 79.2 L431.2 85.1 L431.4 85.8 L431.7 86.5 L431.9 87.2 L431.9 87.2 L432.2 88.0 L432.4 88.7 L432.6 89.4 L442.9 89.3 L443.5 94.7 L433.3 96.7 L433.3 97.5 L433.2 98.2 L433.2 99.0 L433.2 99.0 L433.1 99.7 L433.0 100.5 L432.9 101.2 L442.4 105.3 L440.7 110.5 L430.6 108.2 L430.3 108.8 L429.9 109.5 L429.5 110.2 L429.5 110.2 L429.2 110.8 L428.8 111.4 L428.3 112.1 L435.4 119.7 L431.7 123.8 L423.4 117.5 L422.8 118.0 L422.3 118.5 L421.7 118.9 L421.7 118.9 L421.0 119.4 L420.4 119.8 L419.8 120.2 L423.1 130.0 L418.1 132.2 L413.1 123.2 L412.4 123.4 L411.6 123.5 L410.9 123.7 Z" fill="var(--motor-soft)" stroke="var(--motor)" stroke-width="1.7"></path>
+          <circle cx="405" cy="96" r="11" fill="var(--surface)" stroke="var(--motor)" stroke-width="1.4"></circle>
+          <rect x="401" y="85" width="8" height="6" fill="var(--motor)" opacity="0.5"></rect>
+          <!-- conveyor drum and belt spans -->
+          <circle cx="760" cy="198" r="54" fill="url(#gDrum)" stroke="var(--load)" stroke-width="1.8"></circle>
+          <circle cx="760" cy="198" r="40" fill="none" stroke="var(--load)" stroke-width="1.1" opacity="0.55"></circle>
+          <circle cx="760" cy="198" r="14" fill="var(--surface)" stroke="var(--load)" stroke-width="1.4"></circle>
+          <circle cx="784.9" cy="208.5" r="4.2" fill="var(--load)" opacity="0.4"></circle>
+          <circle cx="749.5" cy="222.9" r="4.2" fill="var(--load)" opacity="0.4"></circle>
+          <circle cx="735.1" cy="187.5" r="4.2" fill="var(--load)" opacity="0.4"></circle>
+          <circle cx="770.5" cy="173.1" r="4.2" fill="var(--load)" opacity="0.4"></circle>
+          <rect x="758" y="136" width="226" height="9" fill="var(--ink-2)" opacity="0.9"></rect>
+          <rect x="758" y="251" width="226" height="9" fill="var(--ink-2)" opacity="0.9"></rect>
+          <path d="M900 168 L900 152" fill="none" stroke="var(--ink-2)" stroke-width="1.3" marker-end="url(#hw-ar)"></path>
+          <text x="900" y="182" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink-2)">belt drag</text>
+          <!-- part names -->
+          <text x="150" y="232" text-anchor="middle" font-family="Archivo, sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.2" fill="var(--muted)">MOTOR</text>
+          <text x="580" y="166" text-anchor="middle" font-family="Archivo, sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.2" fill="var(--muted)">BEARINGS</text>
+          <text x="760" y="126" text-anchor="middle" font-family="Archivo, sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.2" fill="var(--muted)">CONVEYOR DRUM</text>
+          <text x="16" y="14" font-family="Archivo, sans-serif" font-size="11" font-weight="600" letter-spacing="1.5" fill="var(--ink-2)">AS BUILT</text>
+          <!-- callouts -->
+          <line x1="146" y1="30" x2="146" y2="44" stroke="var(--chrome)" stroke-width="1.2" stroke-dasharray="3 2.5"></line>
+          <circle cx="146" cy="16" r="11" fill="var(--chrome)"></circle><text x="146" y="20.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">1</text>
+          <line x1="34" y1="44" x2="44" y2="62" stroke="var(--chrome)" stroke-width="1.2" stroke-dasharray="3 2.5"></line>
+          <circle cx="24" cy="32" r="11" fill="var(--chrome)"></circle><text x="24" y="36.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">2</text>
+          <line x1="352" y1="48" x2="380" y2="74" stroke="var(--chrome)" stroke-width="1.2" stroke-dasharray="3 2.5"></line>
+          <circle cx="344" cy="38" r="11" fill="var(--chrome)"></circle><text x="344" y="42.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">3</text>
+          <line x1="322" y1="240" x2="348" y2="232" stroke="var(--chrome)" stroke-width="1.2" stroke-dasharray="3 2.5"></line>
+          <circle cx="312" cy="244" r="11" fill="var(--chrome)"></circle><text x="312" y="248.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">4</text>
+          <line x1="682" y1="238" x2="714" y2="226" stroke="var(--chrome)" stroke-width="1.2" stroke-dasharray="3 2.5"></line>
+          <circle cx="670" cy="242" r="11" fill="var(--chrome)"></circle><text x="670" y="246.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">5</text>
+          <circle cx="900" cy="202" r="11" fill="var(--chrome)"></circle><text x="900" y="206.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">6</text>
+          <line x1="16" y1="322" x2="984" y2="322" stroke="var(--rule)" stroke-width="1"></line>
+          <text x="16" y="342" font-family="Archivo, sans-serif" font-size="11" font-weight="600" letter-spacing="1.5" fill="var(--ink-2)">IDEALISED AS</text>
+          <path d="M20.0 478.0 L30.0 476.0 M26.0 490.0 L40.0 476.0 M36.0 490.0 L50.0 476.0 M46.0 490.0 L60.0 476.0 M56.0 490.0 L70.0 476.0 M66.0 490.0 L80.0 476.0 M76.0 490.0 L90.0 476.0 M86.0 490.0 L100.0 476.0 M96.0 490.0 L110.0 476.0 M106.0 490.0 L120.0 476.0 M116.0 490.0 L130.0 476.0 M126.0 490.0 L140.0 476.0 M136.0 490.0 L150.0 476.0 M146.0 490.0 L160.0 476.0 M156.0 490.0 L170.0 476.0 M166.0 490.0 L180.0 476.0 M176.0 490.0 L190.0 476.0 M186.0 490.0 L200.0 476.0 M196.0 490.0 L210.0 476.0 M206.0 490.0 L220.0 476.0 M216.0 490.0 L230.0 476.0 M226.0 490.0 L240.0 476.0 M236.0 490.0 L250.0 476.0 M246.0 490.0 L260.0 476.0 M256.0 490.0 L270.0 476.0 M266.0 490.0 L280.0 476.0 M276.0 490.0 L290.0 476.0 M286.0 490.0 L300.0 476.0 M296.0 490.0 L310.0 476.0 M306.0 490.0 L320.0 476.0 M316.0 490.0 L330.0 476.0 M326.0 490.0 L340.0 476.0 M336.0 490.0 L350.0 476.0 M346.0 490.0 L360.0 476.0 M356.0 490.0 L370.0 476.0 M366.0 490.0 L380.0 476.0 M376.0 490.0 L390.0 476.0 M386.0 490.0 L400.0 476.0 M396.0 490.0 L410.0 476.0 M406.0 490.0 L420.0 476.0 M416.0 490.0 L430.0 476.0 M426.0 490.0 L440.0 476.0 M436.0 490.0 L450.0 476.0 M446.0 490.0 L460.0 476.0 M456.0 490.0 L470.0 476.0 M466.0 490.0 L480.0 476.0 M476.0 490.0 L490.0 476.0 M486.0 490.0 L500.0 476.0 M496.0 490.0 L510.0 476.0 M506.0 490.0 L520.0 476.0 M516.0 490.0 L530.0 476.0 M526.0 490.0 L540.0 476.0 M536.0 490.0 L550.0 476.0 M546.0 490.0 L560.0 476.0 M556.0 490.0 L570.0 476.0 M566.0 490.0 L580.0 476.0 M576.0 490.0 L590.0 476.0 M586.0 490.0 L600.0 476.0 M596.0 490.0 L610.0 476.0 M606.0 490.0 L620.0 476.0 M616.0 490.0 L630.0 476.0 M626.0 490.0 L640.0 476.0 M636.0 490.0 L650.0 476.0 M646.0 490.0 L660.0 476.0 M656.0 490.0 L670.0 476.0 M666.0 490.0 L680.0 476.0 M676.0 490.0 L690.0 476.0 M686.0 490.0 L700.0 476.0 M696.0 490.0 L710.0 476.0 M706.0 490.0 L720.0 476.0 M716.0 490.0 L730.0 476.0 M726.0 490.0 L740.0 476.0 M736.0 490.0 L750.0 476.0 M746.0 490.0 L760.0 476.0 M756.0 490.0 L770.0 476.0 M766.0 490.0 L780.0 476.0 M776.0 490.0 L790.0 476.0 M786.0 490.0 L800.0 476.0 M796.0 490.0 L810.0 476.0 M806.0 490.0 L820.0 476.0 M816.0 490.0 L830.0 476.0 M826.0 490.0 L840.0 476.0 M836.0 490.0 L850.0 476.0 M846.0 490.0 L860.0 476.0 M856.0 490.0 L870.0 476.0 M866.0 490.0 L880.0 476.0 M876.0 490.0 L890.0 476.0 M886.0 490.0 L900.0 476.0 M896.0 490.0 L910.0 476.0 M906.0 490.0 L920.0 476.0 M916.0 490.0 L930.0 476.0 M926.0 490.0 L940.0 476.0 M936.0 490.0 L950.0 476.0 M946.0 490.0 L960.0 476.0 M956.0 490.0 L970.0 476.0 M966.0 490.0 L980.0 476.0 M976.0 490.0 L980.0 478.0" fill="none" stroke="var(--hatch)" stroke-width="1.2"></path>
+          <line x1="20" y1="476" x2="980" y2="476" stroke="var(--ink-2)" stroke-width="1.5"></line>
+          <line x1="46" y1="384" x2="46" y2="440" stroke="var(--ink-2)" stroke-width="2"></line>
+          <path d="M33.0 394.0 L43.0 384.0 M33.0 404.0 L46.0 391.0 M33.0 414.0 L46.0 401.0 M33.0 424.0 L46.0 411.0 M33.0 434.0 L46.0 421.0 M37.0 440.0 L46.0 431.0" fill="none" stroke="var(--hatch)" stroke-width="1.2"></path>
+          <line x1="954" y1="384" x2="954" y2="440" stroke="var(--ink-2)" stroke-width="2"></line>
+          <path d="M954.0 394.0 L964.0 384.0 M954.0 404.0 L967.0 391.0 M954.0 414.0 L967.0 401.0 M954.0 424.0 L967.0 411.0 M954.0 434.0 L967.0 421.0 M958.0 440.0 L967.0 431.0" fill="none" stroke="var(--hatch)" stroke-width="1.2"></path>
+          <g stroke="var(--motor)" stroke-width="2" fill="none"><path d="M46 412 L62.0 412"></path><rect x="62.0" y="401" width="27.4" height="22"></rect><path d="M78.4 402 L78.4 422"></path><path d="M78.4 412 L122 412"></path></g>
+          <g stroke="var(--load)" stroke-width="2" fill="none"><path d="M954 412 L938.0 412"></path><rect x="908.0" y="401" width="30.0" height="22"></rect><path d="M920.0 402 L920.0 422"></path><path d="M920.0 412 L800 412"></path></g>
+          <line x1="180" y1="412" x2="374" y2="412" stroke="var(--ink-2)" stroke-width="3" stroke-linecap="round"></line>
+          <line x1="470" y1="412" x2="720" y2="412" stroke="var(--ink-2)" stroke-width="3" stroke-linecap="round"></line>
+          <circle cx="150" cy="412" r="30" fill="var(--motor-soft)" stroke="var(--motor)" stroke-width="2"></circle>
+          <text x="150" y="417" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="14" fill="var(--ink)">J</text>
+          <text x="161" y="421" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--ink)">m</text>
+          <circle cx="390" cy="412" r="16" fill="var(--motor-soft)" stroke="var(--motor)" stroke-width="2"></circle>
+          <circle cx="438" cy="412" r="32" fill="var(--load-soft)" stroke="var(--load)" stroke-width="2"></circle>
+          <text x="378" y="378" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--motor)">N&#8321;</text>
+          <text x="502" y="396" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--load)">N&#8322;</text>
+          <circle cx="760" cy="412" r="40" fill="var(--load-soft)" stroke="var(--load)" stroke-width="2"></circle>
+          <text x="760" y="417" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="14" fill="var(--ink)">J</text>
+          <text x="771" y="421" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--ink)">L</text>
+          <text x="78" y="390" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--motor)">b</text><text x="85" y="394" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--motor)">m</text>
+          <text x="871" y="390" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--load)">b</text><text x="878" y="394" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--load)">L</text>
+          <circle cx="150" cy="362" r="11" fill="var(--chrome)"></circle><text x="150" y="366.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">1</text>
+          <circle cx="84" cy="454" r="11" fill="var(--chrome)"></circle><text x="84" y="458.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">2</text>
+          <circle cx="378" cy="352" r="11" fill="var(--chrome)"></circle><text x="378" y="356.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">3</text>
+          <circle cx="452" cy="454" r="11" fill="var(--chrome)"></circle><text x="452" y="458.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">4</text>
+          <circle cx="760" cy="358" r="11" fill="var(--chrome)"></circle><text x="760" y="362.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">5</text>
+          <circle cx="877" cy="454" r="11" fill="var(--chrome)"></circle><text x="877" y="458.2" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" font-weight="700" fill="var(--chrome-ink)">6</text>
+        </svg>
+      <figcaption>A pictorial elevation, not a projection: the motor is drawn from the side while the gears
+      are drawn face-on, so the tooth counts stay countable. The proportions are the page&rsquo;s default
+      15&nbsp;/&nbsp;30&nbsp;pair; the figure does not follow the sliders.</figcaption>
+    </figure>
+
+    <table class="parts">
+      <thead><tr>
+        <th scope="col">#</th><th scope="col">COMPONENT</th><th scope="col">SYMBOL</th>
+        <th scope="col">WHAT IT PHYSICALLY IS</th>
+      </tr></thead>
+      <tbody>
+        <tr><td><span class="badge">1</span></td><td>Motor rotor</td>
+            <td class="sym m">J<sub>m</sub></td>
+            <td>Everything that spins with the motor shaft: rotor iron, shaft, cooling fan &mdash; and the
+            pinion keyed to it.</td></tr>
+        <tr><td><span class="badge">2</span></td><td>Motor bearings and windage</td>
+            <td class="sym m">b<sub>m</sub></td>
+            <td>Bearing drag, air resistance on the rotor and fan, and the speed-dependent part of the iron
+            losses.</td></tr>
+        <tr><td><span class="badge">3</span></td><td>Pinion, 15 teeth</td>
+            <td class="sym m">N&#8321;</td>
+            <td>Cut on or keyed to the motor shaft, so it turns at <span class="num">&omega;<sub>m</sub></span>.</td></tr>
+        <tr><td><span class="badge">4</span></td><td>Gear, 30 teeth</td>
+            <td class="sym l">N&#8322;</td>
+            <td>On the load shaft. Twice the teeth, so half the speed and twice the torque.</td></tr>
+        <tr><td><span class="badge">5</span></td><td>Conveyor drum</td>
+            <td class="sym l">J<sub>L</sub></td>
+            <td>The drum and its shaft, the gear bolted to it, and the belt and product being dragged
+            along.</td></tr>
+        <tr><td><span class="badge">6</span></td><td>Belt and product drag</td>
+            <td class="sym l">b<sub>L</sub></td>
+            <td>Belt tension losses, product sliding friction, air drag &mdash; every loss that grows with
+            belt speed.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="measure" style="margin-top:30px">
+      <p><strong style="font-family:var(--display);font-weight:600">The pinion is on the motor&rsquo;s
+      side.</strong> It is easy to think of the whole gear set as &ldquo;the gearbox&rdquo; and reflect all of
+      it, but the pinion turns at <span class="num">&omega;<sub>m</sub></span>, so its inertia belongs to
+      <span class="num">J<sub>m</sub></span> and is <em>not</em> multiplied by anything. The gear turns at
+      <span class="num">&omega;<sub>L</sub></span>, so it joins <span class="num">J<sub>L</sub></span> and
+      <em>is</em> reflected by <span class="num">n&sup2;</span>. On a hard reduction that difference matters:
+      the big gear can dominate the load inertia while the pinion is negligible.</p>
+      <p><strong style="font-family:var(--display);font-weight:600">Neither damper is a real
+      part.</strong> Nothing in the drawing above is a dashpot.
+      <span class="num">b<sub>m</sub></span> and <span class="num">b<sub>L</sub></span> are what is left
+      after lumping together every loss that happens to grow in proportion to speed, and calling the sum
+      viscous.</p>
+      <div class="caveat"><strong>Where that lumping breaks.</strong> A real drive train also has Coulomb
+      friction &mdash; a roughly constant breakaway torque that does not care about speed &mdash; plus a mesh
+      efficiency of a few percent per gear stage, and stiction that has to be overcome before anything moves
+      at all. None of those fit the <span class="num">b&omega;</span> form, so this model leaves them out. It
+      earns its keep in the range where speed-dependent losses dominate, which for a machine like this one is
+      most of its working speed.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 2. THE REFLECTION ==================== -->
+<section id="reflect">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The reflection</p>
+      <h2>What the motor actually feels</h2>
+      <p class="lede">The motor never sees <span class="num">J<sub>L</sub></span> or
+      <span class="num">b<sub>L</sub></span> directly. It sees them through the gears, multiplied by
+      <span class="num">n&sup2;</span>. These two bars are live: move the tooth-count sliders above and watch
+      how much of the equivalent inertia and damping is the load&rsquo;s contribution.</p>
+    </div>
+
+    <div class="meters">
+      <div class="meter">
+        <h3>Equivalent inertia <span class="tot"><span id="mJe">0.0950</span> kg&middot;m&sup2;</span></h3>
+        <p class="sub">J<sub>e</sub> = J<sub>m</sub> + n&sup2;J<sub>L</sub></p>
+        <div class="bar"><span class="a" id="barJm" style="flex-basis:21%"></span><span class="b" id="barJL" style="flex-basis:79%"></span></div>
+        <table>
+          <tr><td><span class="dot" style="background:var(--motor)"></span>Motor, J<sub>m</sub></td>
+              <td id="cJm">0.0200</td><td id="pJm">21%</td></tr>
+          <tr><td><span class="dot" style="background:var(--load)"></span>Load reflected, n&sup2;J<sub>L</sub></td>
+              <td id="cJL">0.0750</td><td id="pJL">79%</td></tr>
+          <tr><td>Load as it really is, J<sub>L</sub></td><td id="cJLraw">0.3000</td><td id="cJfac">&times;0.250</td></tr>
+        </table>
+      </div>
+      <div class="meter">
+        <h3>Equivalent damping <span class="tot"><span id="mBe">0.0300</span></span></h3>
+        <p class="sub">b<sub>e</sub> = b<sub>m</sub> + n&sup2;b<sub>L</sub></p>
+        <div class="bar"><span class="a" id="barBm" style="flex-basis:33%"></span><span class="b" id="barBL" style="flex-basis:67%"></span></div>
+        <table>
+          <tr><td><span class="dot" style="background:var(--motor)"></span>Motor, b<sub>m</sub></td>
+              <td id="cBm">0.0100</td><td id="pBm">33%</td></tr>
+          <tr><td><span class="dot" style="background:var(--load)"></span>Load reflected, n&sup2;b<sub>L</sub></td>
+              <td id="cBL">0.0200</td><td id="pBL">67%</td></tr>
+          <tr><td>Load as it really is, b<sub>L</sub></td><td id="cBLraw">0.0800</td><td id="cBfac">&times;0.250</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout">
+      <h3>Why the square, and not just n</h3>
+      <p>Because the reflection has to conserve energy, not torque. The load turns at
+      <span class="num">&omega;<sub>L</sub> = n&omega;<sub>m</sub></span>, so its kinetic energy is
+      <span class="num">&frac12;J<sub>L</sub>(n&omega;<sub>m</sub>)&sup2; = &frac12;(n&sup2;J<sub>L</sub>)&omega;<sub>m</sub>&sup2;</span>
+      &mdash; the same energy an inertia of <span class="num">n&sup2;J<sub>L</sub></span> would have on the
+      motor shaft. The identical argument on dissipated power,
+      <span class="num">b<sub>L</sub>&omega;<sub>L</sub>&sup2; = (n&sup2;b<sub>L</sub>)&omega;<sub>m</sub>&sup2;</span>,
+      gives the damping. One factor of <span class="num">n</span> comes from the speed and one from the
+      torque; the algebra in the next section produces the same <span class="num">n&sup2;</span> without ever
+      mentioning energy.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 3. THE REDUCTION ==================== -->
+<section id="reduce">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The reduction</p>
+      <h2>Two equations, one unknown eliminated</h2>
+      <p class="lede">Start on the load side, where the only applied torque is
+      <span class="num">T&#8322;</span> coming through the gears. Then use the two gear relations to push
+      everything onto the motor shaft.</p>
+    </div>
+
+    <div class="derive">
+      <figure class="fbd">
+        <svg viewBox="0 0 420 262" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--ink-2)"></path></marker>
+            <marker id="ahm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--motor)"></path></marker>
+            <marker id="ahl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--load)"></path></marker>
+            <marker id="ahc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--chrome)"></path></marker>
+          </defs>
+          <circle cx="104" cy="124" r="44" fill="var(--motor-soft)" stroke="var(--motor)" stroke-width="2"></circle>
+          <text x="104" y="130" text-anchor="middle" font-family="var(--data)" font-size="17" fill="var(--ink)">J<tspan dy="4" font-size="12">m</tspan></text>
+          <path d="M84.8 65.0 A62 62 0 0 1 123.2 65.0" fill="none" stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#ah)"></path>
+          <text x="106.9" y="44.6" text-anchor="middle" font-family="var(--data)" font-size="13" fill="var(--ink-2)">&#952;<tspan dy="3" font-size="10">m</tspan></text>
+          <path d="M44.4 106.9 A62 62 0 0 1 73.0 70.3" fill="none" stroke="var(--chrome)" stroke-width="2.4" marker-end="url(#ahc)"></path>
+          <text x="34.4" y="78.0" text-anchor="middle" font-family="var(--data)" font-size="14" fill="var(--chrome)">T<tspan dy="3" font-size="10">m</tspan></text>
+          <path d="M163.6 106.9 A62 62 0 0 0 136.9 71.4" fill="none" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#ah)"></path>
+          <text x="187.1" y="80.5" text-anchor="start" font-family="var(--data)" font-size="13" fill="var(--ink-2)">b<tspan dy="3" font-size="10">m</tspan><tspan dy="-3">s&#952;</tspan><tspan dy="3" font-size="10">m</tspan></text>
+          <path d="M56.5 163.9 A62 62 0 0 0 97.5 185.7" fill="none" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#ah)"></path>
+          <text x="62.7" y="206.2" text-anchor="middle" font-family="var(--data)" font-size="14" fill="var(--ink-2)">T<tspan dy="3" font-size="10">1</tspan></text>
+          <circle cx="300" cy="124" r="44" fill="var(--load-soft)" stroke="var(--load)" stroke-width="2"></circle>
+          <text x="300" y="130" text-anchor="middle" font-family="var(--data)" font-size="17" fill="var(--ink)">J<tspan dy="4" font-size="12">L</tspan></text>
+          <path d="M280.8 65.0 A62 62 0 0 1 319.2 65.0" fill="none" stroke="var(--ink-2)" stroke-width="1.5" marker-end="url(#ah)"></path>
+          <text x="302.9" y="44.6" text-anchor="middle" font-family="var(--data)" font-size="13" fill="var(--ink-2)">&#952;<tspan dy="3" font-size="10">L</tspan></text>
+          <path d="M240.4 106.9 A62 62 0 0 1 269.0 70.3" fill="none" stroke="var(--load)" stroke-width="2.4" marker-end="url(#ahl)"></path>
+          <text x="230.4" y="78.0" text-anchor="middle" font-family="var(--data)" font-size="14" fill="var(--load)">T<tspan dy="3" font-size="10">2</tspan></text>
+          <path d="M359.6 106.9 A62 62 0 0 0 332.9 71.4" fill="none" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#ah)"></path>
+          <text x="383.1" y="80.5" text-anchor="start" font-family="var(--data)" font-size="13" fill="var(--ink-2)">b<tspan dy="3" font-size="10">L</tspan><tspan dy="-3">s&#952;</tspan><tspan dy="3" font-size="10">L</tspan></text>
+          <line x1="150" y1="224" x2="254" y2="224" stroke="var(--rule)" stroke-width="1" stroke-dasharray="4 3"></line>
+          <text x="202" y="216" text-anchor="middle" font-family="var(--data)" font-size="12.5" fill="var(--ink)">T<tspan dy="3" font-size="9">2</tspan><tspan dy="-3">/T</tspan><tspan dy="3" font-size="9">1</tspan><tspan dy="-3"> = N</tspan><tspan dy="3" font-size="9">2</tspan><tspan dy="-3">/N</tspan><tspan dy="3" font-size="9">1</tspan></text>
+          <text x="202" y="243" text-anchor="middle" font-family="var(--data)" font-size="12.5" fill="var(--ink)">&#952;<tspan dy="3" font-size="9">L</tspan><tspan dy="-3">/&#952;</tspan><tspan dy="3" font-size="9">m</tspan><tspan dy="-3"> = N</tspan><tspan dy="3" font-size="9">1</tspan><tspan dy="-3">/N</tspan><tspan dy="3" font-size="9">2</tspan></text>
+          <text x="202" y="30" text-anchor="middle" font-family="Archivo, sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.5" fill="var(--muted)">FREE BODY DIAGRAMS</text>
+        </svg>        <figcaption>The gears contribute a reaction pair: the pinion feels
+        <span class="num">T&#8321;</span> back from the mesh, the gear delivers
+        <span class="num">T&#8322;</span> to the load. Their ratio is set by the tooth counts, and it is the
+        <em>reciprocal</em> of the speed ratio.</figcaption>
+      </figure>
+
+      <ol class="steps">
+        <li><div class="body">
+          <h3>Equation of motion for the load</h3>
+          <p>The gear torque drives it; the load damper opposes it.</p>
+          <div class="eq">J<sub>L</sub>s&sup2;&theta;<sub>L</sub> = T&#8322; &minus; b<sub>L</sub>s&theta;<sub>L</sub></div>
+        </div></li>
+        <li><div class="body">
+          <h3>Equation of motion for the motor</h3>
+          <p>The motor torque drives it; the motor damper and the mesh reaction
+          <span class="num">T&#8321;</span> oppose it.</p>
+          <div class="eq">J<sub>m</sub>s&sup2;&theta;<sub>m</sub> = T<sub>m</sub> &minus; b<sub>m</sub>s&theta;<sub>m</sub> &minus; T&#8321;</div>
+        </div></li>
+        <li><div class="body">
+          <h3>Put the load torque in terms of the motor angle</h3>
+          <p>Rearranging the load equation and substituting
+          <span class="num">&theta;<sub>L</sub> = (N&#8321;/N&#8322;)&theta;<sub>m</sub></span>,</p>
+          <div class="eq">T&#8322; = (J<sub>L</sub>s&sup2; + b<sub>L</sub>s)&theta;<sub>L</sub>
+            = (J<sub>L</sub>s&sup2; + b<sub>L</sub>s)
+            <span class="frac"><span>N&#8321;</span><span>N&#8322;</span></span>&theta;<sub>m</sub></div>
+        </div></li>
+        <li><div class="body">
+          <h3>Reflect it back through the mesh</h3>
+          <p>The reaction on the pinion is smaller than the torque delivered to the load, by the same tooth
+          ratio: <span class="num">T&#8321; = (N&#8321;/N&#8322;)T&#8322;</span>. Substituting into the motor
+          equation brings in the second factor of <span class="num">n</span>:</p>
+          <div class="eq">J<sub>m</sub>s&sup2;&theta;<sub>m</sub> = T<sub>m</sub> &minus; b<sub>m</sub>s&theta;<sub>m</sub>
+            &minus; <span class="frac"><span>N&#8321;</span><span>N&#8322;</span></span>(J<sub>L</sub>s&sup2; + b<sub>L</sub>s)
+            <span class="frac"><span>N&#8321;</span><span>N&#8322;</span></span>&theta;<sub>m</sub></div>
+          <p>which rearranges to a single-shaft system:</p>
+          <div class="eq">(J<sub>m</sub> + n&sup2;J<sub>L</sub>)s&sup2;&theta;<sub>m</sub>
+            + (b<sub>m</sub> + n&sup2;b<sub>L</sub>)s&theta;<sub>m</sub> = T<sub>m</sub>
+            <span class="tag">n = N&#8321;/N&#8322;</span></div>
+        </div></li>
+        <li><div class="body">
+          <h3>Name the two equivalents and read off the answers</h3>
+          <p>With <span class="num">J<sub>e</sub> = J<sub>m</sub> + n&sup2;J<sub>L</sub></span> and
+          <span class="num">b<sub>e</sub> = b<sub>m</sub> + n&sup2;b<sub>L</sub></span>, the gearbox has
+          disappeared entirely:</p>
+          <div class="eq">J<sub>e</sub>s&sup2;&theta;<sub>m</sub> + b<sub>e</sub>s&theta;<sub>m</sub> = T<sub>m</sub></div>
+          <div class="eq center">
+            <span class="frac"><span>&theta;<sub>m</sub>(s)</span><span>T<sub>m</sub>(s)</span></span> =
+            <span class="frac"><span>1</span><span>s(J<sub>e</sub>s + b<sub>e</sub>)</span></span>
+            <span class="tag">2.30a</span>
+          </div>
+          <div class="eq center">
+            <span class="frac"><span>&theta;<sub>L</sub>(s)</span><span>T<sub>m</sub>(s)</span></span> =
+            <span class="frac"><span>n</span><span>s(J<sub>e</sub>s + b<sub>e</sub>)</span></span>
+            <span class="tag">2.30b</span>
+          </div>
+          <p>A pole at the origin and one at <span class="num">&minus;b<sub>e</sub>/J<sub>e</sub></span>: the
+          angle ramps without bound while the <em>speed</em> is a first order system with time constant
+          <span class="num">&tau; = J<sub>e</sub>/b<sub>e</sub></span> settling at
+          <span class="num">T<sub>m</sub>/b<sub>e</sub></span>. The load transfer function is the motor&rsquo;s,
+          scaled by <span class="num">n</span> &mdash; nothing more.</p>
+        </div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 4. STEP RESPONSE ==================== -->
+<section id="response">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Step response</p>
+      <h2>What a step of torque actually does</h2>
+      <p class="lede">Both curves come from <span class="num">2.30a</span> and
+      <span class="num">2.30b</span> with the sliders&rsquo; current values, so they move as you drag. The
+      marker is where the animation above has got to.</p>
+    </div>
+    <div class="rel">
+      <div class="chart-wrap"><svg id="chStep" viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg"
+        role="img" aria-label="Motor and load shaft speed against time for a step of motor torque"></svg></div>
+      <div class="tt" id="ttStep"></div>
+    </div>
+    <div class="legend" style="margin:14px 0 0">
+      <span class="item"><span class="swatch" style="background:var(--motor)"></span>&omega;<sub>m</sub>(t) &mdash; motor shaft</span>
+      <span class="item"><span class="swatch" style="background:var(--load)"></span>&omega;<sub>L</sub>(t) = n&omega;<sub>m</sub>(t) &mdash; load shaft</span>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 5. CHOOSING THE RATIO ==================== -->
+<section id="choose">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Choosing the ratio</p>
+      <h2>There is a best gear ratio, and it is not the biggest one</h2>
+      <p class="lede">Gearing down multiplies torque but costs speed, so somewhere in between there is an
+      optimum &mdash; and the two things you might want to maximise have <em>different</em> optima. Both
+      curves below are live; the dashed line is the optimum, the dot is where your tooth counts currently
+      sit.</p>
+    </div>
+
+    <div class="two-charts">
+      <div>
+        <h3>Initial load acceleration</h3>
+        <p class="cap">&alpha;<sub>L</sub>(0) = nT<sub>m</sub>/J<sub>e</sub> &nbsp;rad/s&sup2; &middot; how fast it gets moving</p>
+        <div class="rel">
+          <div class="chart-wrap"><svg id="chAcc" viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg"
+            role="img" aria-label="Initial load acceleration against gear ratio, with the optimum marked"></svg></div>
+          <div class="tt" id="ttAcc"></div>
+        </div>
+      </div>
+      <div>
+        <h3>Steady-state load speed</h3>
+        <p class="cap">&omega;<sub>L</sub>(&infin;) = nT<sub>m</sub>/b<sub>e</sub> &nbsp;rad/s &middot; how fast it ends up</p>
+        <div class="rel">
+          <div class="chart-wrap"><svg id="chSpd" viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg"
+            role="img" aria-label="Steady-state load speed against gear ratio, with the optimum marked"></svg></div>
+          <div class="tt" id="ttSpd"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="measure" style="margin-top:32px">
+      <p><strong style="font-family:var(--display);font-weight:600">The acceleration optimum is an inertia
+      match.</strong> Maximising <span class="num">nT<sub>m</sub>/(J<sub>m</sub> + n&sup2;J<sub>L</sub>)</span>
+      over <span class="num">n</span> gives</p>
+      <div class="eq center">n* = &radic;(J<sub>m</sub>/J<sub>L</sub>) &nbsp;&nbsp;&rArr;&nbsp;&nbsp;
+        n*&sup2;J<sub>L</sub> = J<sub>m</sub>, &nbsp; J<sub>e</sub> = 2J<sub>m</sub></div>
+      <p>At the best ratio the reflected load inertia is <em>exactly equal</em> to the motor&rsquo;s own, and
+      the equivalent inertia is twice the motor&rsquo;s. Gear down further and you keep multiplying torque, but
+      you are now accelerating a rotor that is mostly your own motor. The best acceleration you can ever get
+      is <span class="num">T<sub>m</sub>/(2&radic;(J<sub>m</sub>J<sub>L</sub>))</span>, and no choice of
+      gearing beats it.</p>
+      <p><strong style="font-family:var(--display);font-weight:600">The speed optimum is a damping
+      match</strong> &mdash; same algebra, other pair of terms:
+      <span class="num">n* = &radic;(b<sub>m</sub>/b<sub>L</sub>)</span>, giving
+      <span class="num">T<sub>m</sub>/(2&radic;(b<sub>m</sub>b<sub>L</sub>))</span>. The two optima only
+      coincide when <span class="num">J<sub>m</sub>/J<sub>L</sub> = b<sub>m</sub>/b<sub>L</sub></span>, so in
+      general a drive train has to be designed for one or the other.</p>
+      <div class="caveat"><strong>Model limits.</strong> Rigid shafts, rigid teeth, no backlash, no gear
+      inertia of its own, no Coulomb friction, 100% mesh efficiency, and a motor that supplies
+      <span class="num">T<sub>m</sub></span> regardless of speed. A real motor&rsquo;s torque falls off as it
+      speeds up, which changes the optimum; a real gearbox loses a few percent per stage and has its own
+      inertia, which is often comparable to a small motor&rsquo;s.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 6. TRY IT ==================== -->
+<section id="try">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Exercises</p>
+      <h2>Four things to try on the drive train</h2>
+    </div>
+    <div class="tryit">
+      <div class="q"><h3>1 &middot; Find the inertia match by hand</h3>
+        <p>With the defaults, compute <span class="num">&radic;(J<sub>m</sub>/J<sub>L</sub>)</span>, then set
+        the tooth counts to hit it. Check that the reflection bar splits
+        <span class="num">50/50</span> and that <span class="num">J<sub>e</sub></span> equals exactly
+        <span class="num">2J<sub>m</sub></span>.</p></div>
+      <div class="q"><h3>2 &middot; Watch the two optima separate</h3>
+        <p>Raise <span class="num">b<sub>L</sub></span> to its maximum. The speed optimum slides left while
+        the acceleration optimum stays put. Which one should a positioning stage be designed around, and
+        which one a conveyor?</p></div>
+      <div class="q"><h3>3 &middot; Make the gearbox invisible</h3>
+        <p>Set <span class="num">N&#8321; = N&#8322;</span> so <span class="num">n = 1</span>. Verify that
+        <span class="num">J<sub>e</sub></span> is now just <span class="num">J<sub>m</sub> + J<sub>L</sub></span>
+        and that the two shafts turn at the same speed &mdash; the reduction collapses to two masses bolted
+        together.</p></div>
+      <div class="q"><h3>4 &middot; Explain the time constant</h3>
+        <p>Gear down hard (<span class="num">n</span> small) and <span class="num">&tau;</span> approaches
+        <span class="num">J<sub>m</sub>/b<sub>m</sub></span>; gear up and it approaches
+        <span class="num">J<sub>L</sub>/b<sub>L</sub></span>. Show that from
+        <span class="num">&tau; = J<sub>e</sub>/b<sub>e</sub></span> by taking the two limits.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>EMCH 367 Controls &middot; Example 2-14, a motor connected to a load through gears</span>
+    <span class="sp">RK4 on J<sub>e</sub>&omega;&#775; + b<sub>e</sub>&omega; = T<sub>m</sub> &middot; curves plotted from the closed-form step response</span>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* =====================================================================
+   EMCH 367 - Example 2-14, a motor connected to a load through gears
+     Je = Jm + n^2 JL,  be = bm + n^2 bL,  n = N1/N2
+     theta_m/Tm = 1/(s(Je s + be)),  theta_L/Tm = n/(s(Je s + be))
+   The speed is first order, so it is stepped with the exact exponential
+   update rather than a numerical integrator.
+   ===================================================================== */
+const TAU = Math.PI * 2;
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const el = id => document.getElementById(id);
+
+const TOK = {};
+const NAMES = ["ink","ink-2","muted","rule","grid","hatch","chrome","chrome-soft",
+               "surface","raised","motor","load","motor-soft","load-soft","good","critical"];
+function readTokens(){
+  const cs = getComputedStyle(document.documentElement);
+  for (const n of NAMES) TOK[n] = cs.getPropertyValue("--" + n).trim();
+}
+readTokens();
+
+/* ---------------------------- model ---------------------------- */
+const P = { N1: 15, N2: 30, Tm: 2.0, Jm: 0.02, JL: 0.30, bm: 0.010, bL: 0.080 };
+const nOf  = () => P.N1 / P.N2;
+const JeOf = () => P.Jm + nOf()**2 * P.JL;
+const beOf = () => P.bm + nOf()**2 * P.bL;
+const tauOf = () => JeOf() / beOf();
+const wssOf = () => P.Tm / beOf();
+
+let t = 0, wm = 0, thm = 0, playing = !reduceMotion, lastNow = 0;
+const DRAW_RATE = 1/24;      /* rotation is drawn slowed; speeds and times are true */
+
+function advance(dt){
+  const wss = wssOf(), tau = tauOf(), e = Math.exp(-dt/tau);
+  thm += wss*dt + (wm - wss)*tau*(1 - e);
+  wm = wss + (wm - wss)*e;
+  t += dt;
+}
+function restart(){ t = 0; wm = 0; thm = 0; }
+
+/* ---------------------------- canvas ---------------------------- */
+function canvasFitter(cv, onFit){
+  const LW = cv.width, LH = cv.height, ctx = cv.getContext("2d");
+  cv.style.aspectRatio = LW + " / " + LH; cv.style.width = "100%";
+  function fit(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1), cssW = cv.clientWidth || LW, s = cssW / LW;
+    cv.width = Math.max(1, Math.round(cssW*dpr));
+    cv.height = Math.max(1, Math.round(cssW*dpr*LH/LW));
+    ctx.setTransform(dpr*s, 0, 0, dpr*s, 0, 0);
+    if (onFit) onFit();
+  }
+  fit();
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(cv); else window.addEventListener("resize", fit);
+  return { ctx, LW, LH };
+}
+const stage = canvasFitter(el("stage"));
+
+const FD  = "600 11px Archivo, Helvetica, Arial, sans-serif";
+const FM  = "500 12px 'IBM Plex Mono', ui-monospace, monospace";
+const FMs = "500 10px 'IBM Plex Mono', ui-monospace, monospace";
+function label(ctx, s, x, y, col, font, align){
+  ctx.font = font || FD; ctx.fillStyle = col; ctx.textAlign = align || "left";
+  ctx.textBaseline = "alphabetic"; ctx.fillText(s, x, y);
+}
+/* Small muted labels sit over the panel's graph-paper background, which shows
+   through the transparent canvas and reads as a strike-through. Paint the
+   surface colour behind the glyphs first. */
+function labelPad(ctx, s, x, y, col, font, align){
+  ctx.font = font || FD; ctx.textAlign = align || "left"; ctx.textBaseline = "alphabetic";
+  const w = ctx.measureText(s).width;
+  const x0 = align === "center" ? x - w/2 : align === "right" ? x - w : x;
+  ctx.fillStyle = TOK.surface;
+  ctx.fillRect(x0 - 3, y - 9.5, w + 6, 13);
+  ctx.fillStyle = col;
+  ctx.fillText(s, x, y);
+}
+function hatchBand(ctx, x0, x1, y0, y1, col){
+  ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1-x0, y1-y0); ctx.clip();
+  ctx.strokeStyle = col; ctx.lineWidth = 1.2; ctx.beginPath();
+  for (let x = x0 - (y1-y0); x < x1 + (y1-y0); x += 10){ ctx.moveTo(x, y1); ctx.lineTo(x + (y1-y0), y0); }
+  ctx.stroke(); ctx.restore();
+}
+function wall(ctx, x, y0, y1, dir){
+  ctx.strokeStyle = TOK["ink-2"]; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke();
+  hatchBand(ctx, dir > 0 ? x - 13 : x, dir > 0 ? x : x + 13, y0, y1, TOK.hatch);
+}
+function dashpotH(ctx, x0, y, x1, h){
+  const L = x1 - x0, sgn = L < 0 ? -1 : 1, aL = Math.abs(L);
+  const bodyW = Math.min(34, aL*0.3), rod = Math.min(20, aL*0.22);
+  const bx = x0 + sgn*rod, left = sgn > 0 ? bx : bx - bodyW;
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(bx, y); ctx.stroke();
+  ctx.beginPath(); ctx.rect(left, y - h/2, bodyW, h); ctx.stroke();
+  const px = bx + sgn*bodyW*0.6;
+  ctx.beginPath(); ctx.moveTo(px, y - h/2 + 1); ctx.lineTo(px, y + h/2 - 1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px, y); ctx.lineTo(x1, y); ctx.stroke();
+}
+function arcArrow(ctx, cx, cy, R, a1, a2, col, lw){
+  ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(cx, cy, R, a1, a2, a2 < a1); ctx.stroke();
+  const dir = a2 > a1 ? 1 : -1, tip = a2 + dir*0.02;
+  const px = cx + R*Math.cos(tip), py = cy + R*Math.sin(tip);
+  const tx = -Math.sin(tip)*dir, ty = Math.cos(tip)*dir;         /* tangent */
+  const nx = Math.cos(tip), ny = Math.sin(tip);                  /* radial  */
+  ctx.beginPath();
+  ctx.moveTo(px + tx*8, py + ty*8);
+  ctx.lineTo(px + nx*4.2, py + ny*4.2);
+  ctx.lineTo(px - nx*4.2, py - ny*4.2);
+  ctx.closePath(); ctx.fill();
+}
+
+/* Trapezoidal teeth on the pitch circle. Both gears of a pair must share one
+   module m = 2*rp/N, with addendum m and dedendum 1.25m, or the tips of one
+   gear cut into the roots of the other. */
+function gearOutline(ctx, cx, cy, rp, N, ang, mod){
+  const add = mod, ded = 1.25*mod;
+  const ra = rp + add, rr = rp - ded, pitch = TAU/N, hb = pitch*0.31, ht = pitch*0.17;
+  ctx.beginPath();
+  for (let i = 0; i < N; i++){
+    const a = ang + i*pitch;
+    for (let k = 0; k <= 3; k++){
+      const q = a - pitch/2 + (pitch/2 - hb)*k/3;
+      const x = cx + rr*Math.cos(q), y = cy + rr*Math.sin(q);
+      (i === 0 && k === 0) ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.lineTo(cx + ra*Math.cos(a - ht), cy + ra*Math.sin(a - ht));
+    ctx.lineTo(cx + ra*Math.cos(a + ht), cy + ra*Math.sin(a + ht));
+    for (let k = 0; k <= 3; k++){
+      const q = a + hb + (pitch/2 - hb)*k/3;
+      ctx.lineTo(cx + rr*Math.cos(q), cy + rr*Math.sin(q));
+    }
+  }
+  ctx.closePath();
+}
+function drawGear(ctx, cx, cy, rp, N, ang, col, soft, mod){
+  gearOutline(ctx, cx, cy, rp, N, ang, mod);
+  ctx.fillStyle = soft; ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.stroke();
+  /* pitch circle, chain-dotted as on a drawing */
+  ctx.save(); ctx.setLineDash([9, 3, 2, 3]);
+  ctx.strokeStyle = col; ctx.globalAlpha = 0.5; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, rp, 0, TAU); ctx.stroke(); ctx.restore();
+  /* hub + index mark, so the rotation is readable */
+  const rh = Math.max(7, rp*0.24);
+  ctx.fillStyle = TOK.surface; ctx.strokeStyle = col; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(cx, cy, rh, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = col; ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(cx + rh*Math.cos(ang), cy + rh*Math.sin(ang));
+  ctx.lineTo(cx + (rp - 1.25*mod)*Math.cos(ang), cy + (rp - 1.25*mod)*Math.sin(ang));
+  ctx.stroke();
+}
+
+function drawRotor(ctx, cx, cy, r, ang, col, soft, tag){
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU);
+  ctx.fillStyle = soft; ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = col; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.4;
+  for (let k = 1; k < 4; k++){
+    const a = ang + k*TAU/4;
+    ctx.beginPath(); ctx.moveTo(cx + r*0.28*Math.cos(a), cy + r*0.28*Math.sin(a));
+    ctx.lineTo(cx + r*0.94*Math.cos(a), cy + r*0.94*Math.sin(a)); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = col; ctx.lineWidth = 2.8;
+  ctx.beginPath(); ctx.moveTo(cx + r*0.28*Math.cos(ang), cy + r*0.28*Math.sin(ang));
+  ctx.lineTo(cx + r*0.94*Math.cos(ang), cy + r*0.94*Math.sin(ang)); ctx.stroke();
+  ctx.fillStyle = TOK.surface; ctx.strokeStyle = col; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(cx, cy, r*0.26, 0, TAU); ctx.fill(); ctx.stroke();
+  label(ctx, tag, cx, cy + r + 20, col, "500 14px 'IBM Plex Mono', monospace", "center");
+}
+
+/* ---------------------------- the drive train ---------------------------- */
+const MY = 112, LY = 232, CD = 120, GX = 500;
+const MDX = 265, MDR = 44, LDX = 700, LDR = 46;
+
+function drawStage(){
+  const { ctx, LW, LH } = stage;
+  ctx.clearRect(0, 0, LW, LH);
+  const n = nOf();
+  const r1 = CD * P.N1 / (P.N1 + P.N2), r2 = CD - r1;
+  const mod = 2*CD / (P.N1 + P.N2);            /* the pair's shared module */
+  const thD = thm * DRAW_RATE;                       /* drawn angle, true angle in the readouts */
+  const a1 = Math.PI/2 + thD;                        /* pinion: a tooth on the line of centres */
+  const a2 = Math.PI/2 + Math.PI - Math.PI/P.N2 - n*thD;   /* gear: a gap there, counter-rotating */
+
+  /* grounds and dampers, exactly as in the schematic */
+  wall(ctx, 52, 66, 158, 1);
+  ctx.strokeStyle = TOK.motor; ctx.lineWidth = 2;
+  dashpotH(ctx, 52, MY, MDX - MDR, 24);
+  label(ctx, "b", 96, MY - 20, TOK.motor, FM);
+  label(ctx, "m", 104, MY - 16, TOK.motor, FMs);
+
+  wall(ctx, 1028, 188, 276, -1);
+  ctx.strokeStyle = TOK.load; ctx.lineWidth = 2;
+  dashpotH(ctx, 1028, LY, LDX + LDR, 24);
+  label(ctx, "b", 962, LY - 20, TOK.load, FM);
+  label(ctx, "L", 970, LY - 16, TOK.load, FMs);
+
+  /* shafts */
+  ctx.strokeStyle = TOK["ink-2"]; ctx.lineWidth = 3.4; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(MDX + MDR - 6, MY); ctx.lineTo(GX - r1 + 8, MY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(GX + r2 - 8, LY); ctx.lineTo(LDX - LDR + 6, LY); ctx.stroke();
+  ctx.lineCap = "butt";
+
+  /* line of centres, chain-dotted */
+  ctx.save(); ctx.setLineDash([9, 3, 2, 3]); ctx.strokeStyle = TOK.rule; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(GX, MY - 20); ctx.lineTo(GX, LY + 20); ctx.stroke(); ctx.restore();
+
+  drawGear(ctx, GX, LY, r2, P.N2, a2, TOK.load, TOK["load-soft"], mod);
+  drawGear(ctx, GX, MY, r1, P.N1, a1, TOK.motor, TOK["motor-soft"], mod);
+  drawRotor(ctx, MDX, MY, MDR, a1, TOK.motor, TOK["motor-soft"], "Jm");
+  drawRotor(ctx, LDX, LY, LDR, a2, TOK.load, TOK["load-soft"], "JL");
+
+  /* applied torque */
+  arcArrow(ctx, MDX, MY, MDR + 17, Math.PI*1.12, Math.PI*1.42, TOK.chrome, 2.6);
+  label(ctx, "Tm", MDX - 52, MY - 44, TOK.chrome, FM, "middle");
+
+  /* tooth counts and the mesh */
+  const xL = GX - Math.max(r1, r2) - mod - 16;      /* one label column, clear of both gears */
+  label(ctx, "N1 = " + P.N1, xL, MY - 34, TOK.motor, FM, "right");
+  labelPad(ctx, "pinion on the motor shaft", xL, MY - 20, TOK.muted, FMs, "right");
+  label(ctx, "N2 = " + P.N2, xL, LY + 22, TOK.load, FM, "right");
+  labelPad(ctx, "gear on the load shaft", xL, LY + 36, TOK.muted, FMs, "right");
+
+  const meshY = MY + r1;
+  ctx.fillStyle = TOK.chrome;
+  ctx.beginPath(); ctx.arc(GX, meshY, 3, 0, TAU); ctx.fill();
+  /* no leader line: every direction out of the mesh point runs through teeth */
+
+  /* headings and live angles */
+  label(ctx, "MOTOR SHAFT", 62, 34, TOK.motor, FD);
+  label(ctx, "θm = " + (thm/TAU).toFixed(2) + " rev", 62, 52, TOK.motor, FM);
+  label(ctx, "ωm = " + wm.toFixed(1) + " rad/s", 62, 68, TOK.motor, FM);
+  label(ctx, "LOAD SHAFT", LW - 62, 306, TOK.load, FD, "right");
+  label(ctx, "θL = " + (n*thm/TAU).toFixed(2) + " rev", LW - 62, 324, TOK.load, FM, "right");
+  label(ctx, "ωL = " + (n*wm).toFixed(1) + " rad/s", LW - 62, 340, TOK.load, FM, "right");
+
+  label(ctx, "n = N1/N2 = " + n.toFixed(3), GX + 150, 34, TOK.ink, FM);
+  labelPad(ctx, "θL/θm = n   ·   T2/T1 = 1/n", GX + 150, 52, TOK.muted, FMs);
+}
+
+/* ---------------------------- readouts + meters ---------------------------- */
+function pct(a, b){ return (100*a/(a+b)); }
+function updateReadouts(){
+  const n = nOf(), Je = JeOf(), be = beOf(), n2 = n*n;
+  el("roN").textContent = n.toFixed(3);
+  el("roJe").innerHTML = Je.toFixed(4) + ' <span class="u">kg·m²</span>';
+  el("roBe").textContent = be.toFixed(4);
+  el("roTau").innerHTML = tauOf().toFixed(2) + ' <span class="u">s</span>';
+  el("roWm").innerHTML = wm.toFixed(1) + ' <span class="u">rad/s</span>';
+  el("roWL").innerHTML = (n*wm).toFixed(1) + ' <span class="u">rad/s</span>';
+  el("clock").textContent = "t = " + t.toFixed(2) + " s";
+
+  const rJ = n2*P.JL, rB = n2*P.bL;
+  el("mJe").textContent = Je.toFixed(4);
+  el("barJm").style.flexBasis = pct(P.Jm, rJ).toFixed(1) + "%";
+  el("barJL").style.flexBasis = pct(rJ, P.Jm).toFixed(1) + "%";
+  el("cJm").textContent = P.Jm.toFixed(4);  el("pJm").textContent = pct(P.Jm, rJ).toFixed(0) + "%";
+  el("cJL").textContent = rJ.toFixed(4);    el("pJL").textContent = pct(rJ, P.Jm).toFixed(0) + "%";
+  el("cJLraw").textContent = P.JL.toFixed(4); el("cJfac").textContent = "×" + n2.toFixed(3);
+
+  el("mBe").textContent = be.toFixed(4);
+  el("barBm").style.flexBasis = pct(P.bm, rB).toFixed(1) + "%";
+  el("barBL").style.flexBasis = pct(rB, P.bm).toFixed(1) + "%";
+  el("cBm").textContent = P.bm.toFixed(4);  el("pBm").textContent = pct(P.bm, rB).toFixed(0) + "%";
+  el("cBL").textContent = rB.toFixed(4);    el("pBL").textContent = pct(rB, P.bm).toFixed(0) + "%";
+  el("cBLraw").textContent = P.bL.toFixed(4); el("cBfac").textContent = "×" + n2.toFixed(3);
+}
+</script>
+
+<script>
+"use strict";
+/* =====================================================================
+   CHARTS - all three are redrawn from the sliders' current values
+   ===================================================================== */
+const FDs  = 'font-family="Archivo, Helvetica, sans-serif" font-weight="600" letter-spacing="1.3"';
+const FMx  = 'font-family="IBM Plex Mono, monospace" font-weight="500"';
+
+/* ---------- step response: omega_m(t) and omega_L(t) ---------- */
+const SP = { x0: 64, x1: 684, y0: 26, y1: 250 };
+let stepScale = null;
+
+function buildStep(){
+  const n = nOf(), tau = tauOf(), wss = wssOf(), T = 5*tau;
+  const ymax = wss * 1.06 || 1;
+  const sx = v => SP.x0 + (v/T)*(SP.x1 - SP.x0);
+  const sy = v => SP.y1 - (v/ymax)*(SP.y1 - SP.y0);
+  stepScale = { sx, sy, T, tau, wss, n, ymax };
+  let s = "";
+
+  for (let k = 0; k <= 4; k++){
+    const y = sy(ymax*k/4);
+    s += `<line x1="${SP.x0}" y1="${y}" x2="${SP.x1}" y2="${y}" stroke="var(--grid)" stroke-width="1"></line>`;
+    s += `<text x="${SP.x0-9}" y="${y+3.5}" ${FMx} font-size="10" fill="var(--muted)" text-anchor="end">${(ymax*k/4).toFixed(ymax<20?1:0)}</text>`;
+  }
+  for (let k = 0; k <= 5; k++){
+    const x = sx(k*tau);
+    s += `<line x1="${x}" y1="${SP.y0}" x2="${x}" y2="${SP.y1}" stroke="var(--grid)" stroke-width="1"></line>`;
+    s += `<text x="${x}" y="${SP.y1+17}" ${FMx} font-size="10" fill="var(--muted)" text-anchor="middle">${k === 0 ? "0" : (k === 1 ? "τ" : k + "τ")}</text>`;
+  }
+  /* the two asymptotes, each labelled with a value the chart reaches */
+  for (const [v, col, tag] of [[wss, "var(--motor)", "ωm(∞)"], [n*wss, "var(--load)", "ωL(∞)"]]){
+    s += `<line x1="${SP.x0}" y1="${sy(v)}" x2="${SP.x1}" y2="${sy(v)}" stroke="${col}" stroke-width="1.1" stroke-dasharray="5 4" opacity="0.55"></line>`;
+    s += `<text x="${SP.x1-6}" y="${sy(v)-6}" ${FMx} font-size="10" fill="${col}" text-anchor="end">${tag} = ${v.toFixed(1)}</text>`;
+  }
+  /* 63.2% of final value at t = tau - the definition of the time constant */
+  s += `<line x1="${sx(tau)}" y1="${sy(0.632*wss)}" x2="${sx(tau)}" y2="${SP.y1}" stroke="var(--chrome)" stroke-width="1" stroke-dasharray="3 3"></line>`;
+  s += `<circle cx="${sx(tau)}" cy="${sy(0.632*wss)}" r="3.4" fill="var(--chrome)"></circle>`;
+  s += `<text x="${sx(tau)+10}" y="${sy(0.632*wss)+19}" ${FMx} font-size="10" fill="var(--chrome)">63.2% of final at t = τ</text>`;
+
+  const path = f => {
+    let d = "";
+    for (let i = 0; i <= 240; i++){
+      const tt = T*i/240, w = f(wss*(1 - Math.exp(-tt/tau)));
+      d += (i ? "L" : "M") + sx(tt).toFixed(2) + " " + sy(w).toFixed(2) + " ";
+    }
+    return d.trim();
+  };
+  s += `<path d="${path(w => w)}" fill="none" stroke="var(--motor)" stroke-width="2.4" stroke-linejoin="round"></path>`;
+  s += `<path d="${path(w => n*w)}" fill="none" stroke="var(--load)" stroke-width="2.4" stroke-linejoin="round"></path>`;
+  s += `<text x="${SP.x1+10}" y="${sy(wss)+4}" ${FMx} font-size="11" fill="var(--motor)">ωm</text>`;
+  s += `<text x="${SP.x1+10}" y="${sy(n*wss)+4}" ${FMx} font-size="11" fill="var(--load)">ωL</text>`;
+
+  s += `<line x1="${SP.x0}" y1="${SP.y0}" x2="${SP.x0}" y2="${SP.y1}" stroke="var(--rule)" stroke-width="1.4"></line>`;
+  s += `<line x1="${SP.x0}" y1="${SP.y1}" x2="${SP.x1}" y2="${SP.y1}" stroke="var(--rule)" stroke-width="1.4"></line>`;
+  s += `<text x="${(SP.x0+SP.x1)/2}" y="${SP.y1+44}" ${FDs} font-size="10" fill="var(--ink-2)" text-anchor="middle">TIME, IN TIME CONSTANTS  (τ = ${tau.toFixed(2)} s)</text>`;
+  s += `<text transform="rotate(-90 20 138)" x="20" y="138" ${FDs} font-size="10" fill="var(--ink-2)" text-anchor="middle">SHAFT SPEED  rad/s</text>`;
+
+  s += `<line id="spGuide" x1="0" y1="${SP.y0}" x2="0" y2="${SP.y1}" stroke="var(--ink-2)" stroke-width="1" opacity="0.35"></line>`;
+  s += `<circle id="spHalo" r="6.5" fill="var(--surface)"></circle>`;
+  s += `<circle id="spDot" r="4.6" fill="none" stroke="var(--ink)" stroke-width="2.2"></circle>`;
+  s += `<line id="spCross" x1="0" y1="${SP.y0}" x2="0" y2="${SP.y1}" stroke="var(--ink-2)" stroke-width="1" opacity="0"></line>`;
+  s += `<rect id="spHit" x="${SP.x0}" y="${SP.y0}" width="${SP.x1-SP.x0}" height="${SP.y1-SP.y0}" fill="transparent" style="cursor:crosshair"></rect>`;
+  el("chStep").innerHTML = s;
+  wireStepHover();
+}
+function markStep(){
+  if (!stepScale || !el("spDot")) return;
+  const { sx, sy, T, tau, wss } = stepScale;
+  const tc = Math.min(t, T), w = wss*(1 - Math.exp(-tc/tau));
+  const x = sx(tc), y = sy(w);
+  el("spHalo").setAttribute("cx", x); el("spHalo").setAttribute("cy", y);
+  el("spDot").setAttribute("cx", x);  el("spDot").setAttribute("cy", y);
+  el("spGuide").setAttribute("x1", x); el("spGuide").setAttribute("x2", x); el("spGuide").setAttribute("y1", y);
+}
+function wireStepHover(){
+  const hit = el("spHit"), cross = el("spCross"), tt = el("ttStep"), svg = el("chStep");
+  const host = svg.closest(".rel");
+  hit.addEventListener("pointermove", e => {
+    const b = svg.getBoundingClientRect(), hb = host.getBoundingClientRect();
+    const px = (e.clientX - b.left)/b.width*760;
+    const { sx, T, tau, wss, n } = stepScale;
+    const tt2 = Math.max(0, Math.min(T, (px - SP.x0)/(SP.x1 - SP.x0)*T));
+    const w = wss*(1 - Math.exp(-tt2/tau));
+    cross.setAttribute("x1", sx(tt2)); cross.setAttribute("x2", sx(tt2)); cross.setAttribute("opacity", "0.4");
+    tt.innerHTML = '<span class="h">t = ' + tt2.toFixed(2) + ' s</span>ωm = ' + w.toFixed(1)
+                 + ' rad/s<br>ωL = ' + (n*w).toFixed(1) + ' rad/s';
+    tt.style.left = (e.clientX - hb.left) + "px"; tt.style.top = (e.clientY - hb.top) + "px";
+    tt.style.opacity = "1";
+  });
+  hit.addEventListener("pointerleave", () => { tt.style.opacity = "0"; cross.setAttribute("opacity", "0"); });
+}
+
+/* ---------- gear-ratio sweeps, on a log ratio axis ---------- */
+const RA = { x0: 58, x1: 452, y0: 26, y1: 232, lo: 0.05, hi: 5 };
+const rlx = v => RA.x0 + (Math.log10(v/RA.lo)/Math.log10(RA.hi/RA.lo))*(RA.x1 - RA.x0);
+const rxl = px => RA.lo * Math.pow(RA.hi/RA.lo, (px - RA.x0)/(RA.x1 - RA.x0));
+
+function buildSweep(svgId, ttId, fn, nStar, yLabel, unit, optLabel){
+  const yPeak = fn(nStar), ymax = yPeak*1.08 || 1;
+  const sy = v => RA.y1 - (v/ymax)*(RA.y1 - RA.y0);
+  const nNow = nOf();
+  let s = "";
+  const xTicks = [0.05, 0.1, 0.2, 0.5, 1, 2, 5];
+  for (let k = 0; k <= 4; k++){
+    const y = sy(ymax*k/4);
+    s += `<line x1="${RA.x0}" y1="${y}" x2="${RA.x1}" y2="${y}" stroke="var(--grid)" stroke-width="1"></line>`;
+    s += `<text x="${RA.x0-9}" y="${y+3.5}" ${FMx} font-size="10" fill="var(--muted)" text-anchor="end">${(ymax*k/4).toFixed(ymax<20?1:0)}</text>`;
+  }
+  for (const v of xTicks){
+    s += `<line x1="${rlx(v)}" y1="${RA.y0}" x2="${rlx(v)}" y2="${RA.y1}" stroke="var(--grid)" stroke-width="1"></line>`;
+    s += `<text x="${rlx(v)}" y="${RA.y1+17}" ${FMx} font-size="10" fill="var(--muted)" text-anchor="middle">${v}</text>`;
+  }
+  /* the optimum */
+  s += `<line x1="${rlx(nStar)}" y1="${sy(yPeak)}" x2="${rlx(nStar)}" y2="${RA.y1}" stroke="var(--chrome)" stroke-width="1.3" stroke-dasharray="4 3"></line>`;
+  s += `<line x1="${RA.x0}" y1="${sy(yPeak)}" x2="${rlx(nStar)}" y2="${sy(yPeak)}" stroke="var(--chrome)" stroke-width="1.3" stroke-dasharray="4 3"></line>`;
+  let d = "";
+  for (let i = 0; i <= 260; i++){
+    const nv = RA.lo*Math.pow(RA.hi/RA.lo, i/260);
+    d += (i ? "L" : "M") + rlx(nv).toFixed(2) + " " + sy(fn(nv)).toFixed(2) + " ";
+  }
+  s += `<path d="${d.trim()}" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"></path>`;
+  s += `<circle cx="${rlx(nStar)}" cy="${sy(yPeak)}" r="4" fill="var(--chrome)"></circle>`;
+  const flip = rlx(nStar) > (RA.x0 + RA.x1)/2;
+  s += `<text x="${rlx(nStar) + (flip ? -9 : 9)}" y="${sy(yPeak)-26}" ${FMx} font-size="10.5" fill="var(--chrome)" text-anchor="${flip ? "end" : "start"}">${optLabel} = ${nStar.toFixed(3)}</text>`;
+  s += `<text x="${rlx(nStar) + (flip ? -9 : 9)}" y="${sy(yPeak)-12}" ${FMx} font-size="10.5" fill="var(--chrome)" text-anchor="${flip ? "end" : "start"}">best ${yPeak.toFixed(2)} ${unit}</text>`;
+  /* where the sliders currently sit */
+  const yNow = fn(nNow);
+  s += `<circle cx="${rlx(nNow)}" cy="${sy(yNow)}" r="7" fill="var(--surface)"></circle>`;
+  s += `<circle cx="${rlx(nNow)}" cy="${sy(yNow)}" r="5" fill="none" stroke="var(--ink)" stroke-width="2.4"></circle>`;
+  const nflip = rlx(nNow) > (RA.x0 + RA.x1)/2;
+  s += `<text x="${rlx(nNow) + (nflip ? -12 : 12)}" y="${sy(yNow)+4}" ${FMx} font-size="10.5" fill="var(--ink)" text-anchor="${nflip ? "end" : "start"}">you: ${yNow.toFixed(2)} (${(100*yNow/yPeak).toFixed(0)}%)</text>`;
+
+  s += `<line x1="${RA.x0}" y1="${RA.y0}" x2="${RA.x0}" y2="${RA.y1}" stroke="var(--rule)" stroke-width="1.4"></line>`;
+  s += `<line x1="${RA.x0}" y1="${RA.y1}" x2="${RA.x1}" y2="${RA.y1}" stroke="var(--rule)" stroke-width="1.4"></line>`;
+  s += `<text x="${(RA.x0+RA.x1)/2}" y="${RA.y1+44}" ${FDs} font-size="10" fill="var(--ink-2)" text-anchor="middle">GEAR RATIO  n = N1/N2   (log)</text>`;
+  s += `<text transform="rotate(-90 20 129)" x="20" y="129" ${FDs} font-size="10" fill="var(--ink-2)" text-anchor="middle">${yLabel}</text>`;
+  s += `<rect class="hit" x="${RA.x0}" y="${RA.y0}" width="${RA.x1-RA.x0}" height="${RA.y1-RA.y0}" fill="transparent" style="cursor:crosshair"></rect>`;
+  const svg = el(svgId);
+  svg.innerHTML = s;
+  const hit = svg.querySelector(".hit"), tt = el(ttId), host = svg.closest(".rel");
+  hit.addEventListener("pointermove", e => {
+    const b = svg.getBoundingClientRect(), hb = host.getBoundingClientRect();
+    const px = (e.clientX - b.left)/b.width*520;
+    const nv = Math.max(RA.lo, Math.min(RA.hi, rxl(px)));
+    tt.innerHTML = '<span class="h">n = ' + nv.toFixed(3) + '</span>' + fn(nv).toFixed(2) + ' ' + unit;
+    tt.style.left = (e.clientX - hb.left) + "px"; tt.style.top = (e.clientY - hb.top) + "px";
+    tt.style.opacity = "1";
+  });
+  hit.addEventListener("pointerleave", () => { tt.style.opacity = "0"; });
+}
+
+function buildCharts(){
+  buildStep();
+  buildSweep("chAcc", "ttAcc",
+    nv => nv*P.Tm/(P.Jm + nv*nv*P.JL), Math.sqrt(P.Jm/P.JL),
+    "LOAD ACCELERATION  rad/s²", "rad/s²", "n* = √(Jm/JL)");
+  buildSweep("chSpd", "ttSpd",
+    nv => nv*P.Tm/(P.bm + nv*nv*P.bL), Math.sqrt(P.bm/P.bL),
+    "LOAD SPEED  rad/s", "rad/s", "n* = √(bm/bL)");
+}
+
+/* ---------------------------- controls ---------------------------- */
+function syncLabels(){
+  el("vN1").textContent = P.N1; el("vN2").textContent = P.N2;
+  el("vT").textContent = P.Tm.toFixed(2);
+  el("vJm").textContent = P.Jm.toFixed(3); el("vJL").textContent = P.JL.toFixed(3);
+  el("vbm").textContent = P.bm.toFixed(4); el("vbL").textContent = P.bL.toFixed(4);
+}
+const BIND = [["sN1","N1",1],["sN2","N2",1],["sT","Tm",1],
+              ["sJm","Jm",1],["sJL","JL",1],["sbm","bm",1],["sbL","bL",1]];
+for (const [id, key] of BIND){
+  el(id).addEventListener("input", e => {
+    P[key] = +e.target.value;
+    syncLabels(); updateReadouts(); buildCharts();
+  });
+}
+el("playBtn").addEventListener("click", e => {
+  playing = !playing; lastNow = 0; e.target.textContent = playing ? "Pause" : "Play";
+});
+el("restartBtn").addEventListener("click", () => { restart(); updateReadouts(); });
+
+/* ---------------------------- main loop ---------------------------- */
+function tick(now){
+  if (playing){
+    if (!lastNow) lastNow = now;
+    advance(Math.min(0.05, (now - lastNow)/1000));
+    lastNow = now;
+  } else lastNow = now;
+  drawStage(); updateReadouts(); markStep();
+  requestAnimationFrame(tick);
+}
+
+function onThemeChange(){ readTokens(); buildCharts(); }
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", onThemeChange);
+new MutationObserver(onThemeChange).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+syncLabels(); updateReadouts(); buildCharts();
+/* open part-way into the spin-up so the first frame shows a machine at work */
+for (let i = 0; i < 90; i++) advance(1/60);
+if (!playing) el("playBtn").textContent = "Play";
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
