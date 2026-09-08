@@ -235,11 +235,35 @@ section:last-of-type{ border-bottom:0; }
   display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
   gap:14px 26px; padding:16px; border-top:1px solid var(--rule); background:var(--raised);
 }
+/* three labelled groups: shared, system 1, system 2 */
+.sgrid{
+  display:grid; grid-template-columns:minmax(0,1fr);
+  border-top:1px solid var(--rule); background:var(--raised);
+}
+@media (min-width:900px){ .sgrid{ grid-template-columns:1fr 1fr 2fr; } }
+.sgrp{ padding:14px 16px 16px; border-right:1px solid var(--rule); min-width:0; }
+.sgrp:last-child{ border-right:0; }
+@media (max-width:899px){
+  .sgrp{ border-right:0; border-bottom:1px solid var(--rule); }
+  .sgrp:last-child{ border-bottom:0; }
+}
+.sgrp h4{
+  font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.12em;
+  color:var(--muted); margin:0 0 10px; display:flex; align-items:center; gap:7px;
+}
+.sgrp h4 .chip{ width:9px; height:9px; border-radius:2px; flex:none; }
+.sgrp .pair{ display:grid; grid-template-columns:minmax(0,1fr); gap:10px 22px; }
+@media (min-width:900px){ .sgrp.wide .pair{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.sgrp .sum{
+  margin-top:12px; padding-top:10px; border-top:1px dashed var(--rule);
+  font-family:var(--data); font-size:.78rem; color:var(--ink-2); font-variant-numeric:tabular-nums;
+}
+.sgrp .sum b{ color:var(--ink); font-weight:600; }
 .slider label{
   display:flex; justify-content:space-between; align-items:baseline; gap:8px;
   min-height:2.5em;
-  font-family:var(--display); font-size:.74rem; font-weight:600;
-  letter-spacing:.07em; text-transform:uppercase; color:var(--muted);
+  font-family:var(--display); font-size:.76rem; font-weight:600;
+  letter-spacing:.02em; color:var(--muted);
   margin-bottom:5px;
 }
 .slider label .v{
@@ -464,12 +488,12 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
       <p class="eyebrow">The instrument</p>
       <h2>One mount, or two?</h2>
       <p class="lede">Both systems see exactly the same base motion <span class="num">u(t)</span>.
-      The sliders set <span class="num">k</span> and <span class="num">b</span> <em>per element</em>, so
-      System&nbsp;2 always carries twice the stiffness and twice the damping of System&nbsp;1. Two inputs are
-      available: a steady <span class="num">Sine</span>, and a single violent
-      <span class="num">Pulse</span> &mdash; the table lurches <span class="num">140 mm</span> and comes
-      straight back, peaking at <span class="num">2.3 g</span>. Watch which system is quieter, then switch
-      the input and watch that answer reverse.</p>
+      System&nbsp;1&rsquo;s single mount and each of System&nbsp;2&rsquo;s two mounts are set independently, so
+      you can make the second system symmetric, lopsided, or single-sided. Two inputs are available: a steady
+      <span class="num">Sine</span>, and a single violent <span class="num">Pulse</span> &mdash; one lurch
+      out and straight back. Both inputs are yours to set: the sine by frequency and amplitude, the pulse
+      by length and height. Watch which system is quieter, then switch the input and watch that answer
+      reverse.</p>
     </div>
 
     <div class="panel">
@@ -486,30 +510,71 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
       <div class="panel-grid"><canvas id="stage" class="stage" width="1080" height="340"
         role="img" aria-label="Animated shake table carrying two mass-spring-damper carts, one mounted on a single side and one mounted on both sides"></canvas></div>
 
-      <div class="sliders">
-        <div class="slider">
-          <label for="sM">Mass <span class="v"><span id="vM">2000</span> kg</span></label>
-          <input type="range" id="sM" min="500" max="6000" step="100" value="2000">
+      <div class="sgrid">
+        <div class="sgrp">
+          <h4>BOTH SYSTEMS</h4>
+          <div class="pair">
+            <div class="slider">
+              <label for="sM"><span>Mass m</span> <span class="v"><span id="vM">2000</span> kg</span></label>
+              <input type="range" id="sM" min="500" max="6000" step="100" value="2000">
+            </div>
+            <div class="slider">
+              <label for="sF"><span id="fLabel">Ground frequency &omega;</span>
+                <span class="v"><span id="vF">6.0</span> <span id="fUnit">rad/s</span></span></label>
+              <input type="range" id="sF" min="1" max="25" step="0.1" value="6">
+            </div>
+            <div class="slider">
+              <label for="sA"><span id="aLabel">Ground amplitude</span>
+                <span class="v"><span id="vA">25</span> <span id="aUnit">mm</span></span></label>
+              <input type="range" id="sA" min="1" max="100" step="1" value="25">
+            </div>
+          </div>
+          <p class="sum">The table itself reaches <b><span id="gpD">25</span>&nbsp;mm</b> and
+            <b><span id="gpA">0.09</span>&nbsp;g</b> &mdash; the input both systems have to beat.</p>
         </div>
-        <div class="slider">
-          <label for="sK">Stiffness, each <span class="v"><span id="vK">80.0</span> kN/m</span></label>
-          <input type="range" id="sK" min="10" max="800" step="5" value="80">
+        <div class="sgrp">
+          <h4><span class="chip" style="background:var(--s-response)"></span>SYSTEM 1 &middot; SINGLE MOUNT</h4>
+          <div class="pair">
+            <div class="slider">
+              <label for="sK1"><span>Stiffness k</span> <span class="v"><span id="vK1">80.0</span> kN/m</span></label>
+              <input type="range" id="sK1" min="10" max="800" step="5" value="80">
+            </div>
+            <div class="slider">
+              <label for="sB1"><span>Damping b</span> <span class="v"><span id="vB1">1.3</span> kN&middot;s/m</span></label>
+              <input type="range" id="sB1" min="0" max="40" step="0.1" value="1.3">
+            </div>
+          </div>
         </div>
-        <div class="slider">
-          <label for="sB">Damping, each <span class="v"><span id="vB">1.3</span> kN&middot;s/m</span></label>
-          <input type="range" id="sB" min="0" max="40" step="0.1" value="1.3">
-        </div>
-        <div class="slider">
-          <label for="sF"><span id="fLabel">Ground frequency</span>
-            <span class="v"><span id="vF">0.95</span> <span id="fUnit">Hz</span></span></label>
-          <input type="range" id="sF" min="0.15" max="4" step="0.01" value="0.95">
+        <div class="sgrp wide">
+          <h4><span class="chip" style="background:var(--s-isolated)"></span>SYSTEM 2 &middot; EACH SIDE SET SEPARATELY</h4>
+          <div class="pair">
+            <div class="slider">
+              <label for="sKL"><span>Left stiffness k<sub>L</sub></span> <span class="v"><span id="vKL">80.0</span> kN/m</span></label>
+              <input type="range" id="sKL" min="0" max="800" step="5" value="80">
+            </div>
+            <div class="slider">
+              <label for="sKR"><span>Right stiffness k<sub>R</sub></span> <span class="v"><span id="vKR">80.0</span> kN/m</span></label>
+              <input type="range" id="sKR" min="0" max="800" step="5" value="80">
+            </div>
+            <div class="slider">
+              <label for="sBL"><span>Left damping b<sub>L</sub></span> <span class="v"><span id="vBL">1.3</span> kN&middot;s/m</span></label>
+              <input type="range" id="sBL" min="0" max="40" step="0.1" value="1.3">
+            </div>
+            <div class="slider">
+              <label for="sBR"><span>Right damping b<sub>R</sub></span> <span class="v"><span id="vBR">1.3</span> kN&middot;s/m</span></label>
+              <input type="range" id="sBR" min="0" max="40" step="0.1" value="1.3">
+            </div>
+          </div>
+          <p class="sum">Both sides act across the same gap, so only the sums reach the equation:
+            k<sub>L</sub>+k<sub>R</sub> = <b><span id="sumK">160.0</span> kN/m</b> &nbsp;&middot;&nbsp;
+            b<sub>L</sub>+b<sub>R</sub> = <b><span id="sumB">2.6</span> kN&middot;s/m</b></p>
         </div>
       </div>
 
       <div style="overflow-x:auto;border-top:1px solid var(--rule)">
         <table class="results" id="sysTable">
           <thead><tr>
-            <th scope="col">SYSTEM</th><th scope="col">&omega;<sub>n</sub></th><th scope="col">f<sub>n</sub></th>
+            <th scope="col">SYSTEM</th><th scope="col">&omega;<sub>n</sub></th><th scope="col">T<sub>n</sub></th>
             <th scope="col">&zeta;</th><th scope="col">r</th>
             <th scope="col">PEAK DRIFT</th><th scope="col">PEAK ACCEL</th>
           </tr></thead>
@@ -660,8 +725,9 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
         <li>
           <div class="body">
           <h3>Now mount the far side as well</h3>
-          <p>Add an identical spring and damper on the other side of the mass. Both new elements span the
-          same gap between cart and mass, so they see the same relative motion and simply add:</p>
+          <p>Add a second spring and damper on the other side of the mass &mdash; not necessarily matched to
+          the first. Every element still spans the same gap between cart and mass, so all four see the
+          <em>same</em> relative motion and their forces simply add:</p>
           <figure class="fbd" style="margin:6px 0 12px;padding:12px">
             <svg viewBox="0 0 420 208" xmlns="http://www.w3.org/2000/svg">
               <g stroke="var(--hatch)" stroke-width="1.4">
@@ -698,21 +764,38 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
             </svg>
             <figcaption>System&nbsp;2. Two elements in parallel across the same gap.</figcaption>
           </figure>
-          <div class="eq">m ẍ = &minus;2k(x &minus; u) &minus; 2b(ẋ &minus; u̇)</div>
-          <div class="eq">m ẍ + 2b ẋ + 2k x = 2b u̇ + 2k u <span class="tag">EOM, both sides</span></div>
-          <p>This is the <em>same equation</em> with <span class="num">k &rarr; 2k</span> and
-          <span class="num">b &rarr; 2b</span>. Nothing about the form of the transfer function changes, so
-          the transmissibility curve below still applies &mdash; the system has simply moved to a different
-          place on it:</p>
+          <div class="eq">m ẍ = &minus;k<sub>L</sub>(x &minus; u) &minus; b<sub>L</sub>(ẋ &minus; u̇)
+            &minus; k<sub>R</sub>(x &minus; u) &minus; b<sub>R</sub>(ẋ &minus; u̇)</div>
+          <div class="eq">m ẍ + (b<sub>L</sub>+b<sub>R</sub>) ẋ + (k<sub>L</sub>+k<sub>R</sub>) x
+            = (b<sub>L</sub>+b<sub>R</sub>) u̇ + (k<sub>L</sub>+k<sub>R</sub>) u
+            <span class="tag">EOM, both sides</span></div>
+          <p>This is the <em>same equation</em> with <span class="num">k &rarr; k<sub>L</sub>+k<sub>R</sub></span>
+          and <span class="num">b &rarr; b<sub>L</sub>+b<sub>R</sub></span>. Nothing about the form of the
+          transfer function changes, so the transmissibility curve below still applies &mdash; the system has
+          simply moved to a different place on it:</p>
           <div class="eq center">
-            &omega;<sub>n</sub>&#8322; = &radic;(2k/m) = &radic;2 &middot; &omega;<sub>n</sub>&#8321;
-            &nbsp;&nbsp;&nbsp;&nbsp;
-            &zeta;&#8322; = <span class="frac"><span>2b</span><span>2&radic;(2k m)</span></span> = &radic;2 &middot; &zeta;&#8321;
+            &omega;<sub>n</sub>&#8322; = &radic;((k<sub>L</sub>+k<sub>R</sub>)/m) &nbsp;&nbsp;&nbsp;&nbsp;
+            &zeta;&#8322; = <span class="frac"><span>b<sub>L</sub>+b<sub>R</sub></span><span>2&radic;((k<sub>L</sub>+k<sub>R</sub>) m)</span></span>
           </div>
-          <p>Both parameters rise by the same factor <span class="num">&radic;2</span>. Doubling the mount is
-          therefore <em>not</em> the same as doubling the damping: it buys stiffness and damping together,
-          and stiffness moves <span class="num">r = &omega;/&omega;<sub>n</sub></span> down &mdash; which is
-          an improvement only if it moves the system away from <span class="num">r = 1</span>.</p>
+          <p><strong style="font-family:var(--display);font-weight:600">Only the sums appear.</strong>
+          Two elements spanning the same pair of bodies are in <em>parallel</em>, so the response cannot tell
+          <span class="num">k<sub>L</sub> = k<sub>R</sub> = 80</span> from
+          <span class="num">k<sub>L</sub> = 150, k<sub>R</sub> = 10</span>. Try it on the sliders above: drag
+          stiffness from one side to the other keeping the total fixed and the traces do not move at all.
+          What asymmetry does change is the <em>static</em> equilibrium the mass settles at, which this model
+          measures from and therefore never shows &mdash; and it would matter dynamically the moment a spring
+          went slack, or the mass were free to rotate rather than just translate.</p>
+          <p>With both sides matched to System&nbsp;1&rsquo;s mount, the sums are
+          <span class="num">2k</span> and <span class="num">2b</span>, and both parameters rise by the same
+          factor <span class="num">&radic;2</span>:</p>
+          <div class="eq center">
+            &omega;<sub>n</sub>&#8322; = &radic;2 &middot; &omega;<sub>n</sub>&#8321; &nbsp;&nbsp;&nbsp;&nbsp;
+            &zeta;&#8322; = &radic;2 &middot; &zeta;&#8321;
+          </div>
+          <p>Doubling the mount is therefore <em>not</em> the same as doubling the damping: it buys stiffness
+          and damping together, and stiffness moves <span class="num">r = &omega;/&omega;<sub>n</sub></span>
+          down &mdash; which is an improvement only if it moves the system away from
+          <span class="num">r = 1</span>.</p>
           </div>
         </li>
       </ol>
@@ -727,10 +810,14 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
       <p class="eyebrow">Frequency response</p>
       <h2>Everything depends on r = &omega;/&omega;<sub>n</sub></h2>
       <p class="lede">Evaluating the transmissibility at <span class="num">s = j&omega;</span> gives the curves
-      below. Both systems live on this one chart; the two marked points track the sliders above, and
-      System&nbsp;2 always sits at <span class="num">r&#8321;/&radic;2</span> on a curve
-      <span class="num">&radic;2</span> better damped. In pulse mode the markers are placed at the
-      pulse&rsquo;s own frequency, <span class="num">1/T<sub>p</sub></span>, which is where a single-cycle
+      below. Both systems live on this one chart and the two marked points track the sliders above. Because
+      the input is quoted in <span class="num">rad/s</span> alongside each
+      <span class="num">&omega;<sub>n</sub></span>, <span class="num">r</span> is simply the ratio of two
+      numbers already in the table. With
+      both of System&nbsp;2&rsquo;s mounts matched to System&nbsp;1&rsquo;s, it sits at exactly
+      <span class="num">r&#8321;/&radic;2</span> on a curve <span class="num">&radic;2</span> better damped;
+      change any one slider and it moves wherever its own sums put it. In pulse mode the markers are placed at the
+      pulse&rsquo;s own frequency, <span class="num">2&pi;/T<sub>p</sub></span>, which is where a single-cycle
       pulse carries most of its energy &mdash; a useful guide, though a transient is never a single
       frequency.</p>
     </div>
@@ -800,17 +887,17 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
       <div class="trio panel-grid">
         <div class="cell">
           <div class="cell-head"><span class="bar" style="background:var(--s-response)"></span>
-            <h3>Single mount</h3><span class="sub">f<sub>n</sub> 1.00 Hz &middot; &zeta; 0.02</span></div>
+            <h3>Single mount</h3><span class="sub">&omega;<sub>n</sub> 6.00 rad/s &middot; &zeta; 0.020</span></div>
           <canvas id="c0" width="360" height="176" role="img" aria-label="Single mount response"></canvas>
         </div>
         <div class="cell">
           <div class="cell-head"><span class="bar" style="background:var(--s-isolated)"></span>
-            <h3>Two mounts</h3><span class="sub">f<sub>n</sub> 1.41 Hz &middot; &zeta; 0.028</span></div>
+            <h3>Two mounts</h3><span class="sub">&omega;<sub>n</sub> 8.49 rad/s &middot; &zeta; 0.028</span></div>
           <canvas id="c1" width="360" height="176" role="img" aria-label="Double mount response"></canvas>
         </div>
         <div class="cell">
           <div class="cell-head"><span class="bar" style="background:var(--s-ground)"></span>
-            <h3>One soft mount</h3><span class="sub">f<sub>n</sub> 0.33 Hz &middot; &zeta; 0.15</span></div>
+            <h3>One soft mount</h3><span class="sub">&omega;<sub>n</sub> 2.00 rad/s &middot; &zeta; 0.150</span></div>
           <canvas id="c2" width="360" height="176" role="img" aria-label="Soft mount response"></canvas>
         </div>
       </div>
@@ -845,32 +932,32 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
     <div class="measure" style="margin-top:30px">
       <p><strong style="font-family:var(--display);font-weight:600">A short shock punishes the second
       mount.</strong> The pulse lasts <span class="num">0.35 s</span>, about a third of the single
-      mount&rsquo;s own <span class="num">1.0 s</span> period, so the mass cannot follow it: of the
-      ground&rsquo;s <span class="num">2.30 g</span>, only <span class="num">0.56 g</span> reaches the mass.
-      Adding the second pair lifts <span class="num">f<sub>n</sub></span> to
-      <span class="num">1.41 Hz</span>, which walks the system up the rising flank of the response: what gets
-      through goes from <span class="num">&times;0.24</span> of the ground&rsquo;s peak to
-      <span class="num">&times;0.64</span>. Peak acceleration rises by a factor of
+      mount&rsquo;s own <span class="num">1.05 s</span> period, so the mass cannot follow it: of the
+      ground&rsquo;s <span class="num">2.30 g</span>, only <span class="num">0.49 g</span> reaches the mass.
+      Adding the second pair lifts <span class="num">&omega;<sub>n</sub></span> to
+      <span class="num">8.49 rad/s</span>, which walks the system up the rising flank of the response: what
+      gets through goes from <span class="num">&times;0.21</span> of the ground&rsquo;s peak to
+      <span class="num">&times;0.55</span>. Peak acceleration rises by a factor of
       <span class="num">2.6</span>, and the travel across the mount reaches
-      <span class="num">178 mm</span>, <em>more</em> than the ground&rsquo;s own
+      <span class="num">172 mm</span>, <em>more</em> than the ground&rsquo;s own
       <span class="num">140 mm</span> stroke. The mount is now amplifying the motion it was installed to
       absorb. Note how little of the change came from the extra damper:
       <span class="num">&zeta;</span> rose only from <span class="num">0.020</span> to
       <span class="num">0.028</span>. Almost all of it is the shift in
       <span class="num">&omega;<sub>n</sub></span>. Keep stiffening and it gets worse still: this pulse
       crosses <span class="num">&times;1</span> &mdash; the mount transmitting more than a rigid bolt
-      would &mdash; at about <span class="num">f<sub>n</sub> = 1.7 Hz</span>, and peaks near
-      <span class="num">&times;3.4</span> at <span class="num">f<sub>n</sub> &asymp; 3.4 Hz</span>, where the
-      pulse length is a little over one natural period. For a shock, the whole design rule is
+      would &mdash; at about <span class="num">&omega;<sub>n</sub> = 10.7 rad/s</span>, and peaks near
+      <span class="num">&times;3.6</span> at <span class="num">&omega;<sub>n</sub> &asymp; 23.5 rad/s</span>,
+      where the pulse length is about <span class="num">1.3</span> natural periods. For a shock, the whole design rule is
       <em>pulse length against natural period</em>.</p>
       <p><strong style="font-family:var(--display);font-weight:600">Against a shock, the soft mount wins on
-      both counts.</strong> At <span class="num">0.33 Hz</span> the pulse is long over before the mass has
-      begun to respond, so it feels <span class="num">0.11 g</span> &mdash; a twentieth of the ground. And
+      both counts.</strong> At <span class="num">2.0 rad/s</span> the pulse is long over before the mass
+      has begun to respond, so it feels <span class="num">0.11 g</span> &mdash; a twentieth of the ground. And
       unlike the harmonic case, it does not pay for that in stroke: because the mass stays nearly still, the
       travel across the mount is simply the ground&rsquo;s own displacement, and it cannot exceed the
       <span class="num">140 mm</span> the table moved. Switch the table above to
-      <span class="num">Sine</span> at <span class="num">0.95 Hz</span> and the ordering between the first
-      two mountings inverts. Neither result is wrong &mdash; they are answers to different questions, and
+      <span class="num">Sine</span> at <span class="num">&omega; = 6 rad/s</span> and the ordering between
+      the first two mountings inverts. Neither result is wrong &mdash; they are answers to different questions, and
       which one you design for is the actual engineering decision.</p>
       <div class="caveat"><strong>Model limits.</strong> Linear, planar, one horizontal direction, lumped
       mass, springs and dampers that never bottom out or go slack, no friction, and no gravity &mdash; so the
@@ -886,28 +973,51 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
   <div class="wrap">
     <div class="sec-head">
       <p class="eyebrow">Exercises</p>
-      <h2>Four things to try on the table</h2>
+      <h2>Five things to try on the table</h2>
     </div>
     <div class="tryit">
       <div class="q"><h3>1 &middot; Make the second mount the loser</h3>
-        <p>Drag the stiffness down until System&nbsp;1 sits at <span class="num">r &gt; 2</span>. Now
-        System&nbsp;2 is the one closer to resonance and it moves <em>more</em> than System&nbsp;1. Explain it
-        from <span class="num">&omega;<sub>n</sub>&#8322; = &radic;2 &omega;<sub>n</sub>&#8321;</span> alone.</p></div>
+        <p>Soften <em>all three</em> stiffness sliders together to <span class="num">10 kN/m</span> &mdash;
+        System&nbsp;1&rsquo;s <span class="num">k</span>, and both of System&nbsp;2&rsquo;s, so the second
+        system stays exactly twice the first. System&nbsp;1 lands at <span class="num">r = 2.68</span>, out
+        in the isolated band, while System&nbsp;2 is dragged back to <span class="num">r = 1.90</span>. The
+        doubled mount is now the <em>worse</em> one: <span class="num">33 mm</span> of travel against
+        <span class="num">29 mm</span>, and <span class="num">0.04 g</span> against
+        <span class="num">0.02 g</span>. Explain it from
+        <span class="num">&omega;<sub>n</sub>&#8322; = &radic;2 &omega;<sub>n</sub>&#8321;</span> alone.</p></div>
       <div class="q"><h3>2 &middot; Catch the &radic;2 coincidence</h3>
-        <p>Tune the ground frequency until System&nbsp;2 reads <span class="num">r = 1.00</span>. Check that
-        System&nbsp;1 now reads <span class="num">1.41</span> and that its transmissibility is exactly 1 &mdash;
-        it is passing the ground straight through while its neighbour resonates.</p></div>
+        <p>Starting from <span class="num">Reset</span>, so both of System&nbsp;2&rsquo;s mounts match
+        System&nbsp;1&rsquo;s, raise <span class="num">&omega;</span> until System&nbsp;2 reads
+        <span class="num">r = 1.00</span> &mdash; which happens exactly when <span class="num">&omega;</span>
+        reaches that system&rsquo;s own <span class="num">&omega;<sub>n</sub> = 8.9 rad/s</span>, and being
+        able to read that straight off the table is the whole reason for quoting the input in rad/s. Check
+        that System&nbsp;1 now reads <span class="num">1.41</span>, its own crossover, where
+        <span class="num">|X/U| = 1</span> exactly for every <span class="num">&zeta;</span>. On the strip
+        chart its red trace matches the blue ground trace in <em>height</em> &mdash; but not in phase, which
+        is why the travel across its mount still reads about
+        <span class="num">50 mm</span> rather than zero.</p></div>
       <div class="q"><h3>3 &middot; Reverse the ranking with one click</h3>
-        <p>On <span class="num">Sine</span> at <span class="num">0.95 Hz</span>, System&nbsp;2 travels about
-        <span class="num">22 mm</span> against System&nbsp;1&rsquo;s <span class="num">166 mm</span>. Switch
+        <p>On <span class="num">Sine</span> at <span class="num">&omega; = 6.0 rad/s</span> and
+        <span class="num">25 mm</span>, System&nbsp;2 travels about
+        <span class="num">20 mm</span> against System&nbsp;1&rsquo;s <span class="num">161 mm</span>. Switch
         to <span class="num">Pulse</span> and System&nbsp;2 becomes the worse one, at
         <span class="num">166 mm</span> and nearly <span class="num">1.4 g</span> against
         <span class="num">0.55 g</span>. Explain the reversal using the pulse length against each
         system&rsquo;s natural period.</p></div>
-      <div class="q"><h3>4 &middot; Find where damping stops helping</h3>
-        <p>At <span class="num">r &approx; 1</span>, more damping always helps. Set the ground frequency so
-        that <span class="num">r &approx; 3</span>, then raise <span class="num">b</span> and watch both
-        amplitudes go <em>up</em>. Explain that from the <span class="num">bs + k</span> numerator.</p></div>
+      <div class="q"><h3>4 &middot; Prove the sides are in parallel</h3>
+        <p>Set <span class="num">k<sub>L</sub> = 150</span> and <span class="num">k<sub>R</sub> = 10</span>,
+        then <span class="num">30</span> and <span class="num">130</span>, then
+        <span class="num">160</span> and <span class="num">0</span>. The total never changes and neither does
+        the trace. Now argue from the free body diagram why the split cannot matter, and name one change to
+        the model that would make it matter.</p></div>
+      <div class="q"><h3>5 &middot; Double the input, change nothing</h3>
+        <p>From <span class="num">Reset</span>, note both peak drifts, then drag the ground amplitude from
+        <span class="num">25 mm</span> to <span class="num">50 mm</span>. Every drift and every acceleration
+        doubles, and <span class="num">&omega;<sub>n</sub></span>, <span class="num">&zeta;</span> and
+        <span class="num">r</span> do not move at all. That is linearity, and it is why the whole design
+        question lives in the <em>ratio</em> of response to input rather than in either one alone &mdash;
+        including on <span class="num">Pulse</span>, where a taller pulse raises the ground&rsquo;s peak
+        acceleration and each system&rsquo;s in exact proportion.</p></div>
     </div>
   </div>
 </section>
@@ -915,7 +1025,8 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
 <footer>
   <div class="wrap">
     <span>EMCH 367 Controls &middot; base&ndash;excited mass&ndash;spring&ndash;damper demonstration</span>
-    <span class="sp">RK4, 8 substeps/frame &middot; inputs: harmonic, or a single-cycle raised-cosine displacement pulse</span>
+    <span class="sp">RK4, 8 substeps/frame &middot; harmonic runs start on the exact steady state, so the peak
+    columns match |X/U| and |Z/U| by hand; the pulse starts from rest</span>
   </div>
 </footer>
 <script>
@@ -949,25 +1060,26 @@ readTokens();
 function lcg(seed){ let s = seed % 2147483647 || 1; return () => (s = (s * 48271) % 2147483647) / 2147483647; }
 
 const PULSE = (function(){
-  /* One cycle of a raised cosine in ground DISPLACEMENT: the table lurches 140 mm
-     and comes back. Being C1 continuous at both ends it has finite velocity and
+  /* One cycle of a raised cosine in ground DISPLACEMENT: the table lurches out by
+     A and comes back. Being C1 continuous at both ends it has finite velocity and
      acceleration everywhere, and it leaves the table exactly where it started, so
      nothing drifts. Repeats every PERIOD so the ring-down can be watched again. */
-  const A = 0.140, PERIOD = 14;
+  const PERIOD = 14;
   return {
-    period: PERIOD, amp: A,
-    at(t, Tp){
+    period: PERIOD,
+    at(t, Tp, A){
       const tt = t % PERIOD;
       if (tt > Tp) return { u: 0, ud: 0, udd: 0 };
       const w = TAU / Tp, h = A / 2;
       return { u: h*(1 - Math.cos(w*tt)), ud: h*w*Math.sin(w*tt), udd: h*w*w*Math.cos(w*tt) };
     },
-    pga(Tp){ const w = TAU / Tp; return (A/2)*w*w; }      /* peak ground acceleration */
+    pga(Tp, A){ const w = TAU / Tp; return (A/2)*w*w; }   /* peak ground acceleration */
   };
 })();
 
-function sineMotion(t, A, f){
-  const w = TAU * f;
+/* the harmonic input is parameterised by omega directly, in rad/s, so that
+   r = omega / omega_n can be read straight off the two numbers on screen */
+function sineMotion(t, A, w){
   return { u: A*Math.sin(w*t), ud: A*w*Math.cos(w*t), udd: -A*w*w*Math.sin(w*t) };
 }
 
@@ -1118,23 +1230,35 @@ const stage = canvasFitter(document.getElementById("stage"));
 const strip = canvasFitter(document.getElementById("strip"));
 
 const GAIN = 500;                                  // display pixels per metre
-const clampPx = d => Math.max(-88, Math.min(88, d));
+const clampPx = d => Math.max(-88, Math.min(88, d));      /* mount travel: bounded by the gap */
+const clampU  = d => Math.max(-130, Math.min(130, d));   /* table travel: no geometric limit */
 
-const P = { m: 2000, k: 80000, b: 1300, f: 0.95, pulse: false, A: 0.025, Tp: 0.35 };
+const P = { m: 2000, k1: 80000, b1: 1300,
+            kL: 80000, bL: 1300, kR: 80000, bR: 1300,
+            w: 6.0, A: 0.025,           /* sine:  frequency in rad/s, and amplitude */
+            Tp: 0.35, Ap: 0.140,        /* pulse: duration and amplitude */
+            pulse: false };
+/* Both of System 2's pairs span the same cart-to-mass gap, so they are in
+   parallel: only the sums enter the equation of motion. */
+const k2 = () => P.kL + P.kR, b2 = () => P.bL + P.bR;
 let sys1 = makeSystem(1), sys2 = makeSystem(1);
 let simT = 0, playing = !reduceMotion, acc = 0, lastNow = 0;
 
 const SAMPLE_DT = 1/60, WINDOW = 20, NBUF = Math.round(WINDOW / SAMPLE_DT);
 let bufU = [], bufX1 = [], bufX2 = [], bufA1 = [], bufA2 = [];
 
-const motion = t => P.pulse ? PULSE.at(t, P.Tp) : sineMotion(t, P.A, P.f);
-/* a single-cycle pulse of length Tp carries its energy around 1/Tp, so that is the
-   frequency the transmissibility chart should be read at in pulse mode */
-const fGround = () => P.pulse ? 1/P.Tp : P.f;
+const motion = t => P.pulse ? PULSE.at(t, P.Tp, P.Ap) : sineMotion(t, P.A, P.w);
+/* what the ground itself is doing, for the input readout */
+const groundPeak = () => P.pulse
+  ? { d: P.Ap, a: PULSE.pga(P.Tp, P.Ap) }
+  : { d: P.A,  a: P.A * P.w**2 };
+/* a single-cycle pulse of length Tp carries its energy around 2*pi/Tp rad/s, so
+   that is the frequency the transmissibility chart should be read at in pulse mode */
+const wGround = () => P.pulse ? TAU/P.Tp : P.w;
 /* system 1 uses (k, b); system 2 uses (2k, 2b) */
-const wn1 = () => Math.sqrt(P.k / P.m),          wn2 = () => Math.sqrt(2*P.k / P.m);
-const z1  = () => P.b / (2*Math.sqrt(P.k*P.m)),  z2  = () => 2*P.b / (2*Math.sqrt(2*P.k*P.m));
-const r1  = () => TAU * fGround() / wn1(),       r2  = () => TAU * fGround() / wn2();
+const wn1 = () => Math.sqrt(P.k1 / P.m),          wn2 = () => Math.sqrt(k2() / P.m);
+const z1  = () => P.b1 / (2*Math.sqrt(P.k1*P.m)), z2  = () => b2() / (2*Math.sqrt(k2()*P.m));
+const r1  = () => wGround() / wn1(),             r2  = () => wGround() / wn2();
 
 function pushSample(g){
   bufU.push(g.u);
@@ -1146,17 +1270,43 @@ function advance(dt){
   const nsub = 8, h = dt / nsub;
   let g = motion(simT);
   for (let i = 0; i < nsub; i++){
-    g = step(sys1, simT, h, motion, P.m, P.k, P.b);
-        step(sys2, simT, h, motion, P.m, 2*P.k, 2*P.b);
+    g = step(sys1, simT, h, motion, P.m, P.k1, P.b1);
+        step(sys2, simT, h, motion, P.m, k2(), b2());
     simT += h;
   }
   return g;
 }
+/* Steady state of  m x'' + b x' + k x = b u' + k u  under u = A sin(w t):
+     X/U = (j w b + k) / (k - m w^2 + j w b)
+     x(t) = A |H| sin(w t + phi)
+   Starting a sine run ON this instead of from rest matters for teaching: the
+   peak columns then report the steady state a student gets from |X/U| by hand,
+   not a start-up transient that overshoots it by 10-20%. A pulse is the
+   opposite case - the transient IS the event - so that one starts from rest. */
+function seedSteady(sys, m, k, b){
+  const w = P.w, A = P.A;
+  const nr = k, ni = w*b;                       /* numerator  k + j w b */
+  const dr = k - m*w*w, di = w*b;               /* denominator            */
+  const d2 = dr*dr + di*di;
+  if (d2 === 0) return;                         /* undamped, exactly at wn */
+  const hr = (nr*dr + ni*di)/d2, hi = (ni*dr - nr*di)/d2;
+  const mag = Math.hypot(hr, hi), phi = Math.atan2(hi, hr);
+  sys.x[0] = A*mag*Math.sin(phi);
+  sys.v[0] = A*mag*w*Math.cos(phi);
+}
 function resetSim(){
   sys1 = makeSystem(1); sys2 = makeSystem(1); simT = 0; acc = 0;
+  if (!P.pulse){ seedSteady(sys1, P.m, P.k1, P.b1); seedSteady(sys2, P.m, k2(), b2()); }
   bufU = []; bufX1 = []; bufX2 = []; bufA1 = []; bufA2 = [];
   for (let i = 0; i < NBUF; i++) pushSample(advance(SAMPLE_DT));
 }
+
+/* Visual gauge: heavier line and tighter coils for a stiffer spring, a fatter
+   body for a stronger damper. Cosmetic only - the physics uses the numbers. */
+const wGauge = v => 1.4 + 1.9 * Math.min(1, Math.max(0, v / 400000));
+const fade = (ctx, v) => { ctx.globalAlpha = v <= 0 ? 0.28 : 1; };
+const coilsFor = k => Math.max(3, Math.round(9 - 6 * Math.min(1, k / 400000)));
+const bodyFor  = b => 16 + 12 * Math.min(1, b / 20000);
 
 /* ---------------------------------- stage ---------------------------------- */
 const TABLE_Y0 = 274, TABLE_Y1 = 296, RAIL_Y = 302, TX0 = 40, TX1 = 1040;
@@ -1185,7 +1335,7 @@ function driftBadge(ctx, cx, z, col, tag){
 function drawStage(g){
   const { ctx, LW, LH } = stage;
   ctx.clearRect(0, 0, LW, LH);
-  const uPx = clampPx(g.u * GAIN);
+  const uPx = clampU(g.u * GAIN);
   const d1 = clampPx((sys1.x[0] - g.u) * GAIN), d2 = clampPx((sys2.x[0] - g.u) * GAIN);
 
   hatch(ctx, 0, LW, RAIL_Y + 2, LH, TOK.hatch);
@@ -1206,11 +1356,14 @@ function drawStage(g){
 
   /* ---- System 1: single mount ---- */
   post(ctx, S1.post, 176);
-  ctx.strokeStyle = TOK["s-response"]; ctx.lineWidth = 2;
-  spring(ctx, S1.post, 212, S1.mass + d1, 5, 11);
-  dashpot(ctx, S1.post, 252, S1.mass + d1, 22);
-  label(ctx, "k", S1.post + 16, 202, TOK["s-response"], FM);
-  label(ctx, "b", S1.post + 16, 240, TOK["s-response"], FM);
+  ctx.strokeStyle = TOK["s-response"]; ctx.lineWidth = wGauge(P.k1); fade(ctx, P.k1);
+  spring(ctx, S1.post, 212, S1.mass + d1, coilsFor(P.k1), 11);
+  ctx.lineWidth = wGauge(P.b1 * 20); fade(ctx, P.b1);
+  dashpot(ctx, S1.post, 252, S1.mass + d1, bodyFor(P.b1));
+  ctx.globalAlpha = 1;
+  /* (c) System 1's elements carry their values too, so the two systems read alike */
+  label(ctx, "k = " + (P.k1/1000).toFixed(0), S1.post + 16, 196, TOK["s-response"], FMs);
+  label(ctx, "b = " + (P.b1/1000).toFixed(1), S1.post + 16, 236, TOK["s-response"], FMs);
   massBox(ctx, S1.mass + d1);
   label(ctx, "SYSTEM 1 — SINGLE MOUNT", S1.cx, 86, TOK.muted, FD, "center");
   labelPad(ctx, "one spring, one damper", S1.cx, 100, TOK.muted, FMs, "center");
@@ -1220,15 +1373,22 @@ function drawStage(g){
   post(ctx, S2.postL, 176);
   ctx.fillStyle = TOK["chrome-soft"]; ctx.strokeStyle = TOK["ink-2"]; ctx.lineWidth = 1.8;
   ctx.beginPath(); ctx.rect(S2.postR, 176, 12, TABLE_Y0 - 176); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = TOK["s-isolated"]; ctx.lineWidth = 2;
-  spring(ctx, S2.postL, 212, S2.mass + d2, 5, 11);
-  dashpot(ctx, S2.postL, 252, S2.mass + d2, 22);
-  spring(ctx, S2.postR, 212, S2.mass + MASS_W + d2, 5, 11);
-  dashpot(ctx, S2.postR, 252, S2.mass + MASS_W + d2, 22);
-  label(ctx, "k", S2.postL + 16, 202, TOK["s-isolated"], FM);
-  label(ctx, "b", S2.postL + 16, 240, TOK["s-isolated"], FM);
-  label(ctx, "k", S2.postR - 16, 202, TOK["s-isolated"], FM, "right");
-  label(ctx, "b", S2.postR - 16, 240, TOK["s-isolated"], FM, "right");
+ctx.strokeStyle = TOK["s-isolated"];
+  /* each side is drawn at its own gauge, so an asymmetric setting looks
+     asymmetric even though the response only sees the sums */
+  ctx.lineWidth = wGauge(P.kL); fade(ctx, P.kL);
+  spring(ctx, S2.postL, 212, S2.mass + d2, coilsFor(P.kL), 11);
+  ctx.lineWidth = wGauge(P.kR); fade(ctx, P.kR);
+  spring(ctx, S2.postR, 212, S2.mass + MASS_W + d2, coilsFor(P.kR), 11);
+  ctx.lineWidth = wGauge(P.bL * 20); fade(ctx, P.bL);
+  dashpot(ctx, S2.postL, 252, S2.mass + d2, bodyFor(P.bL));
+  ctx.lineWidth = wGauge(P.bR * 20); fade(ctx, P.bR);
+  dashpot(ctx, S2.postR, 252, S2.mass + MASS_W + d2, bodyFor(P.bR));
+  ctx.globalAlpha = 1; ctx.lineWidth = 2;
+  label(ctx, "kL = " + (P.kL/1000).toFixed(0), S2.postL + 16, 196, TOK["s-isolated"], FMs);
+  label(ctx, "bL = " + (P.bL/1000).toFixed(1), S2.postL + 16, 236, TOK["s-isolated"], FMs);
+  label(ctx, "kR = " + (P.kR/1000).toFixed(0), S2.postR - 16, 196, TOK["s-isolated"], FMs, "right");
+  label(ctx, "bR = " + (P.bR/1000).toFixed(1), S2.postR - 16, 236, TOK["s-isolated"], FMs, "right");
   massBox(ctx, S2.mass + d2);
   label(ctx, "SYSTEM 2 — MOUNTED BOTH SIDES", S2.cx, 86, TOK.muted, FD, "center");
   labelPad(ctx, "two springs, two dampers", S2.cx, 100, TOK.muted, FMs, "center");
@@ -1347,7 +1507,7 @@ function updateReadouts(){
   ];
   for (const d of data){
     el("t"+d.i+"wn").textContent = d.w.toFixed(2) + " rad/s";
-    el("t"+d.i+"fn").textContent = (d.w/TAU).toFixed(2) + " Hz";
+    el("t"+d.i+"fn").textContent = (TAU/d.w).toFixed(2) + " s";
     el("t"+d.i+"z").textContent  = d.z.toFixed(3);
     el("t"+d.i+"d").textContent  = (d.p[0]*1000).toFixed(0) + " mm";
     el("t"+d.i+"a").textContent  = d.p[1].toFixed(2) + " g";
@@ -1376,18 +1536,41 @@ function tick(now){
 /* ------------------------------- controls ------------------------------- */
 function syncLabels(){
   el("vM").textContent = P.m.toFixed(0);
-  el("vK").textContent = (P.k/1000).toFixed(1);
-  el("vB").textContent = (P.b/1000).toFixed(1);
-  el("vF").textContent = P.pulse ? P.Tp.toFixed(2) : P.f.toFixed(2);
-  el("fLabel").textContent = P.pulse ? "Pulse duration" : "Ground frequency";
-  el("fUnit").textContent  = P.pulse ? "s" : "Hz";
+  el("vK1").textContent = (P.k1/1000).toFixed(1);
+  el("vB1").textContent = (P.b1/1000).toFixed(1);
+  el("vKL").textContent = (P.kL/1000).toFixed(1);
+  el("vKR").textContent = (P.kR/1000).toFixed(1);
+  el("vBL").textContent = (P.bL/1000).toFixed(1);
+  el("vBR").textContent = (P.bR/1000).toFixed(1);
+  el("sumK").textContent = (k2()/1000).toFixed(1);
+  el("sumB").textContent = (b2()/1000).toFixed(1);
+  el("vF").textContent = P.pulse ? P.Tp.toFixed(2) : P.w.toFixed(1);
+  el("fLabel").innerHTML  = P.pulse ? "Pulse duration T<sub>p</sub>" : "Ground frequency &omega;";
+  el("fUnit").textContent = P.pulse ? "s" : "rad/s";
+  el("vA").textContent = ((P.pulse ? P.Ap : P.A) * 1000).toFixed(0);
+  el("aLabel").textContent = P.pulse ? "Pulse amplitude" : "Ground amplitude";
+  const g = groundPeak();
+  el("gpD").textContent = (g.d * 1000).toFixed(0);
+  el("gpA").textContent = (g.a / G).toFixed(2);
 }
-el("sM").addEventListener("input", e => { P.m = +e.target.value; syncLabels(); });
-el("sK").addEventListener("input", e => { P.k = +e.target.value * 1000; syncLabels(); });
-el("sB").addEventListener("input", e => { P.b = +e.target.value * 1000; syncLabels(); });
+/* Every slider restarts the run. The peak columns hold a 20 s window, so if a
+   parameter changed a moment ago the window would still be mostly the OLD
+   system and the table would report a peak belonging to no configuration on
+   screen. resetSim() re-integrates the whole window from rest in about 4 ms, so
+   the strip chart always shows a clean history of exactly the current numbers,
+   build-up transient included, at its left edge. */
+const bump = () => { syncLabels(); resetSim(); };
+el("sM").addEventListener("input", e => { P.m = +e.target.value; bump(); });
+for (const [id, key] of [["sK1","k1"],["sB1","b1"],["sKL","kL"],["sKR","kR"],["sBL","bL"],["sBR","bR"]])
+  el(id).addEventListener("input", e => { P[key] = +e.target.value * 1000; bump(); });
 el("sF").addEventListener("input", e => {
-  if (P.pulse) P.Tp = +e.target.value; else P.f = +e.target.value;
-  syncLabels();
+  if (P.pulse) P.Tp = +e.target.value; else P.w = +e.target.value;
+  bump();
+});
+el("sA").addEventListener("input", e => {
+  const m = +e.target.value / 1000;
+  if (P.pulse) P.Ap = m; else P.A = m;
+  bump();
 });
 
 function setExcitation(q){
@@ -1395,10 +1578,12 @@ function setExcitation(q){
   P.pulse = q;
   el("exSine").setAttribute("aria-pressed", String(!q));
   el("exPulse").setAttribute("aria-pressed", String(q));
-  /* the same slider drives the pulse length in pulse mode */
-  const sf = el("sF");
-  if (q){ sf.min = 0.12; sf.max = 1.20; sf.step = 0.01; sf.value = P.Tp; }
-  else  { sf.min = 0.15; sf.max = 4.00; sf.step = 0.01; sf.value = P.f; }
+  /* the same two sliders drive the pulse length and height in pulse mode */
+  const sf = el("sF"), sa = el("sA");
+  if (q){ sf.min = 0.12; sf.max = 1.20; sf.step = 0.01; sf.value = P.Tp;
+          sa.min = 20;   sa.max = 250;  sa.step = 5;    sa.value = P.Ap * 1000; }
+  else  { sf.min = 1.0;  sf.max = 25.0; sf.step = 0.1;  sf.value = P.w;
+          sa.min = 1;    sa.max = 100;  sa.step = 1;    sa.value = P.A * 1000; }
   syncLabels(); resetSim();
 }
 el("exSine").addEventListener("click", () => setExcitation(false));
@@ -1409,10 +1594,16 @@ el("playBtn").addEventListener("click", e => {
   e.target.textContent = playing ? "Pause" : "Play";
 });
 el("resetBtn").addEventListener("click", () => {
-  P.m = 2000; P.k = 80000; P.b = 1300; P.f = 0.95;
-  el("sM").value = 2000; el("sK").value = 80; el("sB").value = 1.3; el("sF").value = 0.95;
+  P.m = 2000; P.k1 = 80000; P.b1 = 1300;
+  P.kL = 80000; P.bL = 1300; P.kR = 80000; P.bR = 1300;
+  P.w = 6.0; P.A = 0.025; P.Tp = 0.35; P.Ap = 0.140;
+  el("sM").value = 2000;
+  el("sK1").value = 80; el("sB1").value = 1.3;
+  el("sKL").value = 80; el("sKR").value = 80;
+  el("sBL").value = 1.3; el("sBR").value = 1.3;
   setExcitation(false);
-  el("sF").min = 0.15; el("sF").max = 4.00; el("sF").value = 0.95;
+  el("sF").min = 1.0;  el("sF").max = 25.0; el("sF").step = 0.1;  el("sF").value = 6.0;
+  el("sA").min = 1;    el("sA").max = 100;  el("sA").step = 1;    el("sA").value = 25;
   syncLabels(); resetSim();
 });
 
@@ -1537,26 +1728,26 @@ buildTransmissibility();
    ===================================================================== */
 const CTP = 0.35;                 /* pulse length used for the comparison run */
 const CMASS = 2000;
-const kA = CMASS * (TAU * 1.00)**2, bA = 2 * 0.02 * Math.sqrt(kA * CMASS);
-const kC = CMASS * (TAU * 0.33)**2, bC = 2 * 0.15 * Math.sqrt(kC * CMASS);
+const kA = CMASS * 6.00**2, bA = 2 * 0.02 * Math.sqrt(kA * CMASS);   /* wn = 6 rad/s */
+const kC = CMASS * 2.00**2, bC = 2 * 0.15 * Math.sqrt(kC * CMASS);   /* wn = 2 rad/s */
 const CFG = [
   { name: "Single mount",   k: kA,     b: bA,     col: "s-response", mode: "one"  },
   { name: "Two mounts",     k: 2 * kA, b: 2 * bA, col: "s-isolated", mode: "two"  },
   { name: "One soft mount", k: kC,     b: bC,     col: "s-ground",   mode: "soft" }
 ];
 CFG.forEach(c => {
-  c.wn = Math.sqrt(c.k / CMASS); c.fn = c.wn / TAU;
-  c.z = c.b / (2 * Math.sqrt(c.k * CMASS)); c.r = (1 / CTP) / c.fn;
+  c.wn = Math.sqrt(c.k / CMASS); c.Tn = TAU / c.wn;
+  c.z = c.b / (2 * Math.sqrt(c.k * CMASS)); c.r = (TAU / CTP) / c.wn;
 });
 document.querySelectorAll("#compare .trio .cell .sub").forEach((n, i) => {
-  n.innerHTML = "f<sub>n</sub> " + CFG[i].fn.toFixed(2) + " Hz &middot; &zeta; " + CFG[i].z.toFixed(3);
+  n.innerHTML = "&omega;<sub>n</sub> " + CFG[i].wn.toFixed(2) + " rad/s &middot; &zeta; " + CFG[i].z.toFixed(3);
 });
 
-const CDT = 1/240, CREC = 14, CFPS = 60;
+const CDT = 1/240, CREC = 14, CFPS = 60, CAMP = 0.140;
 const REC = { u: [], z: [[],[],[]], peakZ: [0,0,0], peakA: [0,0,0], n: 0 };
 (function precompute(){
   const sysA = CFG.map(() => makeSystem(1));
-  const q = t => PULSE.at(t, CTP);
+  const q = t => PULSE.at(t, CTP, CAMP);
   const every = Math.round((1/CFPS) / CDT);
   let t = 0, i = 0;
   while (t < CREC){
@@ -1689,9 +1880,9 @@ function bars(svgId, vals, fmt, unit, refVal, refLabel){
   s += `<text x="${X0}" y="180" ${FMs2} font-size="9" fill="var(--muted)">0</text>`;
   svg.innerHTML = s;
 }
-const CPGA = PULSE.pga(CTP) / 9.80665;
+const CPGA = PULSE.pga(CTP, CAMP) / 9.80665;
 bars("barDrift", REC.peakZ.map(v => v*1000), v => v.toFixed(0), "mm",
-     PULSE.amp*1000, "ground stroke " + (PULSE.amp*1000).toFixed(0) + " mm");
+     CAMP*1000, "ground stroke " + (CAMP*1000).toFixed(0) + " mm");
 bars("barAcc",   REC.peakA,                  v => v.toFixed(2), "g",
      CPGA, "ground " + CPGA.toFixed(2) + " g");
 
