@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subsonic, Transonic, Supersonic</title>
+<style>
+  :root{
+    --surface:#fcfcfb; --panel:#ffffff; --ink:#1c1a19; --ink2:#4a4542; --muted:#6b6663;
+    --rule:#e3e0dc;
+    --garnet:#862633; --serA:#A32B41; --serB:#1F6FB2;
+    --good:#1e7a52; --warn:#9a6212;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--surface);color:var(--ink);
+    font-family:"Segoe UI",Tahoma,-apple-system,Helvetica,Arial,sans-serif;}
+  .stage{width:1920px;height:1080px;padding:26px 44px 16px;display:flex;flex-direction:column;}
+  .hdr{display:flex;align-items:flex-start;gap:28px}
+  h1{margin:0;font-size:35px;letter-spacing:-.01em;font-weight:700;}
+  .sub{margin:6px 0 0;font-size:18px;color:var(--ink2);max-width:1300px;line-height:1.35}
+  .rule{height:5px;background:var(--garnet);width:132px;margin:12px 0 14px;border-radius:3px}
+  .controls{background:var(--panel);border:1px solid var(--rule);border-radius:12px;
+    padding:12px 20px;margin-bottom:14px;display:flex;align-items:center;gap:20px;flex-wrap:nowrap}
+  .ctl{display:flex;align-items:center;gap:11px}
+  .ctl label{font-size:16px;color:var(--ink2);font-weight:700;white-space:nowrap}
+  input[type=range]{accent-color:var(--serB)}
+  #mach{width:400px}
+  .mval{font-variant-numeric:tabular-nums;font-weight:800;font-size:26px;min-width:96px;color:var(--ink)}
+  button{font:inherit;font-size:14.5px;font-weight:600;padding:7px 13px;border-radius:8px;
+    border:1px solid var(--serB);background:#eef5fb;color:#14507f;cursor:pointer}
+  button:hover{background:#e2eefa}
+  button.on{background:var(--serB);color:#fff}
+  .badge{font-size:17px;font-weight:800;padding:9px 20px;border-radius:999px;
+    display:flex;align-items:center;gap:10px;border:1px solid;white-space:nowrap;margin-left:auto}
+  .dot{width:11px;height:11px;border-radius:50%;background:currentColor}
+  .b-sub{background:#eef5fb;border-color:#cadff0;color:#14507f}
+  .b-tra{background:#fdf4e6;border-color:#eed9b3;color:var(--warn)}
+  .b-sup{background:#fbeef0;border-color:#eccdd4;color:var(--serA)}
+  .charts{display:grid;grid-template-columns:1.62fr 1fr;gap:18px}
+  .card{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:14px 16px 10px}
+  .card h2{margin:0 0 2px;font-size:19px;font-weight:700}
+  .card .cap{margin:0 0 6px;font-size:13.5px;color:var(--muted)}
+  .tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:14px}
+  .tile{background:var(--panel);border:1px solid var(--rule);border-radius:11px;padding:11px 14px}
+  .tile .k{font-size:12.5px;color:var(--muted);font-weight:700;text-transform:uppercase;line-height:1.25;min-height:16px}
+  .tile .v{font-size:23px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums}
+  .tile .n{font-size:12.5px;color:var(--muted);margin-top:3px;font-weight:600;line-height:1.3}
+  .punch{margin-top:13px;font-size:19px;line-height:1.42;color:var(--ink);
+    border-left:5px solid var(--garnet);padding:7px 0 7px 16px;font-weight:600}
+  .foot{margin-top:auto;padding-top:9px;font-size:13px;color:var(--muted);line-height:1.42;border-top:1px solid var(--rule)}
+  text{font-family:inherit}
+</style>
+</head>
+<body data-palette="#A32B41,#1F6FB2">
+<div class="stage">
+  <div class="hdr">
+    <div>
+      <h1>Subsonic, transonic, supersonic: how the sound waves react</h1>
+      <p class="sub">A source emits a pulse every tick. Each pulse spreads as a sphere at the speed of sound <em>a</em>, centred on the point where it was emitted &mdash; while the source itself moves on at <em>V</em> = M&thinsp;a. All three regimes follow from that one race.</p>
+    </div>
+    <div class="badge b-sub" id="badge"><span class="dot"></span><span id="badgeTxt">Subsonic</span></div>
+  </div>
+  <div class="rule"></div>
+
+  <div class="controls">
+    <div class="ctl"><label for="mach">Mach number M</label>
+      <input id="mach" type="range" min="0" max="3" step="0.01" value="0.5">
+      <span class="mval" id="mval">0.50</span></div>
+    <button id="play" class="on">Pause</button>
+    <span style="width:1px;height:26px;background:var(--rule)"></span>
+    <button class="preset" data-m="0">M = 0</button>
+    <button class="preset" data-m="0.5">0.5</button>
+    <button class="preset" data-m="0.85">0.85</button>
+    <button class="preset" data-m="1">1.0</button>
+    <button class="preset" data-m="1.3">1.3</button>
+    <button class="preset" data-m="2">2.0</button>
+  </div>
+
+  <div class="charts">
+    <div class="card">
+      <h2>Wave pattern</h2>
+      <p class="cap">Each circle is one pulse, still expanding at <em>a</em> from where it was emitted &mdash; camera follows the source</p>
+      <svg id="wave" width="1122" height="452" role="img" aria-label="Expanding sound wavefronts around a moving source"></svg>
+    </div>
+    <div class="card">
+      <h2>The geometry</h2>
+      <p class="cap">One pulse of age <em>t</em>: it has grown to <em>at</em> while the source ran on <em>Vt</em></p>
+      <svg id="geo" width="672" height="300" role="img" aria-label="Mach angle construction"></svg>
+      <p id="geoNote" style="font-size:14.5px;line-height:1.45;color:var(--ink2);margin:8px 0 0"></p>
+    </div>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+  <p class="punch" id="punch"></p>
+  <p class="foot">
+    <strong>How this is built.</strong> Pulse <em>k</em> of age t<sub>k</sub> has radius a&thinsp;t<sub>k</sub> and its centre sits V&thinsp;t<sub>k</sub> behind the source; the picture is that statement drawn for nine successive pulses. The fronts acquire a common tangent only when V &gt; a, and the right triangle then gives sin&thinsp;&mu; = a&thinsp;t / V&thinsp;t = 1/M.
+    <strong>Caveats.</strong> This is the linear acoustic construction &mdash; infinitesimally weak pulses, uniform air, no viscosity. A real shock has finite strength, so it stands detached ahead of a blunt nose and is stronger and steeper than the Mach wave drawn here; the regime bands (transonic &asymp; 0.8&ndash;1.2) are conventional labels, not sharp physical boundaries.
+  </p>
+</div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const el=(n,a={})=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const txt=(p,s)=>{p.textContent=s;return p;};
+
+let M=0.5, phase=0, playing=true, last=0;
+const NW=9, AS=1;
+
+/* ---------------- wave panel ---------------- */
+const WW=1122, WH=452, PAD=14;
+function drawWaves(){
+  const svg=document.getElementById("wave"); svg.innerHTML="";
+  const iw=WW-2*PAD, ih=WH-2*PAD;
+  const UNITS=26, sc=iw/UNITS;
+  const sx=PAD+iw*0.70, sy=PAD+ih*0.52;
+  const X=u=>sx+u*sc;
+
+  svg.appendChild(el("rect",{x:PAD,y:PAD,width:iw,height:ih,fill:"#fbfaf9",
+    stroke:"var(--rule)","stroke-width":1,rx:8}));
+  const cp=el("clipPath",{id:"wclip"});
+  cp.appendChild(el("rect",{x:PAD,y:PAD,width:iw,height:ih,rx:8}));
+  svg.appendChild(cp);
+  const g=el("g",{"clip-path":"url(#wclip)"}); svg.appendChild(g);
+
+  const ages=[]; for(let k=NW;k>=1;k--) ages.push(k+phase);
+  const maxAge=NW+phase;
+
+  if(M>1){
+    const mu=Math.asin(1/M), L=UNITS*1.7*sc;
+    const y1=sy-L*Math.sin(mu), y2=sy+L*Math.sin(mu), xc=sx-L*Math.cos(mu);
+    g.appendChild(el("path",{d:`M${sx} ${sy} L${xc} ${y1} L${xc} ${PAD} L${WW} ${PAD} L${WW} ${WH} L${xc} ${WH} L${xc} ${y2} Z`,
+      fill:"#f3f1ee",opacity:.8}));
+    txt(g.appendChild(el("text",{x:sx+96,y:sy-ih*0.33,"font-size":15,"font-weight":700,
+      fill:"var(--muted)","text-anchor":"middle"})),"zone of silence");
+    txt(g.appendChild(el("text",{x:sx+96,y:sy-ih*0.33+19,"font-size":13,
+      fill:"var(--muted)","text-anchor":"middle"})),"no pulse has reached here yet");
+  }
+
+  ages.forEach((age,i)=>{
+    const r=AS*age*sc, cx=X(-M*age);
+    const op=0.30+0.55*(i/(ages.length-1||1));
+    g.appendChild(el("circle",{cx:cx,cy:sy,r:r,fill:"none",
+      stroke:"var(--serB)","stroke-width":i===ages.length-1?2.4:1.7,opacity:op}));
+    g.appendChild(el("circle",{cx:cx,cy:sy,r:2.6,fill:"var(--serB)",opacity:op*0.9}));
+  });
+
+  if(M>1){
+    const mu=Math.asin(1/M), L=UNITS*1.7*sc;
+    [-1,1].forEach(s=>g.appendChild(el("line",{x1:sx,y1:sy,x2:sx-L*Math.cos(mu),y2:sy+s*L*Math.sin(mu),
+      stroke:"var(--serA)","stroke-width":3})));
+    const ar=112;
+    g.appendChild(el("path",{d:`M ${sx-ar} ${sy} A ${ar} ${ar} 0 0 0 ${sx-ar*Math.cos(mu)} ${sy+ar*Math.sin(mu)}`,
+      fill:"none",stroke:"var(--serA)","stroke-width":1.6}));
+    txt(g.appendChild(el("text",{x:sx-ar-20,y:sy+27,"font-size":19,"font-weight":800,fill:"var(--serA)"})),"μ");
+    const dLab=Math.min(280,(sy-PAD-30)/Math.max(Math.sin(mu),1e-3));
+    txt(g.appendChild(el("text",{x:sx-dLab*Math.cos(mu)-6,y:sy-dLab*Math.sin(mu)-11,"font-size":15,
+      "font-weight":700,fill:"var(--serA)","text-anchor":"middle"})),"Mach wave");
+  }
+
+  if(Math.abs(M-1)<0.02){
+    g.appendChild(el("line",{x1:sx,y1:PAD,x2:sx,y2:WH-PAD,stroke:"var(--serA)","stroke-width":3.5}));
+    txt(g.appendChild(el("text",{x:sx-16,y:PAD+27,"font-size":16,"font-weight":800,
+      fill:"var(--serA)","text-anchor":"end"})),"every pulse touches here");
+  }
+
+  if(M<0.98){
+    const lead=maxAge*(1-M);
+    g.appendChild(el("line",{x1:X(lead),y1:sy-ih*0.43,x2:X(lead),y2:sy+ih*0.43,
+      stroke:"var(--good)","stroke-width":2,"stroke-dasharray":"7 5"}));
+    const nearEdge = X(lead) > PAD+iw-250;
+    txt(g.appendChild(el("text",{x:X(lead)+(nearEdge?-10:10),y:sy-ih*0.43+16,"font-size":14,
+      "font-weight":700,fill:"var(--good)","text-anchor":nearEdge?"end":"start"})),
+      "sound reaches this far ahead");
+  }
+
+  const b=14;
+  g.appendChild(el("path",{d:`M${sx+b*1.5} ${sy} L${sx-b} ${sy-b*0.72} L${sx-b*0.45} ${sy} L${sx-b} ${sy+b*0.72} Z`,fill:"#1c1a19"}));
+  g.appendChild(el("line",{x1:sx+26,y1:sy,x2:sx+96,y2:sy,stroke:"#1c1a19","stroke-width":2.4}));
+  g.appendChild(el("path",{d:`M${sx+104} ${sy} L${sx+92} ${sy-5.5} L${sx+92} ${sy+5.5} Z`,fill:"#1c1a19"}));
+  txt(g.appendChild(el("text",{x:sx+60,y:sy-13,"font-size":15,"font-weight":800,
+    fill:"#1c1a19","text-anchor":"middle"})),"V = "+M.toFixed(2)+" a");
+}
+
+/* ---------------- geometry panel ---------------- */
+function drawGeo(){
+  const svg=document.getElementById("geo"); svg.innerHTML="";
+  const W=672,H=300,P=16;
+  svg.appendChild(el("rect",{x:P,y:P,width:W-2*P,height:H-2*P,fill:"#fbfaf9",
+    stroke:"var(--rule)","stroke-width":1,rx:8}));
+  const cy=H*0.56, note=document.getElementById("geoNote");
+  const gcp=el("clipPath",{id:"gclip"});
+  gcp.appendChild(el("rect",{x:P,y:P,width:W-2*P,height:H-2*P,rx:8}));
+  svg.appendChild(gcp);
+  const gg=el("g",{"clip-path":"url(#gclip)"}); svg.appendChild(gg);
+
+  if(M>1){
+    const mu=Math.asin(1/M), at=Math.min(88,(W-140)/(1/Math.sin(mu)+1)),
+          Vt=at/Math.sin(mu), Sx=Math.max(46,(W-(Vt+at))/2), Rx=Sx+Vt;
+    gg.appendChild(el("circle",{cx:Rx,cy:cy,r:at,fill:"none",stroke:"var(--serB)","stroke-width":2.2}));
+    gg.appendChild(el("line",{x1:Sx,y1:cy,x2:Rx,y2:cy,stroke:"#1c1a19","stroke-width":2}));
+    const tx=Rx-at*Math.sin(mu), ty=cy-at*Math.cos(mu);
+    gg.appendChild(el("line",{x1:Sx,y1:cy,x2:Sx+(tx-Sx)*1.40,y2:cy+(ty-cy)*1.40,
+      stroke:"var(--serA)","stroke-width":3}));
+    gg.appendChild(el("line",{x1:Rx,y1:cy,x2:tx,y2:ty,stroke:"var(--serB)","stroke-width":2,"stroke-dasharray":"6 4"}));
+    const ux=tx-Sx, uy=ty-cy, ul=Math.hypot(ux,uy), vx=Rx-tx, vy=cy-ty, vl=Math.hypot(vx,vy), s=11;
+    gg.appendChild(el("path",{d:`M${tx-ux/ul*s} ${ty-uy/ul*s} L${tx-ux/ul*s+vx/vl*s} ${ty-uy/ul*s+vy/vl*s} L${tx+vx/vl*s} ${ty+vy/vl*s}`,
+      fill:"none",stroke:"var(--ink2)","stroke-width":1.3}));
+    const ar=54;
+    gg.appendChild(el("path",{d:`M ${Sx+ar} ${cy} A ${ar} ${ar} 0 0 0 ${Sx+ar*Math.cos(mu)} ${cy-ar*Math.sin(mu)}`,
+      fill:"none",stroke:"var(--serA)","stroke-width":1.6}));
+    txt(gg.appendChild(el("text",{x:Sx+ar+10,y:cy-14,"font-size":19,"font-weight":800,fill:"var(--serA)"})),"μ");
+    txt(gg.appendChild(el("text",{x:(Sx+Rx)/2,y:cy+24,"font-size":16,"font-weight":700,fill:"#1c1a19","text-anchor":"middle"})),"V t");
+    txt(gg.appendChild(el("text",{x:Rx+11,y:cy-at/2,"font-size":16,"font-weight":700,fill:"var(--serB)"})),"a t");
+    txt(gg.appendChild(el("text",{x:Sx-5,y:cy+27,"font-size":14,"font-weight":700,fill:"#1c1a19"})),"S");
+    txt(gg.appendChild(el("text",{x:Rx-5,y:cy+27,"font-size":14,"font-weight":700,fill:"var(--serB)"})),"R");
+    gg.appendChild(el("circle",{cx:Sx,cy:cy,r:4.5,fill:"#1c1a19"}));
+    gg.appendChild(el("circle",{cx:Rx,cy:cy,r:4,fill:"var(--serB)"}));
+    note.innerHTML=`The source at <b>S</b> is <em>outside</em> the pulse it emitted at <b>R</b>. The tangent from S is the Mach wave, and the right triangle gives
+      <b>sin&thinsp;&mu; = at/Vt = 1/M</b> = ${(1/M).toFixed(3)}, so <b>&mu; = ${(mu*180/Math.PI).toFixed(1)}&deg;</b>. Faster flight &rarr; tighter cone.`;
+  } else {
+    const at=92, Cx=W*0.44, Vt=at*M;
+    gg.appendChild(el("circle",{cx:Cx,cy:cy,r:at,fill:"none",stroke:"var(--serB)","stroke-width":2.2}));
+    gg.appendChild(el("line",{x1:Cx,y1:cy,x2:Cx+Vt,y2:cy,stroke:"#1c1a19","stroke-width":2}));
+    gg.appendChild(el("line",{x1:Cx,y1:cy,x2:Cx,y2:cy-at,stroke:"var(--serB)","stroke-width":2,"stroke-dasharray":"6 4"}));
+    gg.appendChild(el("circle",{cx:Cx,cy:cy,r:4,fill:"var(--serB)"}));
+    gg.appendChild(el("circle",{cx:Cx+Vt,cy:cy,r:5,fill:"#1c1a19"}));
+    if(Vt>30) txt(gg.appendChild(el("text",{x:Cx+Vt/2,y:cy-9,"font-size":15,"font-weight":700,
+      fill:"#1c1a19","text-anchor":"middle"})),"V t");
+    txt(gg.appendChild(el("text",{x:Cx-32,y:cy-at/2,"font-size":16,"font-weight":700,fill:"var(--serB)"})),"a t");
+    txt(gg.appendChild(el("text",{x:Cx+Vt+10,y:cy+24,"font-size":14,"font-weight":700,fill:"#1c1a19"})),"S");
+    txt(gg.appendChild(el("text",{x:Cx-14,y:cy+24,"font-size":14,"font-weight":700,fill:"var(--serB)"})),"R");
+    gg.appendChild(el("line",{x1:Cx+Vt,y1:cy-at-18,x2:Cx+at,y2:cy-at-18,stroke:"var(--good)","stroke-width":2}));
+    gg.appendChild(el("line",{x1:Cx+Vt,y1:cy-at-23,x2:Cx+Vt,y2:cy-at-13,stroke:"var(--good)","stroke-width":2}));
+    gg.appendChild(el("line",{x1:Cx+at,y1:cy-at-23,x2:Cx+at,y2:cy-at-13,stroke:"var(--good)","stroke-width":2}));
+    txt(gg.appendChild(el("text",{x:(2*Cx+Vt+at)/2,y:cy-at-27,"font-size":13.5,"font-weight":700,
+      fill:"var(--good)","text-anchor":"middle"})),"lead = (1−M) a t");
+    note.innerHTML = Math.abs(M-1)<0.02
+      ? `At <b>M = 1</b> exactly the source sits <em>on</em> the wavefront &mdash; the limiting case. The lead has shrunk to
+         <b>zero</b>, and the tangent at S is now perpendicular to the flight path: the cone has opened out to a plane, &mu; = 90&deg;.`
+      : `Because V &lt; a the source at <b>S</b> stays <em>inside</em> every pulse it has emitted, always keeping a lead of
+         <b>(1 &minus; M) a t</b> = ${(1-M).toFixed(2)}&thinsp;at on it. No tangent can be drawn from an interior point, so <b>there is no Mach cone</b>.`;
+  }
+}
+
+/* ---------------- regime / tiles / punchline ---------------- */
+function regime(){
+  if(M<0.8) return {name:"Subsonic",cls:"b-sub"};
+  if(M<1.2) return {name:(Math.abs(M-1)<0.02?"Sonic (M = 1)":"Transonic"),cls:"b-tra"};
+  return {name:"Supersonic",cls:"b-sup"};
+}
+function updateText(){
+  const R=regime(), badge=document.getElementById("badge");
+  badge.className="badge "+R.cls;
+  document.getElementById("badgeTxt").textContent=R.name;
+  document.getElementById("mval").textContent=M.toFixed(2);
+  const mu = M>=1 ? Math.asin(1/Math.max(M,1))*180/Math.PI : null;
+  const tile=(k,v,n)=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`;
+  document.getElementById("tiles").innerHTML=
+    tile("Mach number","M = "+M.toFixed(2),"V / a") +
+    tile("Regime",R.name,"conventional bands") +
+    tile("Mach angle",mu===null?"—":mu.toFixed(1)+"°",
+         mu===null?"no cone exists (V < a)":
+         (Math.abs(M-1)<0.02?"sin μ = 1 — cone opens to a plane":"sin μ = 1/M = "+(1/M).toFixed(3))) +
+    tile("Lead ahead of source",M<1?(1-M).toFixed(2)+" at":"none",M<1?"(1 − M) × pulse radius":"source outruns its sound") +
+    tile("Air warned in advance?",M<1?"Yes":"No",M<1?"flow diverts smoothly":"first news is the shock") +
+    tile("Wave drag",M<0.8?"No":(M<1.2?"Rising":"Yes"),M<0.8?"below drag divergence":(M<1.2?"local supersonic pockets":"shock losses"));
+  const P=document.getElementById("punch");
+  if(M<0.01){
+    P.innerHTML=`At <b>M = 0</b> the source is stationary: the pulses are concentric circles and sound reaches every direction equally. No direction is special yet.`;
+  } else if(M<0.8){
+    P.innerHTML=`<b>Subsonic.</b> The pulses outrun the source, so they bunch ahead (spacing &times; ${(1-M).toFixed(2)}) and stretch behind (&times; ${(1+M).toFixed(2)}) &mdash; that asymmetry is the Doppler effect. Crucially the air ahead <em>is warned</em>, so it begins diverting smoothly around the body before the body arrives.`;
+  } else if(Math.abs(M-1)<0.02){
+    P.innerHTML=`<b>M = 1.</b> The source keeps exact pace with its own pulses, so every wavefront touches it at one point and they coalesce into a single plane of piled-up pressure. This is the "sound barrier": disturbances can no longer escape forward.`;
+  } else if(M<1.2){
+    P.innerHTML=`<b>Transonic.</b> The freestream is still ${M<1?"below":"just above"} M = 1, but the pulses ahead are squeezed to ${Math.abs(1-M).toFixed(2)} of their spacing &mdash; flow accelerating over a curved surface goes locally supersonic and ends in a shock. Drag rises steeply here even though the aircraft is ${M<1?"not yet":"barely"} supersonic.`;
+  } else {
+    P.innerHTML=`<b>Supersonic.</b> The source outruns its own sound and sits <em>outside</em> every pulse it has emitted. The fronts share a common tangent &mdash; the Mach cone, half-angle <b>&mu; = ${mu.toFixed(1)}&deg;</b> &mdash; and all disturbance is trapped inside it. Air ahead gets no warning: it is turned abruptly by a shock, and that irreversibility is wave drag.`;
+  }
+}
+function redraw(){ drawWaves(); drawGeo(); updateText(); }
+
+function frame(ts){
+  if(playing){
+    if(!last) last=ts;
+    phase += (ts-last)/1000*0.45;
+    if(phase>=1) phase-=1;
+    last=ts; drawWaves();
+  } else last=0;
+  requestAnimationFrame(frame);
+}
+document.getElementById("mach").addEventListener("input",e=>{M=+e.target.value;redraw();});
+document.getElementById("play").addEventListener("click",e=>{
+  playing=!playing; e.target.textContent=playing?"Pause":"Play"; e.target.classList.toggle("on",playing); last=0;
+});
+document.querySelectorAll(".preset").forEach(b=>b.addEventListener("click",()=>{
+  M=+b.dataset.m; document.getElementById("mach").value=M; redraw();
+}));
+redraw();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
