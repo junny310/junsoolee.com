@@ -9,7 +9,7 @@ nav_order: 7
 
 {% assign confs = site.data.conferences | sort: "start" %}
 {% assign year_groups = confs | group_by: "year" %}
-{% assign cats = "Control Systems,Aerospace & Mechanical,Robotics & Autonomous Systems,Machine Learning & AI" | split: "," %}
+{% assign cats = "Control Systems,Aerospace & Mechanical,Robotics & Autonomous Systems,Machine Learning & AI,General & Regional" | split: "," %}
 
 <style>
   /* Keep every conference table's columns identical regardless of content */

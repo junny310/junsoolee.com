@@ -181,3 +181,13 @@
   location: Seoul, South Korea
   url: https://2027.ieee-icra.org/
   deadline: "September 15, 2026"
+
+- name: SoutheastCon
+  full_name: IEEE SoutheastCon (Region 3 Conference)
+  category: General & Regional
+  year: 2027
+  start: 2027-04-15
+  dates: April 15–18, 2027
+  location: Daytona Beach, FL, USA
+  url: https://ieeesoutheastcon.org/
+  deadline: "December 30, 2026"
