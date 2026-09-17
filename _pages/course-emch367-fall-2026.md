@@ -6,6 +6,7 @@ description: Course files for EMCH 367, Controls (Fall 2026).
 nav: false
 file_titles:
   reflected_inertia: Reflected Inertia
+  servo_motor_lab: Servo Motor Lab
   shake_table_lab: Shake Table Lab
 ---
 

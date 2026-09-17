@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Servo Motor Lab</title>
+<meta name="description" content="A DC servo motor driven by a step voltage, open loop and closed loop side by side: one radian commanded per volt, and the pole at the origin that makes feedback necessary. EMCH 367 Controls.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* ============================================================
+   TOKENS — complete light palette on bare :root.
+   Neutrals carry a faint cyan-green bias toward the petrol chrome,
+   matching the other two EMCH 367 demonstrations.
+   Series hues validated (dataviz six checks) in both modes.
+   ============================================================ */
+:root{
+  color-scheme: light;
+
+  --paper:      #F2F5F5;
+  --surface:    #FBFCFC;
+  --raised:     #FFFFFF;
+  --ink:        #121C20;
+  --ink-2:      #46565C;
+  --muted:      #78888D;
+  --rule:       #D8E0E1;
+  --grid:       #E7EDED;
+  --hatch:      #C6D1D2;
+
+  --chrome:     #0B6070;   /* interactive affordances only, never data */
+  --chrome-ink: #FFFFFF;
+  --chrome-soft:#E3EEF0;
+
+  --c-cmd:   #2A6FB8;      /* the command, u(t) */
+  --c-shaft: #BE3A22;      /* the shaft angle, theta(t) */
+  --c-err:   #4A3AA7;      /* the error, e = u - theta */
+  --c-shaft-wash: rgba(190,58,34,.12);
+
+  --good:     #0A7A52;
+  --warn:     #A9670A;
+  --critical: #B3261E;
+  --good-bg:     #E4F3EC;
+  --warn-bg:     #F7EEDD;
+  --critical-bg: #F8E6E3;
+
+  --shadow: 0 1px 2px rgba(18,28,32,.06), 0 8px 24px -12px rgba(18,28,32,.18);
+
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --prose: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --measure: 68ch;
+  --wide: 1120px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:   #0E1416;
+    --surface: #141A1C;
+    --raised:  #1B2325;
+    --ink:     #EDF2F2;
+    --ink-2:   #A9B8BC;
+    --muted:   #7C8B8F;
+    --rule:    #263033;
+    --grid:    #1E2729;
+    --hatch:   #2C3739;
+
+    --chrome:     #35A2B8;
+    --chrome-ink: #06181C;
+    --chrome-soft:#12292E;
+
+    --c-cmd:   #5595DE;
+    --c-shaft: #E2603F;
+    --c-err:   #9085E9;
+    --c-shaft-wash: rgba(226,96,63,.15);
+
+    --good:     #34B27E;
+    --warn:     #D69A2B;
+    --critical: #E56B5C;
+    --good-bg:     #102A22;
+    --warn-bg:     #2C2413;
+    --critical-bg: #2E1A17;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:   #0E1416;
+  --surface: #141A1C;
+  --raised:  #1B2325;
+  --ink:     #EDF2F2;
+  --ink-2:   #A9B8BC;
+  --muted:   #7C8B8F;
+  --rule:    #263033;
+  --grid:    #1E2729;
+  --hatch:   #2C3739;
+
+  --chrome:     #35A2B8;
+  --chrome-ink: #06181C;
+  --chrome-soft:#12292E;
+
+  --c-cmd:   #5595DE;
+  --c-shaft: #E2603F;
+  --c-err:   #9085E9;
+  --c-shaft-wash: rgba(226,96,63,.15);
+
+  --good:     #34B27E;
+  --warn:     #D69A2B;
+  --critical: #E56B5C;
+  --good-bg:     #102A22;
+  --warn-bg:     #2C2413;
+  --critical-bg: #2E1A17;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -14px rgba(0,0,0,.7);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--prose);
+  font-size:17px;
+  line-height:1.62;
+  font-optical-sizing:auto;
+}
+img{ max-width:100%; }
+:focus-visible{ outline:2px solid var(--chrome); outline-offset:2px; border-radius:2px; }
+
+.wrap{ max-width:var(--wide); margin:0 auto; padding-inline:24px; }
+.measure{ max-width:var(--measure); }
+p{ margin:0 0 1em; }
+p:last-child{ margin-bottom:0; }
+a{ color:var(--chrome); text-decoration-thickness:1px; text-underline-offset:2px; }
+
+h1,h2,h3,h4{ font-family:var(--display); font-weight:600; text-wrap:balance; margin:0; line-height:1.14; letter-spacing:-.012em; }
+h1{ font-size:clamp(2.1rem,4.6vw,3.3rem); font-weight:700; letter-spacing:-.028em; }
+h2{ font-size:clamp(1.4rem,2.4vw,1.85rem); }
+h3{ font-size:1.06rem; letter-spacing:.005em; }
+
+.eyebrow{
+  font-family:var(--display); font-size:.7rem; font-weight:600;
+  letter-spacing:.15em; text-transform:uppercase; color:var(--muted);
+  margin:0;
+}
+.num{ font-family:var(--data); font-variant-numeric:tabular-nums; }
+
+/* ============================================================
+   MASTHEAD
+   ============================================================ */
+.masthead{
+  border-bottom:1px solid var(--rule);
+  background:var(--surface);
+  padding-block:38px 30px;
+}
+.masthead .wrap{ display:flex; flex-direction:column; gap:14px; }
+.mast-rule{ display:flex; align-items:center; gap:14px; }
+.mast-rule::after{ content:""; flex:1; height:1px; background:var(--rule); }
+.standfirst{ font-size:1.14rem; color:var(--ink-2); max-width:64ch; margin:0; }
+.standfirst strong{ color:var(--ink); font-weight:600; }
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+section{ padding-block:56px; border-bottom:1px solid var(--rule); }
+section:last-of-type{ border-bottom:0; }
+.sec-head{ display:flex; flex-direction:column; gap:10px; margin-bottom:28px; }
+.sec-head .lede{ color:var(--ink-2); max-width:var(--measure); margin:0; }
+
+/* ============================================================
+   INSTRUMENT PANEL
+   ============================================================ */
+.panel{
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.panel-grid{
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size:22px 22px;
+  background-position:-1px -1px;
+}
+.stage{ display:block; width:100%; height:auto; }
+.panel-bar{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px;
+  padding:11px 16px; border-bottom:1px solid var(--rule);
+  background:var(--raised);
+}
+.panel-bar.bottom{ border-bottom:0; border-top:1px solid var(--rule); }
+.panel-title{
+  font-family:var(--display); font-size:.7rem; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-2);
+  margin-right:auto;
+}
+
+.btn{
+  font-family:var(--display); font-size:.8rem; font-weight:600; letter-spacing:.02em;
+  padding:7px 15px; border-radius:2px; border:1px solid var(--rule);
+  background:var(--surface); color:var(--ink); cursor:pointer;
+  transition:background .12s, border-color .12s, color .12s;
+}
+.btn:hover{ border-color:var(--chrome); color:var(--chrome); }
+.btn.primary{ background:var(--chrome); border-color:var(--chrome); color:var(--chrome-ink); }
+.btn.primary:hover{ filter:brightness(1.08); color:var(--chrome-ink); }
+
+.seg{ display:inline-flex; border:1px solid var(--rule); border-radius:2px; overflow:hidden; }
+.seg button{
+  font-family:var(--display); font-size:.76rem; font-weight:600; letter-spacing:.03em;
+  padding:6px 13px; border:0; background:var(--surface); color:var(--ink-2); cursor:pointer;
+  border-right:1px solid var(--rule);
+}
+.seg button:last-child{ border-right:0; }
+.seg button[aria-pressed="true"]{ background:var(--chrome-soft); color:var(--chrome); }
+.seg button:hover:not([aria-pressed="true"]){ color:var(--ink); }
+
+/* slider groups */
+.sgrid{
+  display:grid; grid-template-columns:minmax(0,1fr);
+  border-top:1px solid var(--rule); background:var(--raised);
+}
+@media (min-width:860px){ .sgrid{ grid-template-columns:1fr 2fr; } }
+.sgrp{ padding:14px 16px 16px; border-right:1px solid var(--rule); min-width:0; }
+.sgrp:last-child{ border-right:0; }
+@media (max-width:859px){
+  .sgrp{ border-right:0; border-bottom:1px solid var(--rule); }
+  .sgrp:last-child{ border-bottom:0; }
+}
+.sgrp h4{
+  font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.12em;
+  color:var(--muted); margin:0 0 10px; display:flex; align-items:center; gap:7px;
+}
+.sgrp h4 .chip{ width:9px; height:9px; border-radius:2px; flex:none; }
+.sgrp .pair{ display:grid; grid-template-columns:minmax(0,1fr); gap:10px 22px; }
+@media (min-width:860px){ .sgrp.wide .pair{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+.sgrp .sum{
+  margin-top:12px; padding-top:10px; border-top:1px dashed var(--rule);
+  font-family:var(--data); font-size:.78rem; color:var(--ink-2); font-variant-numeric:tabular-nums;
+}
+.sgrp .sum b{ color:var(--ink); font-weight:600; }
+.slider label{
+  display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  min-height:2.5em;
+  font-family:var(--display); font-size:.76rem; font-weight:600;
+  letter-spacing:.02em; color:var(--muted);
+  margin-bottom:5px;
+}
+.slider label .v{
+  font-family:var(--data); font-size:.84rem; font-weight:500;
+  letter-spacing:0; text-transform:none; color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:18px;
+  background:transparent; cursor:pointer; margin:0; display:block;
+}
+input[type=range]::-webkit-slider-runnable-track{ height:3px; background:var(--rule); border-radius:2px; }
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:15px; height:15px; margin-top:-6px;
+  border-radius:50%; background:var(--chrome); border:2px solid var(--raised);
+  box-shadow:0 0 0 1px var(--chrome);
+}
+input[type=range]::-moz-range-track{ height:3px; background:var(--rule); border-radius:2px; }
+input[type=range]::-moz-range-thumb{
+  width:13px; height:13px; border-radius:50%; background:var(--chrome);
+  border:2px solid var(--raised); box-shadow:0 0 0 1px var(--chrome);
+}
+
+.presets{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:10px; border-top:1px dashed var(--rule); }
+.presets .lbl{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.11em; color:var(--muted); align-self:center; margin-right:2px; }
+.presets button{
+  font-family:var(--data); font-size:.73rem; padding:4px 9px; border-radius:2px;
+  border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); cursor:pointer;
+}
+.presets button:hover{ border-color:var(--chrome); color:var(--chrome); }
+
+/* readouts */
+.readouts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); border-top:1px solid var(--rule); }
+.ro{ padding:12px 16px; border-right:1px solid var(--rule); background:var(--surface); display:flex; flex-direction:column; gap:3px; }
+.ro:last-child{ border-right:0; }
+.ro .k{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.11em; color:var(--muted); }
+.ro .n{ font-family:var(--data); font-size:1.16rem; font-weight:500; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.ro .u{ font-size:.76rem; color:var(--muted); font-weight:400; margin-left:1px; }
+.ro.flag-good{ background:var(--good-bg); }
+.ro.flag-good .n{ color:var(--good); }
+.ro.flag-critical{ background:var(--critical-bg); }
+.ro.flag-critical .n{ color:var(--critical); }
+
+/* legend */
+.legend{ display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; }
+.legend .item{ display:inline-flex; align-items:center; gap:7px; font-family:var(--display); font-size:.74rem; font-weight:500; color:var(--ink-2); }
+.legend .swatch{ width:16px; height:3px; border-radius:2px; flex:none; }
+.legend .swatch.dash{ background:none; border-top:3px dashed var(--c-cmd); height:0; }
+
+.rel{ position:relative; }
+.tt{
+  position:absolute; pointer-events:none; opacity:0; transform:translate(-50%,-118%);
+  background:var(--raised); border:1px solid var(--rule); border-radius:2px;
+  box-shadow:var(--shadow); padding:7px 10px; white-space:nowrap;
+  font-family:var(--data); font-size:.78rem; line-height:1.5; color:var(--ink);
+  font-variant-numeric:tabular-nums; transition:opacity .1s; z-index:5;
+}
+.tt .h{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:block; }
+
+/* ============================================================
+   DERIVATION
+   ============================================================ */
+.derive{ display:grid; grid-template-columns:minmax(0,1fr); gap:28px; }
+@media (min-width:900px){ .derive{ grid-template-columns:minmax(0,430px) minmax(0,1fr); gap:40px; align-items:start; } }
+.fig{
+  background:var(--surface); border:1px solid var(--rule); border-radius:3px;
+  padding:14px; box-shadow:var(--shadow); margin:0;
+}
+.fig svg{ display:block; width:100%; height:auto; }
+.fig figcaption{
+  font-family:var(--display); font-size:.72rem; font-weight:500;
+  color:var(--muted); margin-top:10px; letter-spacing:.01em; line-height:1.45;
+}
+.steps{ counter-reset:step; display:flex; flex-direction:column; gap:22px; margin:0; padding:0; list-style:none; }
+.steps li{ counter-increment:step; display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; align-items:start; }
+.steps .body{ min-width:0; }
+.steps li::before{
+  content:counter(step); font-family:var(--data); font-size:.8rem; font-weight:600;
+  color:var(--chrome); border:1px solid var(--rule); border-radius:50%;
+  width:28px; height:28px; display:grid; place-items:center; margin-top:1px;
+}
+.steps h3{ margin:0 0 6px; }
+.steps p{ margin:0 0 .55em; color:var(--ink-2); }
+
+.eq{
+  font-family:var(--data); font-size:.95rem; line-height:2.1;
+  overflow-x:auto; padding:12px 14px; margin:10px 0 12px;
+  background:var(--raised); border:1px solid var(--rule); border-left:2px solid var(--chrome);
+  border-radius:0 2px 2px 0; color:var(--ink);
+}
+.eq.center{ text-align:center; }
+.eq .tag{ float:right; color:var(--muted); font-size:.82rem; }
+.frac{ display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 .28em; line-height:1.35; }
+.frac>span:first-child{ padding:0 .45em .12em; }
+.frac>span:last-child{ padding:.14em .45em 0; border-top:1px solid currentColor; }
+
+/* ============================================================
+   CLOSING
+   ============================================================ */
+.tryit{ display:grid; grid-template-columns:minmax(0,1fr); gap:0; border:1px solid var(--rule); border-radius:3px; overflow:hidden; background:var(--surface); }
+@media (min-width:720px){ .tryit{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.tryit .q{ padding:18px 20px; border-bottom:1px solid var(--rule); }
+@media (min-width:720px){
+  .tryit .q:nth-child(odd){ border-right:1px solid var(--rule); }
+  .tryit .q:nth-last-child(-n+2){ border-bottom:0; }
+}
+@media (max-width:719px){ .tryit .q:last-child{ border-bottom:0; } }
+.tryit h3{ margin-bottom:5px; }
+.tryit p{ color:var(--ink-2); font-size:.96rem; margin:0; }
+
+.caveat{
+  border-left:2px solid var(--warn); background:var(--warn-bg);
+  padding:14px 18px; border-radius:0 2px 2px 0; font-size:.95rem; color:var(--ink);
+}
+.caveat strong{ font-family:var(--display); font-weight:600; }
+
+.keynote{
+  border-left:2px solid var(--good); background:var(--good-bg);
+  padding:16px 20px; border-radius:0 2px 2px 0; color:var(--ink); margin-top:24px;
+}
+.keynote strong{ font-family:var(--display); font-weight:600; }
+
+footer{ padding-block:34px 60px; color:var(--muted); font-size:.86rem; }
+footer .wrap{ display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline; border-top:1px solid var(--rule); padding-top:20px; }
+footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
+
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <div class="mast-rule"><p class="eyebrow">EMCH 367 &middot; Controls &middot; Fall 2026</p></div>
+    <h1>Servo Motor Lab</h1>
+    <p class="standfirst">One DC motor, one step of voltage, two ways of wiring it. Left to itself the motor
+    turns a voltage into a <strong>speed</strong>, so it can never hold an angle. Wrap a loop around it and the
+    same motor turns a voltage into an <strong>angle</strong> &mdash; exactly
+    <span class="num">1 rad</span> for every <span class="num">1 V</span>, and the motor&rsquo;s own gain
+    cancels out of that number entirely.</p>
+  </div>
+</header>
+
+<!-- ==================== 1. THE INSTRUMENT ==================== -->
+<section id="lab">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The instrument</p>
+      <h2>Step the voltage, watch the shaft</h2>
+      <p class="lede">A step of <span class="num">V</span> volts is applied at
+      <span class="num">t = 0</span>. In <span class="num">Open loop</span> the voltage drives the motor
+      directly; in <span class="num">Closed loop</span> it is a <em>command</em>, and what reaches the motor
+      is the error between where the shaft is and where it was told to be. The needle is the shaft; the blue
+      mark is the command.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-bar">
+        <span class="panel-title">DC servo &mdash; step response</span>
+        <div class="seg" role="group" aria-label="Wiring">
+          <button type="button" id="mOpen" aria-pressed="false">Open loop</button>
+          <button type="button" id="mClosed" aria-pressed="true">Closed loop</button>
+        </div>
+        <button type="button" class="btn primary" id="playBtn">Pause</button>
+        <button type="button" class="btn" id="replayBtn">Replay</button>
+      </div>
+
+      <div class="panel-grid"><canvas id="stage" class="stage" width="1080" height="380"
+        role="img" aria-label="Signal flow from the step voltage source through a summing junction and the motor to a dial showing the shaft angle against the commanded angle"></canvas></div>
+
+      <div class="sgrid">
+        <div class="sgrp">
+          <h4><span class="chip" style="background:var(--c-cmd)"></span>INPUT</h4>
+          <div class="pair">
+            <div class="slider">
+              <label for="sA"><span>Step voltage V</span> <span class="v"><span id="vA">1.00</span> V</span></label>
+              <input type="range" id="sA" min="0.25" max="5" step="0.05" value="1">
+            </div>
+          </div>
+          <p class="sum">Commands <b><span id="cmdRad">1.00</span> rad</b> =
+            <b><span id="cmdDeg">57.3</span>&deg;</b> of shaft</p>
+        </div>
+        <div class="sgrp wide">
+          <h4>MOTOR AND LOAD</h4>
+          <div class="pair">
+            <div class="slider">
+              <label for="sK"><span>Gain K</span> <span class="v"><span id="vK">114</span> N&middot;m/V</span></label>
+              <input type="range" id="sK" min="1" max="400" step="1" value="114">
+            </div>
+            <div class="slider">
+              <label for="sJ"><span>Inertia J</span> <span class="v"><span id="vJ">10.0</span> kg&middot;m&sup2;</span></label>
+              <input type="range" id="sJ" min="1" max="50" step="0.5" value="10">
+            </div>
+            <div class="slider">
+              <label for="sC"><span>Damping c</span> <span class="v"><span id="vC">4.0</span> N&middot;m&middot;s</span></label>
+              <input type="range" id="sC" min="0.5" max="120" step="0.5" value="4">
+            </div>
+          </div>
+          <div class="presets">
+            <span class="lbl">JUMP TO</span>
+            <button type="button" data-p="lecture">Lecture: K=114, J=10, c=4</button>
+            <button type="button" data-p="z07">&zeta; = 0.7</button>
+            <button type="button" data-p="z1">Critically damped</button>
+            <button type="button" data-p="over">Overdamped</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="readouts" id="roRow"></div>
+
+      <div class="rel">
+        <div class="panel-grid" style="border-top:1px solid var(--rule)">
+          <canvas id="plot" class="stage" width="1080" height="300"
+            role="img" aria-label="Shaft angle against time, with the commanded angle drawn as a dashed line"></canvas>
+        </div>
+        <div class="tt" id="ttP"></div>
+      </div>
+
+      <div class="panel-bar bottom">
+        <div class="legend">
+          <span class="item"><span class="swatch dash"></span>Command <span class="num">u</span></span>
+          <span class="item"><span class="swatch" style="background:var(--c-shaft)"></span>Shaft angle <span class="num">&theta;(t)</span></span>
+        </div>
+        <div class="seg" role="group" aria-label="Vertical scale" style="margin-left:auto">
+          <button type="button" id="yCmd" aria-pressed="true">Command scale</button>
+          <button type="button" id="yFit" aria-pressed="false">Fit the curve</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 2. THE MODEL ==================== -->
+<section id="model">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The model</p>
+      <h2>From torque balance to transfer function</h2>
+      <p class="lede">The electrical side is fast enough to ignore here, so the motor is one rotating
+      inertia with viscous drag, driven by a torque proportional to the applied voltage. Everything that
+      follows comes out of that one line.</p>
+    </div>
+
+    <div class="derive">
+      <figure class="fig">
+        <svg viewBox="0 0 420 470" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--ink-2)"></path>
+            </marker>
+            <marker id="ahc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--c-cmd)"></path>
+            </marker>
+            <marker id="ahs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--c-shaft)"></path>
+            </marker>
+          </defs>
+
+          <!-- ---------- (a) the plant ---------- -->
+          <text x="10" y="18" font-family="var(--display)" font-size="11" font-weight="600"
+                letter-spacing="1.6" fill="var(--muted)">(a)  THE MOTOR AS ONE INERTIA</text>
+
+          <!-- supply -->
+          <rect x="22" y="70" width="58" height="42" rx="2" fill="var(--raised)" stroke="var(--ink-2)" stroke-width="1.6"></rect>
+          <text x="51" y="96" text-anchor="middle" font-family="var(--data)" font-size="14" fill="var(--c-cmd)">V</text>
+          <line x1="80" y1="91" x2="128" y2="91" stroke="var(--c-cmd)" stroke-width="2" marker-end="url(#ahc)"></line>
+          <text x="104" y="82" text-anchor="middle" font-family="var(--data)" font-size="11" fill="var(--c-cmd)">T = K&middot;V</text>
+
+          <!-- rotor -->
+          <circle cx="196" cy="140" r="58" fill="var(--chrome-soft)" stroke="var(--ink)" stroke-width="2"></circle>
+          <circle cx="196" cy="140" r="9"  fill="var(--raised)" stroke="var(--ink)" stroke-width="1.6"></circle>
+          <text x="196" y="122" text-anchor="middle" font-family="var(--data)" font-size="16" fill="var(--ink)">J</text>
+          <line x1="196" y1="140" x2="196" y2="88" stroke="var(--c-shaft)" stroke-width="2.4"></line>
+          <path d="M 232 104 A 48 48 0 0 1 244 146" fill="none" stroke="var(--ink-2)" stroke-width="1.8" marker-end="url(#ah)"></path>
+          <text x="262" y="122" font-family="var(--data)" font-size="13" fill="var(--ink-2)">&omega; = &theta;&#775;</text>
+
+          <!-- shaft + damping -->
+          <line x1="254" y1="140" x2="330" y2="140" stroke="var(--ink)" stroke-width="3"></line>
+          <line x1="288" y1="140" x2="288" y2="182" stroke="var(--ink-2)" stroke-width="1.6"></line>
+          <rect x="268" y="182" width="40" height="22" fill="none" stroke="var(--ink-2)" stroke-width="1.8"></rect>
+          <line x1="288" y1="182" x2="288" y2="204" stroke="var(--ink-2)" stroke-width="1.8"></line>
+          <text x="322" y="199" font-family="var(--data)" font-size="13" fill="var(--ink-2)">c</text>
+          <g stroke="var(--hatch)" stroke-width="1.4">
+            <path d="M262 226 L276 212 M282 226 L296 212 M302 226 L316 212" fill="none"></path>
+          </g>
+          <line x1="256" y1="212" x2="322" y2="212" stroke="var(--ink-2)" stroke-width="1.5"></line>
+          <line x1="288" y1="204" x2="288" y2="212" stroke="var(--ink-2)" stroke-width="1.8"></line>
+          <line x1="340" y1="118" x2="340" y2="162" stroke="var(--rule)" stroke-width="1" stroke-dasharray="3 3"></line>
+          <text x="352" y="146" font-family="var(--data)" font-size="14" fill="var(--c-shaft)">&theta;</text>
+
+          <text x="22" y="262" font-family="var(--data)" font-size="14" fill="var(--ink)">J&thinsp;&theta;&#776; + c&thinsp;&theta;&#775; = K&middot;V(t)</text>
+
+          <line x1="10" y1="292" x2="410" y2="292" stroke="var(--rule)" stroke-width="1"></line>
+
+          <!-- ---------- (b) the loop ---------- -->
+          <text x="10" y="318" font-family="var(--display)" font-size="11" font-weight="600"
+                letter-spacing="1.6" fill="var(--muted)">(b)  WRAPPED IN UNIT FEEDBACK</text>
+
+          <line x1="18" y1="374" x2="76" y2="374" stroke="var(--c-cmd)" stroke-width="2" marker-end="url(#ahc)"></line>
+          <text x="30" y="365" font-family="var(--data)" font-size="13" fill="var(--c-cmd)">u</text>
+          <circle cx="92" cy="374" r="15" fill="var(--raised)" stroke="var(--ink)" stroke-width="1.8"></circle>
+          <path d="M 82 364 L 102 384 M 102 364 L 82 384" stroke="var(--ink)" stroke-width="1.4"></path>
+          <text x="76" y="358" font-family="var(--data)" font-size="12" fill="var(--ink-2)">+</text>
+          <text x="96" y="410" font-family="var(--data)" font-size="13" fill="var(--ink-2)">&minus;</text>
+
+          <line x1="107" y1="374" x2="168" y2="374" stroke="var(--c-err)" stroke-width="2" marker-end="url(#ah)"></line>
+          <text x="128" y="365" font-family="var(--data)" font-size="13" fill="var(--c-err)">e</text>
+
+          <rect x="168" y="348" width="126" height="52" rx="2" fill="var(--raised)" stroke="var(--ink)" stroke-width="2"></rect>
+          <text x="231" y="371" text-anchor="middle" font-family="var(--data)" font-size="13" fill="var(--ink)">K</text>
+          <line x1="196" y1="378" x2="266" y2="378" stroke="var(--ink)" stroke-width="1"></line>
+          <text x="231" y="393" text-anchor="middle" font-family="var(--data)" font-size="13" fill="var(--ink)">Js&sup2; + cs</text>
+
+          <line x1="294" y1="374" x2="394" y2="374" stroke="var(--c-shaft)" stroke-width="2" marker-end="url(#ahs)"></line>
+          <text x="368" y="365" font-family="var(--data)" font-size="13" fill="var(--c-shaft)">&theta;</text>
+
+          <path d="M 344 374 L 344 434 L 92 434 L 92 389" fill="none" stroke="var(--c-shaft)" stroke-width="1.8" marker-end="url(#ahs)"></path>
+          <circle cx="344" cy="374" r="3.2" fill="var(--c-shaft)"></circle>
+          <text x="214" y="452" text-anchor="middle" font-family="var(--data)" font-size="11" fill="var(--muted)">unit feedback &mdash; the shaft angle itself</text>
+        </svg>
+        <figcaption>The plant is a double integrator with drag: one pole at
+        <span class="num">s = &minus;c/J</span> and, decisively, one at
+        <span class="num">s = 0</span>. That second pole is the whole story.</figcaption>
+      </figure>
+
+      <ol class="steps">
+        <li>
+          <div class="body">
+          <h3>Balance the torques on the rotor</h3>
+          <p>Applied torque, minus viscous drag, accelerates the inertia. The constant
+          <span class="num">K</span> lumps the torque constant of the motor together with whatever the
+          amplifier contributes, so its units are newton-metres per volt.</p>
+          <div class="eq">J &theta;&#776; + c &theta;&#775; = K&middot;V(t) <span class="tag">EOM</span></div>
+          </div>
+        </li>
+        <li>
+          <div class="body">
+          <h3>Transform with zero initial conditions</h3>
+          <p>Term by term, <span class="num">&#8466;[&theta;&#776;] = s&sup2;&Theta;(s)</span> and
+          <span class="num">&#8466;[&theta;&#775;] = s&Theta;(s)</span>, so</p>
+          <div class="eq center">[J s&sup2; + c s] &Theta;(s) = K&middot;V(s)</div>
+          <div class="eq center">
+            <span class="frac"><span>&Theta;(s)</span><span>V(s)</span></span> =
+            <span class="frac"><span>K</span><span>J s&sup2; + c s</span></span> =
+            <span class="frac"><span>K</span><span>s (J s + c)</span></span>
+            <span class="tag">open loop</span>
+          </div>
+          <p>Factoring the <span class="num">s</span> out of the denominator is the moment the problem
+          announces itself: there is a free integrator between voltage and angle.</p>
+          </div>
+        </li>
+        <li>
+          <div class="body">
+          <h3>Apply a step and invert</h3>
+          <p>With <span class="num">V(s) = A/s</span> the transform has a <em>double</em> pole at the
+          origin, and a double pole at the origin inverts to a ramp:</p>
+          <div class="eq center">
+            &Theta;(s) = <span class="frac"><span>A K</span><span>s&sup2;(J s + c)</span></span>
+            &nbsp;&nbsp;&#10230;&nbsp;&nbsp;
+            &theta;(t) = <span class="frac"><span>A K</span><span>c</span></span>
+            [ t &minus; &tau;(1 &minus; e<sup>&minus;t/&tau;</sup>) ],
+            &nbsp; &tau; = J/c
+          </div>
+          <p>Differentiate and the meaning is plain &mdash; the <em>speed</em> settles, the angle never
+          does:</p>
+          <div class="eq center">&theta;&#775;(t) =
+            <span class="frac"><span>A K</span><span>c</span></span>(1 &minus; e<sup>&minus;t/&tau;</sup>)
+            &nbsp;&#10230;&nbsp; &theta;&#775;(&infin;) =
+            <span class="frac"><span>A K</span><span>c</span></span>
+            <span class="tag">rad/s per volt</span>
+          </div>
+          <p>A constant voltage buys a constant <em>speed</em>. There is no voltage you can hold that
+          parks the shaft at an angle, because holding any voltage at all means turning forever.</p>
+          </div>
+        </li>
+        <li>
+          <div class="body">
+          <h3>Close the loop and the order stays, the type drops</h3>
+          <p>Feed the shaft angle back and subtract it from the command. With
+          <span class="num">e = u &minus; &theta;</span> and
+          <span class="num">&theta; = G&middot;e</span>,</p>
+          <div class="eq center">
+            &theta; = G(u &minus; &theta;) &nbsp;&#10230;&nbsp;
+            <span class="frac"><span>&Theta;</span><span>U</span></span> =
+            <span class="frac"><span>G</span><span>1 + G</span></span> =
+            <span class="frac"><span>K</span><span>J s&sup2; + c s + K</span></span>
+            <span class="tag">closed loop</span>
+          </div>
+          <p>The free integrator is gone. Both poles now sit strictly in the left half plane for any
+          positive <span class="num">K</span>, <span class="num">J</span> and <span class="num">c</span>,
+          so the step response settles instead of running away, and in the standard second order form</p>
+          <div class="eq center">&omega;<sub>n</sub> = &radic;(K/J) &nbsp;&nbsp;&nbsp;&nbsp;
+            &zeta; = <span class="frac"><span>c</span><span>2&radic;(K J)</span></span></div>
+          </div>
+        </li>
+        <li>
+          <div class="body">
+          <h3>Check the error it settles to</h3>
+          <p>The error transform is what the command leaves over after the loop has had its say:</p>
+          <div class="eq center">
+            E(s) = [1 &minus; G<sub>CL</sub>]&middot;U(s) =
+            <span class="frac"><span>A (J s + c)</span><span>J s&sup2; + c s + K</span></span>
+          </div>
+          <div class="eq center">e<sub>ss</sub> = lim<sub>s&rarr;0</sub> s&middot;E(s) = 0
+            <span class="tag">zero, for every K</span></div>
+          <p>With the lecture numbers <span class="num">J = 10</span>, <span class="num">c = 4</span>,
+          <span class="num">K = 114</span> and a one volt step this is
+          <span class="num">(10s + 4)/(10s&sup2; + 4s + 114)</span>, and the final value theorem sends it
+          to zero &mdash; the free integrator that made the open loop useless is exactly what makes the
+          closed loop exact.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 3. ONE VOLT, ONE RADIAN ==================== -->
+<section id="calib">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Calibration</p>
+      <h2>Why one volt is exactly one radian</h2>
+      <p class="lede">Set the step to <span class="num">1 V</span> and the shaft settles at
+      <span class="num">1.000 rad</span>. Drag <span class="num">K</span> anywhere from 1 to 400 and it
+      still settles at <span class="num">1.000 rad</span>. That is not a tuning &mdash; nothing on this
+      page was fitted to make it come out round.</p>
+    </div>
+
+    <div class="measure">
+      <p>Put <span class="num">s = 0</span> into the closed loop transfer function and every term carrying
+      an <span class="num">s</span> vanishes:</p>
+      <div class="eq center">G<sub>CL</sub>(0) =
+        <span class="frac"><span>K</span><span>J&middot;0 + c&middot;0 + K</span></span> =
+        <span class="frac"><span>K</span><span>K</span></span> = 1</div>
+      <p>The motor&rsquo;s gain divides itself out. Whatever <span class="num">K</span> is &mdash; a strong
+      motor, a weak one, a hot one whose magnets have drifted &mdash; the steady angle per volt of command
+      is the same number, and that number is 1. Inertia and damping do not appear either; they set
+      <em>how</em> the shaft gets there, never <em>where</em> it stops.</p>
+      <p>The open loop has no such number to offer. Its steady gain from volts to radians does not exist,
+      because the angle has no steady value; the only steady thing is
+      <span class="num">&theta;&#775;(&infin;) = AK/c</span> radians per second, which depends on
+      <span class="num">K</span> and <span class="num">c</span> directly. A ten percent change in the
+      motor&rsquo;s magnets is a ten percent change in every angle it reaches &mdash; and it never
+      stops anyway.</p>
+
+      <div class="keynote">
+        <p><strong>So what actually sets the scale?</strong> The feedback path, not the motor. Put a
+        sensor of gain <span class="num">H</span> in the return line and the same algebra gives
+        <span class="num">&Theta;/U = K/(Js&sup2; + cs + KH)</span>, whose DC value is
+        <span class="num">1/H</span> &mdash; so the shaft settles at
+        <span class="num">A/H</span>. Here <span class="num">H = 1</span>, the encoder reports radians and
+        one volt buys one radian. Change the encoder&rsquo;s scale factor and you have changed the
+        calibration of the whole servo, without touching the motor. This is why the sensor, not the
+        actuator, is the part a control engineer refuses to economise on.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 4. WHAT GAIN COSTS ==================== -->
+<section id="gain">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The trade</p>
+      <h2>What raising the gain buys, and what it costs</h2>
+      <p class="lede">If <span class="num">K</span> cannot change where the shaft stops, it is worth asking
+      what it does change. Both of the second order parameters depend on it &mdash; and they pull in
+      opposite directions.</p>
+    </div>
+    <div class="measure">
+      <div class="eq center">&omega;<sub>n</sub> = &radic;(K/J) &nbsp;&#8599;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &zeta; = <span class="frac"><span>c</span><span>2&radic;(K J)</span></span> &nbsp;&#8600;</div>
+      <p>Raising <span class="num">K</span> raises <span class="num">&omega;<sub>n</sub></span> as
+      <span class="num">&radic;K</span>, which is the response getting faster, and lowers
+      <span class="num">&zeta;</span> as <span class="num">1/&radic;K</span>, which is the response getting
+      ringier. The product <span class="num">&zeta;&omega;<sub>n</sub> = c/2J</span> is
+      <em>independent of K</em> &mdash; so the envelope of the decay, and with it the settling time
+      <span class="num">t<sub>s</sub> &asymp; 4/(&zeta;&omega;<sub>n</sub>) = 8J/c</span>, does not improve
+      at all no matter how hard you push the gain. All the extra gain does is pack more oscillations into
+      the same decay.</p>
+      <p>The lecture numbers sit hard against that wall. At <span class="num">K = 114</span> with
+      <span class="num">J = 10</span> and <span class="num">c = 4</span>,
+      <span class="num">&zeta; = 0.059</span>: the shaft overshoots to
+      <span class="num">1.83 rad</span> &mdash; eighty three percent past its target &mdash; and then rings
+      for twenty seconds. It arrives at the right place; it just makes a meal of getting there. To settle
+      that you have to raise <span class="num">c</span>, not lower <span class="num">K</span>: the presets
+      above do exactly that, holding <span class="num">K</span> fixed and putting
+      <span class="num">c = 2&zeta;&radic;(KJ)</span>.</p>
+      <div class="caveat"><strong>Model limits.</strong> The armature inductance is ignored, so there is no
+      electrical pole and no current limit &mdash; a real amplifier would saturate long before the
+      transient this model predicts for a five volt step. Friction is purely viscous, with no stiction to
+      leave the shaft parked slightly off target. The load is rigid, so there is no resonance between motor
+      and load. What the model does carry exactly is the part the course is about: where the poles are, and
+      what they do to the response.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 5. TRY IT ==================== -->
+<section id="try">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Exercises</p>
+      <h2>Five things to try on the bench</h2>
+    </div>
+    <div class="tryit">
+      <div class="q"><h3>1 &middot; Watch it sail past the target</h3>
+        <p>Leave everything at <span class="num">Reset</span> and switch to
+        <span class="num">Open loop</span>. The shaft reaches the commanded
+        <span class="num">1 rad</span> after <span class="num">0.43 s</span>, leaves the top of the chart
+        at <span class="num">0.65 s</span>, and by the end of the
+        <span class="num">30 s</span> window has turned <span class="num">784 rad</span> &mdash; about
+        <span class="num">125</span> full revolutions. Press
+        <span class="num">Fit the curve</span> to see the whole ramp at once, then name the pole
+        responsible and say why no choice of voltage fixes it.</p></div>
+      <div class="q"><h3>2 &middot; Break the gain and keep the answer</h3>
+        <p>In <span class="num">Closed loop</span>, drag <span class="num">K</span> from
+        <span class="num">1</span> to <span class="num">400</span>. Overshoot, ringing and
+        <span class="num">&omega;<sub>n</sub></span> all change violently; the final angle stays
+        <span class="num">1.00 rad</span> to every digit shown. Explain it from
+        <span class="num">G<sub>CL</sub>(0)</span> in one line.</p></div>
+      <div class="q"><h3>3 &middot; Confirm the calibration is linear</h3>
+        <p>Step to <span class="num">1 V</span>, then <span class="num">2.5 V</span>, then
+        <span class="num">5 V</span>. The settled angle reads <span class="num">1.00</span>,
+        <span class="num">2.50</span>, <span class="num">5.00 rad</span>, and the peak scales by the same
+        factor each time, because overshoot is a <em>ratio</em> fixed by
+        <span class="num">&zeta;</span> alone.</p></div>
+      <div class="q"><h3>4 &middot; Find critical damping by hand</h3>
+        <p>Keep <span class="num">K = 114</span>, <span class="num">J = 10</span> and raise
+        <span class="num">c</span> until the overshoot readout first reads
+        <span class="num">0.0 %</span>. Check your slider against
+        <span class="num">c = 2&radic;(KJ) = 67.5</span>, and notice the needle now reaches the command
+        without ever crossing it.</p></div>
+      <div class="q"><h3>5 &middot; Prove gain cannot buy settling time</h3>
+        <p>Note the settling time at <span class="num">K = 114</span>
+        (<span class="num">18.8 s</span>), then double <span class="num">K</span>: it reads
+        <span class="num">19.2 s</span> &mdash; and the two percent it did move is only the last ring
+        leaving the band at a different point in its cycle, since doubling
+        <span class="num">K</span> changed the frequency. The decay envelope
+        <span class="num">e<sup>&minus;&zeta;&omega;<sub>n</sub>t</sup></span> is identical, because
+        <span class="num">&zeta;&omega;<sub>n</sub> = c/2J</span> has no <span class="num">K</span> in it.
+        Now double <span class="num">c</span> instead and watch it halve. What does that say about where
+        to spend your effort on a sluggish servo?</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>EMCH 367 Controls &middot; DC servo position control, open loop against unit feedback</span>
+    <span class="sp">closed-form step responses, all three damping regimes &middot; &theta;(&infin;) = A exactly</span>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* =====================================================================
+   EMCH 367 - DC servo position control.
+   Both step responses are evaluated in CLOSED FORM, so every number the
+   page prints is exact rather than the result of an integrator:
+     open loop    theta(t) = (AK/c)[t - tau(1 - e^-t/tau)],  tau = J/c
+     closed loop  the standard second order step response, branched on
+                  zeta < 1, zeta = 1, zeta > 1.
+   Both were checked against RK4 to ~1e-14 before this page was written.
+   ===================================================================== */
+const el = id => document.getElementById(id);
+const TAU2 = Math.PI * 2;
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------------------------- theme tokens ---------------------------- */
+const TOK = {};
+function readTokens(){
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ["ink","ink-2","muted","rule","grid","hatch","surface","raised",
+                   "chrome","chrome-soft","c-cmd","c-shaft","c-err","good","critical"])
+    TOK[k] = cs.getPropertyValue("--" + k).trim();
+}
+readTokens();
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { readTokens(); });
+new MutationObserver(() => readTokens())
+  .observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] });
+
+/* ------------------------------ parameters ---------------------------- */
+const P = { A: 1.0, K: 114, J: 10, c: 4, closed: true, fitY: false };
+
+const wn   = () => Math.sqrt(P.K / P.J);
+const zeta = () => P.c / (2 * Math.sqrt(P.K * P.J));
+const tauM = () => P.J / P.c;                       /* mechanical time constant */
+
+/* ------------------------- closed-form responses ---------------------- */
+function thetaOpen(t){
+  const T = tauM();
+  return (P.A * P.K / P.c) * (t - T * (1 - Math.exp(-t / T)));
+}
+function omegaOpen(t){
+  return (P.A * P.K / P.c) * (1 - Math.exp(-t / tauM()));
+}
+function thetaClosed(t){
+  const w = wn(), z = zeta();
+  if (Math.abs(z - 1) < 1e-9) return P.A * (1 - Math.exp(-w*t) * (1 + w*t));
+  if (z < 1){
+    const wd = w * Math.sqrt(1 - z*z);
+    return P.A * (1 - Math.exp(-z*w*t) * (Math.cos(wd*t) + z/Math.sqrt(1-z*z)*Math.sin(wd*t)));
+  }
+  /* overdamped: s2 computed first, s1 = wn^2/s2 avoids cancellation at large zeta */
+  const s2 = -z*w - w*Math.sqrt(z*z - 1), s1 = w*w / s2;
+  return P.A * (1 + (s2*Math.exp(s1*t) - s1*Math.exp(s2*t)) / (s1 - s2));
+}
+function omegaClosed(t){
+  const w = wn(), z = zeta();
+  if (Math.abs(z - 1) < 1e-9) return P.A * w*w * t * Math.exp(-w*t);
+  if (z < 1){
+    const wd = w * Math.sqrt(1 - z*z);
+    return P.A * (w/Math.sqrt(1-z*z)) * Math.exp(-z*w*t) * Math.sin(wd*t);
+  }
+  const s2 = -z*w - w*Math.sqrt(z*z - 1), s1 = w*w / s2;
+  return P.A * w*w * (Math.exp(s1*t) - Math.exp(s2*t)) / (s1 - s2);
+}
+const theta = t => P.closed ? thetaClosed(t) : thetaOpen(t);
+const omega = t => P.closed ? omegaClosed(t) : omegaOpen(t);
+
+/* overshoot is a ratio fixed by zeta alone - independent of the step size */
+const overshoot = () => { const z = zeta(); return z < 1 ? Math.exp(-Math.PI*z/Math.sqrt(1-z*z)) : 0; };
+
+/* settling time measured off the curve rather than from the envelope
+   approximation, so it stays honest for every damping ratio */
+function settlingTime(){
+  const band = 0.02 * P.A, lim = Math.max(60, 40 * P.J / P.c);
+  const n = 4000, h = lim / n;
+  let last = 0;
+  for (let i = 0; i <= n; i++){
+    if (Math.abs(thetaClosed(i*h) - P.A) > band) last = i*h;
+  }
+  return last + h;
+}
+const settlesHere = () => P.closed;
+
+let cachedTs = 0;
+/* a window that shows the whole story without the user choosing one */
+const NICE = [2,3,4,5,6,8,10,12,15,20,25,30,40,50,60,80,100,120,160,200,240];
+function span(){
+  /* mode-independent on purpose: the toggle is a comparison, and a window
+     that jumped between the two would make it unreadable */
+  const raw = Math.max(1.5*(cachedTs || 10), 6*tauM());
+  for (const n of NICE) if (n >= raw) return n;
+  return 240;
+}
+
+/* ------------------------------- canvases ----------------------------- */
+function fitter(cv, onFit){
+  const ctx = cv.getContext("2d");
+  const BW = cv.width, BH = cv.height;
+  /* the first fit runs while the caller's own const is still being
+     initialised, so the repaint callback only starts from the second */
+  let armed = false;
+  function fit(){
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const cssW = cv.clientWidth || BW;
+    const k = cssW / BW;
+    cv.style.height = (BH * k) + "px";
+    cv.width  = Math.round(cssW * dpr);
+    cv.height = Math.round(BH * k * dpr);
+    ctx.setTransform(k*dpr, 0, 0, k*dpr, 0, 0);
+    if (onFit && armed) onFit();
+    armed = true;
+  }
+  fit();
+  new ResizeObserver(fit).observe(cv);
+  return { ctx, W: BW, H: BH };
+}
+const FD  = '600 12px "Archivo", sans-serif';
+const FDs = '600 10.5px "Archivo", sans-serif';
+const FM  = '500 13px "IBM Plex Mono", monospace';
+const FMs = '500 11px "IBM Plex Mono", monospace';
+const FMl = '500 17px "IBM Plex Mono", monospace';
+
+/* paint the surface behind glyphs so the graph-paper grid cannot strike
+   through low-contrast labels */
+function label(ctx, s, x, y, col, font, align, bg){
+  ctx.font = font; ctx.textAlign = align || "left"; ctx.textBaseline = "alphabetic";
+  const w = ctx.measureText(s).width, h = parseInt(font.match(/(\d+(\.\d+)?)px/)[1], 10);
+  const x0 = align === "center" ? x - w/2 - 3 : align === "right" ? x - w - 3 : x - 3;
+  ctx.fillStyle = bg || TOK.surface;
+  ctx.fillRect(x0, y - h + 1, w + 6, h + 4);
+  ctx.fillStyle = col;
+  ctx.fillText(s, x, y);
+}
+
+/* ------------------------------ simulation ---------------------------- */
+let simT = 0, playing = !reduceMotion, lastNow = 0, prevTheta = 0;
+cachedTs = settlingTime();
+let T = span();
+function resetRun(){
+  cachedTs = settlingTime();
+  T = span();
+  simT = reduceMotion ? T : 0;
+  prevTheta = theta(simT);
+}
+
+/* ================================ STAGE =============================== */
+const DIAL = { x: 762, y: 186, r: 116 };
+const stage = fitter(el("stage"), () => drawStage());
+
+function drawStage(){
+  const { ctx, W, H } = stage;
+  ctx.clearRect(0, 0, W, H);
+  const th = theta(simT), w = omega(simT);
+
+  /* ---- source ---- */
+  ctx.strokeStyle = TOK.ink; ctx.lineWidth = 1.8;
+  ctx.fillStyle = TOK.raised;
+  ctx.beginPath(); ctx.rect(30, 150, 104, 62); ctx.fill(); ctx.stroke();
+  label(ctx, "STEP", 82, 172, TOK.muted, FDs, "center");
+  label(ctx, P.A.toFixed(2) + " V", 82, 196, TOK["c-cmd"], FM, "center");
+
+  /* wire into the junction */
+  const jx = 214, jy = 181;
+  ctx.strokeStyle = TOK["c-cmd"]; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(134, 181); ctx.lineTo(P.closed ? jx - 18 : 300, 181); ctx.stroke();
+  if (!P.closed) arrow(ctx, 300, 181, 0, TOK["c-cmd"]);
+
+  if (P.closed){
+    /* summing junction */
+    ctx.beginPath(); ctx.arc(jx, jy, 17, 0, TAU2);
+    ctx.fillStyle = TOK.raised; ctx.fill();
+    ctx.strokeStyle = TOK.ink; ctx.lineWidth = 1.8; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(jx-9, jy-9); ctx.lineTo(jx+9, jy+9);
+    ctx.moveTo(jx+9, jy-9); ctx.lineTo(jx-9, jy+9);
+    ctx.lineWidth = 1.3; ctx.stroke();
+    label(ctx, "+", jx - 22, jy - 14, TOK["ink-2"], FM, "center");
+    label(ctx, "−", jx + 4, jy + 40, TOK["ink-2"], FM, "center");
+    /* error leg */
+    const e = P.A - th;
+    ctx.strokeStyle = TOK["c-err"]; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(jx + 17, jy); ctx.lineTo(300, jy); ctx.stroke();
+    arrow(ctx, 300, jy, 0, TOK["c-err"]);
+    label(ctx, "e = " + fmt(e, 3), 258, jy - 12, TOK["c-err"], FMs, "center");
+  }
+
+  /* ---- motor ---- */
+  const mx = 372, my = 181, mr = 58;
+  ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2);
+  ctx.fillStyle = TOK["chrome-soft"]; ctx.fill();
+  ctx.strokeStyle = TOK.ink; ctx.lineWidth = 2; ctx.stroke();
+  label(ctx, "MOTOR", mx, my - 22, TOK["ink-2"], FDs, "center");
+  label(ctx, "J = " + P.J.toFixed(1), mx, my + 2, TOK.ink, FMs, "center");
+  label(ctx, "c = " + P.c.toFixed(1), mx, my + 20, TOK.ink, FMs, "center");
+  label(ctx, "T = K·V,  K = " + P.K, mx, my - mr - 12, TOK["ink-2"], FMs, "center");
+
+  /* shaft */
+  ctx.strokeStyle = TOK.ink; ctx.lineWidth = 5; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(mx + mr, my); ctx.lineTo(DIAL.x - DIAL.r - 14, my); ctx.stroke();
+  ctx.lineCap = "butt";
+  ctx.lineWidth = 1.4; ctx.strokeStyle = TOK["ink-2"];
+  for (const cx of [488, 500]){ ctx.beginPath(); ctx.moveTo(cx, my - 11); ctx.lineTo(cx, my + 11); ctx.stroke(); }
+
+  drawDial(ctx, th, w);
+
+  /* ---- feedback path ---- */
+  if (P.closed){
+    const fy = 366, fx = DIAL.x + DIAL.r + 26;
+    ctx.strokeStyle = TOK["c-shaft"]; ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(DIAL.x + DIAL.r, DIAL.y);
+    ctx.lineTo(fx, DIAL.y); ctx.lineTo(fx, fy); ctx.lineTo(jx, fy); ctx.lineTo(jx, jy + 23);
+    ctx.stroke();
+    arrow(ctx, jx, jy + 19, -90, TOK["c-shaft"]);
+    label(ctx, "measured shaft angle \u03B8 fed back", (fx + jx)/2, fy - 9, TOK.muted, FMs, "center");
+  }
+}
+
+function arrow(ctx, x, y, deg, col){
+  const a = deg * Math.PI / 180;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-9, -4.5); ctx.lineTo(-9, 4.5); ctx.closePath();
+  ctx.fillStyle = col; ctx.fill(); ctx.restore();
+}
+const fmt = (v, d) => { const s = v.toFixed(d); return s === "-" + (0).toFixed(d) ? (0).toFixed(d) : s; };
+
+function drawDial(ctx, th, w){
+  const { x, y, r } = DIAL;
+  /* face */
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU2);
+  ctx.fillStyle = TOK.raised; ctx.fill();
+  ctx.strokeStyle = TOK.rule; ctx.lineWidth = 1.6; ctx.stroke();
+
+  /* ticks every 30 degrees, cardinals labelled */
+  for (let k = 0; k < 12; k++){
+    const a = -k * Math.PI / 6;                       /* screen y is down */
+    const major = k % 3 === 0;
+    const r0 = r - (major ? 16 : 9);
+    ctx.strokeStyle = major ? TOK["ink-2"] : TOK.rule;
+    ctx.lineWidth = major ? 1.6 : 1;
+    ctx.beginPath();
+    ctx.moveTo(x + r0*Math.cos(a), y + r0*Math.sin(a));
+    ctx.lineTo(x + (r-2)*Math.cos(a), y + (r-2)*Math.sin(a));
+    ctx.stroke();
+    if (major){
+      const rl = r - 30;
+      label(ctx, (k*30) + "°", x + rl*Math.cos(a), y + rl*Math.sin(a) + 4, TOK.muted, FMs, "center", TOK.raised);
+    }
+  }
+
+  /* the sweep since the last frame - at speed this fills the face, which is
+     the honest reading of a needle turning faster than the eye resolves */
+  let d = th - prevTheta;
+  if (Math.abs(d) > 0.004){
+    const cap = Math.min(Math.abs(d), TAU2);
+    ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.arc(x, y, r - 20, -th, -th + cap*Math.sign(d), d < 0);
+    ctx.closePath();
+    ctx.fillStyle = TOK["c-shaft"]; ctx.globalAlpha = 0.16; ctx.fill(); ctx.globalAlpha = 1;
+  }
+
+  /* commanded angle */
+  if (P.closed){
+    const a = -P.A;
+    ctx.strokeStyle = TOK["c-cmd"]; ctx.lineWidth = 2.4;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (r-8)*Math.cos(a), y + (r-8)*Math.sin(a)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(x + (r-8)*Math.cos(a), y + (r-8)*Math.sin(a), 5.5, 0, TAU2);
+    ctx.fillStyle = TOK["c-cmd"]; ctx.fill();
+  }
+
+  /* the shaft */
+  const a = -th;
+  ctx.strokeStyle = TOK["c-shaft"]; ctx.lineWidth = 3.4; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (r-16)*Math.cos(a), y + (r-16)*Math.sin(a)); ctx.stroke();
+  ctx.lineCap = "butt";
+  ctx.beginPath(); ctx.arc(x, y, 8, 0, TAU2);
+  ctx.fillStyle = TOK.ink; ctx.fill();
+
+  /* readout under the dial */
+  const deg = th * 180 / Math.PI;
+  label(ctx, fmt(th, 3) + " rad", x, y + r + 26, TOK["c-shaft"], FMl, "center");
+  label(ctx, fmt(deg, 1) + "°" + (Math.abs(th) > TAU2 ? "   ·   " + fmt(th/TAU2, 2) + " turns" : ""),
+        x, y + r + 44, TOK.muted, FMs, "center");
+  label(ctx, P.closed ? "SHAFT AGAINST COMMAND" : "SHAFT, NO COMMAND TO COMPARE",
+        x, y - r - 12, TOK.muted, FDs, "center");
+  label(ctx, fmt(w, 2) + " rad/s", x + r + 4, y - r - 12, TOK["ink-2"], FMs, "right");
+}
+
+/* ================================ PLOT ================================ */
+const PX = { x0: 66, x1: 930, y0: 20, y1: 254 };
+let hoverT = null;
+const plot = fitter(el("plot"), () => drawPlot());
+
+function yRange(){
+  if (!P.fitY) return [-0.2 * P.A, 2.2 * P.A];
+  let lo = 0, hi = 0;
+  for (let i = 0; i <= 200; i++){ const v = theta(i*T/200); if (v < lo) lo = v; if (v > hi) hi = v; }
+  hi = Math.max(hi, P.A * 1.05);
+  const pad = (hi - lo) * 0.08 || 1;
+  return [lo - pad, hi + pad];
+}
+
+function drawPlot(){
+  const { ctx, W, H } = plot;
+  ctx.clearRect(0, 0, W, H);
+  const [lo, hi] = yRange();
+  const sx = t => PX.x0 + (t / T) * (PX.x1 - PX.x0);
+  const sy = v => PX.y1 - ((v - lo) / (hi - lo)) * (PX.y1 - PX.y0);
+
+  /* grid */
+  ctx.strokeStyle = TOK.grid; ctx.lineWidth = 1;
+  const nx = 6;
+  for (let i = 0; i <= nx; i++){
+    const x = PX.x0 + i*(PX.x1-PX.x0)/nx;
+    ctx.beginPath(); ctx.moveTo(x, PX.y0); ctx.lineTo(x, PX.y1); ctx.stroke();
+  }
+  const ticks = niceTicks(lo, hi, 5);
+  for (const v of ticks){
+    const y = sy(v);
+    if (y < PX.y0 - 1 || y > PX.y1 + 1) continue;
+    ctx.beginPath(); ctx.moveTo(PX.x0, y); ctx.lineTo(PX.x1, y); ctx.stroke();
+  }
+  /* zero line */
+  if (lo < 0 && hi > 0){
+    ctx.strokeStyle = TOK.rule; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PX.x0, sy(0)); ctx.lineTo(PX.x1, sy(0)); ctx.stroke();
+  }
+
+  /* axis labels */
+  for (const v of ticks){
+    const y = sy(v);
+    if (y < PX.y0 - 1 || y > PX.y1 + 1) continue;
+    label(ctx, fmtTick(v), PX.x0 - 10, y + 4, TOK.muted, FMs, "right");
+  }
+  label(ctx, "rad", PX.x0 - 10, PX.y0 - 6, TOK.muted, FD, "right");
+  for (let i = 0; i <= nx; i++){
+    const t = i*T/nx;
+    label(ctx, (T <= 6 ? t.toFixed(1) : Math.round(t)) + "", PX.x0 + i*(PX.x1-PX.x0)/nx, PX.y1 + 18, TOK.muted, FMs, "center");
+  }
+  label(ctx, "seconds", (PX.x0 + PX.x1)/2, PX.y1 + 36, TOK.muted, FD, "center");
+
+  /* commanded level */
+  const yc = sy(P.A);
+  ctx.strokeStyle = TOK["c-cmd"]; ctx.lineWidth = 2; ctx.setLineDash([7, 5]);
+  ctx.beginPath(); ctx.moveTo(PX.x0, yc); ctx.lineTo(PX.x1, yc); ctx.stroke();
+  ctx.setLineDash([]);
+  label(ctx, "u = " + P.A.toFixed(2) + " rad", PX.x1 + 8, yc + 4, TOK["c-cmd"], FMs, "left");
+
+  /* the response, clipped to the frame */
+  ctx.save();
+  ctx.beginPath(); ctx.rect(PX.x0, PX.y0, PX.x1 - PX.x0, PX.y1 - PX.y0); ctx.clip();
+  ctx.beginPath();
+  const N = 900;
+  for (let i = 0; i <= N; i++){
+    const t = i*T/N, v = theta(t);
+    i ? ctx.lineTo(sx(t), sy(v)) : ctx.moveTo(sx(t), sy(v));
+  }
+  ctx.strokeStyle = TOK["c-shaft"]; ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.stroke();
+  ctx.restore();
+
+  /* where the curve leaves the top, say so rather than let it vanish */
+  if (!P.fitY){
+    let tExit = null;
+    for (let i = 1; i <= N; i++){
+      const t = i*T/N;
+      if (theta(t) > hi){
+        let lo2 = (i-1)*T/N, hi2 = t;
+        for (let k = 0; k < 40; k++){
+          const mid = (lo2 + hi2)/2;
+          if (theta(mid) > hi) hi2 = mid; else lo2 = mid;
+        }
+        tExit = hi2; break;
+      }
+    }
+    if (tExit !== null){
+      const x = sx(tExit);
+      ctx.beginPath(); ctx.moveTo(x, PX.y0 + 3); ctx.lineTo(x - 6, PX.y0 + 13); ctx.lineTo(x + 6, PX.y0 + 13);
+      ctx.closePath(); ctx.fillStyle = TOK["c-shaft"]; ctx.fill();
+      label(ctx, "leaves the chart at " + tExit.toFixed(2) + " s", x + 12, PX.y0 + 14, TOK["c-shaft"], FMs, "left");
+    }
+  }
+
+  /* time cursor and the live point */
+  const xc = sx(simT), vc = theta(simT);
+  ctx.strokeStyle = TOK["ink-2"]; ctx.lineWidth = 1; ctx.globalAlpha = 0.45;
+  ctx.beginPath(); ctx.moveTo(xc, PX.y0); ctx.lineTo(xc, PX.y1); ctx.stroke();
+  ctx.globalAlpha = 1;
+  const yv = sy(vc);
+  if (yv >= PX.y0 && yv <= PX.y1){
+    ctx.beginPath(); ctx.arc(xc, yv, 5, 0, TAU2);
+    ctx.fillStyle = TOK["c-shaft"]; ctx.fill();
+    ctx.strokeStyle = TOK.surface; ctx.lineWidth = 2; ctx.stroke();
+  }
+  label(ctx, "t = " + simT.toFixed(2) + " s", PX.x1 + 8, PX.y0 + 12, TOK["ink-2"], FMs, "left");
+  label(ctx, P.closed ? "θ settles at " + P.A.toFixed(2) : "θ never settles",
+        PX.x1 + 8, PX.y0 + 30, P.closed ? TOK.good : TOK.critical, FMs, "left");
+
+  /* hover crosshair */
+  if (hoverT !== null){
+    const hx = sx(hoverT), hv = theta(hoverT), hy = sy(hv);
+    ctx.strokeStyle = TOK.ink; ctx.lineWidth = 1; ctx.globalAlpha = 0.35;
+    ctx.beginPath(); ctx.moveTo(hx, PX.y0); ctx.lineTo(hx, PX.y1); ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (hy >= PX.y0 && hy <= PX.y1){
+      ctx.beginPath(); ctx.arc(hx, hy, 4.5, 0, TAU2);
+      ctx.fillStyle = TOK.ink; ctx.fill();
+      ctx.strokeStyle = TOK.surface; ctx.lineWidth = 2; ctx.stroke();
+    }
+  }
+}
+function niceTicks(lo, hi, want){
+  const raw = (hi - lo) / want;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m*mag).find(s => s >= raw) || 10*mag;
+  const out = [];
+  for (let v = Math.ceil(lo/step)*step; v <= hi + 1e-9; v += step) out.push(Math.abs(v) < 1e-9 ? 0 : v);
+  return out;
+}
+const fmtTick = v => Math.abs(v) >= 100 ? v.toFixed(0) : Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2);
+
+/* tooltip */
+const ttP = el("ttP");
+el("plot").addEventListener("pointermove", ev => {
+  const cv = el("plot"), b = cv.getBoundingClientRect();
+  const lx = (ev.clientX - b.left) / b.width * plot.W;
+  if (lx < PX.x0 || lx > PX.x1){ hoverT = null; ttP.style.opacity = "0"; return; }
+  hoverT = clamp((lx - PX.x0) / (PX.x1 - PX.x0) * T, 0, T);
+  const v = theta(hoverT);
+  ttP.innerHTML = '<span class="h">at t = ' + hoverT.toFixed(2) + ' s</span>'
+    + "θ " + fmt(v, 3) + " rad &middot; " + fmt(v*180/Math.PI, 1) + "°"
+    + (P.closed ? "<br>error " + fmt(P.A - v, 3) + " rad" : "<br>speed " + fmt(omega(hoverT), 2) + " rad/s");
+  ttP.style.left = (ev.clientX - b.left) + "px";
+  ttP.style.top  = (ev.clientY - b.top) + "px";
+  ttP.style.opacity = "1";
+});
+el("plot").addEventListener("pointerleave", () => { hoverT = null; ttP.style.opacity = "0"; });
+
+/* ============================== READOUTS ============================== */
+const TILES = {
+  open: [["TIME CONSTANT τ","tTau","s"],["SPEED CONSTANT","tKc","rad/s per V"],
+         ["SHAFT SPEED","tW","rad/s"],["SHAFT ANGLE","tTh","rad"],
+         ["TURNS SO FAR","tRev","rev"],["SETTLES AT","tEnd",""]],
+  closed:[["ωn","tWn","rad/s"],["ζ","tZ",""],["OVERSHOOT","tMp","%"],
+          ["SETTLING, 2%","tTs","s"],["SHAFT ANGLE","tTh","rad"],["SETTLES AT","tEnd","rad"]]
+};
+function buildReadouts(){
+  el("roRow").innerHTML = TILES[P.closed ? "closed" : "open"].map(([k, id, u]) =>
+    '<div class="ro" id="' + id + 'box"><span class="k">' + k + '</span>'
+    + '<span class="n"><span id="' + id + '">&mdash;</span>'
+    + (u ? '<span class="u"> ' + u + '</span>' : '') + '</span></div>').join("");
+  el("tEndbox").classList.add(P.closed ? "flag-good" : "flag-critical");
+}
+function updateReadouts(){
+  const th = theta(simT);
+  el("tTh").textContent = fmt(th, 3);
+  if (P.closed){
+    el("tWn").textContent = wn().toFixed(3);
+    el("tZ").textContent  = zeta().toFixed(3);
+    el("tMp").textContent = (100*overshoot()).toFixed(1);
+    el("tTs").textContent = (cachedTs || 0).toFixed(1);
+    el("tEnd").textContent = P.A.toFixed(2);
+  } else {
+    el("tTau").textContent = tauM().toFixed(3);
+    el("tKc").textContent  = (P.K/P.c).toFixed(2);
+    el("tW").textContent   = omegaOpen(simT).toFixed(2);
+    el("tRev").textContent = (th/TAU2).toFixed(2);
+    el("tEnd").textContent = "never";
+  }
+}
+
+/* ============================== CONTROLS ============================== */
+function syncLabels(){
+  el("vA").textContent = P.A.toFixed(2);
+  el("vK").textContent = P.K;
+  el("vJ").textContent = P.J.toFixed(1);
+  el("vC").textContent = P.c.toFixed(1);
+  el("cmdRad").textContent = P.A.toFixed(2);
+  el("cmdDeg").textContent = (P.A*180/Math.PI).toFixed(1);
+}
+/* every control restarts the run: the window and the settling time both
+   depend on the parameters, so a mid-flight change would leave the chart
+   showing a transient that belongs to no configuration on screen */
+const bump = () => { syncLabels(); resetRun(); updateReadouts(); };
+el("sA").addEventListener("input", e => { P.A = +e.target.value; bump(); });
+el("sK").addEventListener("input", e => { P.K = +e.target.value; bump(); });
+el("sJ").addEventListener("input", e => { P.J = +e.target.value; bump(); });
+el("sC").addEventListener("input", e => { P.c = +e.target.value; bump(); });
+
+function setMode(closed){
+  if (P.closed === closed) return;
+  P.closed = closed;
+  el("mOpen").setAttribute("aria-pressed", String(!closed));
+  el("mClosed").setAttribute("aria-pressed", String(closed));
+  buildReadouts(); bump();
+}
+el("mOpen").addEventListener("click", () => setMode(false));
+el("mClosed").addEventListener("click", () => setMode(true));
+
+function setY(fit){
+  P.fitY = fit;
+  el("yFit").setAttribute("aria-pressed", String(fit));
+  el("yCmd").setAttribute("aria-pressed", String(!fit));
+}
+el("yCmd").addEventListener("click", () => setY(false));
+el("yFit").addEventListener("click", () => setY(true));
+
+el("playBtn").addEventListener("click", e => {
+  playing = !playing; lastNow = 0;
+  e.target.textContent = playing ? "Pause" : "Play";
+});
+el("replayBtn").addEventListener("click", () => {
+  simT = 0; prevTheta = theta(0); lastNow = 0;
+  if (!playing){ playing = true; el("playBtn").textContent = "Pause"; }
+});
+
+const PRESETS = {
+  lecture: () => ({ K: 114, J: 10, c: 4 }),
+  z07:     () => ({ K: 114, J: 10, c: Math.round(2*0.7*Math.sqrt(114*10)*2)/2 }),
+  z1:      () => ({ K: 114, J: 10, c: Math.round(2*Math.sqrt(114*10)*2)/2 }),
+  over:    () => ({ K: 114, J: 10, c: 120 })
+};
+for (const b of document.querySelectorAll(".presets button")){
+  b.addEventListener("click", () => {
+    const v = PRESETS[b.dataset.p]();
+    P.K = v.K; P.J = v.J; P.c = v.c;
+    el("sK").value = P.K; el("sJ").value = P.J; el("sC").value = P.c;
+    bump();
+  });
+}
+
+/* ============================== MAIN LOOP ============================= */
+function tick(now){
+  if (playing){
+    if (!lastNow) lastNow = now;
+    const dt = Math.min(0.1, (now - lastNow)/1000);
+    lastNow = now;
+    prevTheta = theta(simT);
+    simT += dt;
+    if (simT > T){ simT = 0; prevTheta = theta(0); }
+  } else lastNow = now;
+  drawStage(); drawPlot(); updateReadouts();
+  requestAnimationFrame(tick);
+}
+
+buildReadouts();
+syncLabels();
+resetRun();
+updateReadouts();
+if (!playing) el("playBtn").textContent = "Play";
+requestAnimationFrame(tick);
+</script>
+
+</body>
+</html>
