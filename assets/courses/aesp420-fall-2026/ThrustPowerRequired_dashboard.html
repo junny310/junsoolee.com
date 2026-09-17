@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Thrust &amp; Power Required</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F7F5F3; --surface:#FFFFFF; --chart:#FCFCFB;
+  --ink:#17120F; --ink2:#57504C; --muted:#8B827D;
+  --grid:#E4E0DA; --axis:#C6C0B8; --rule:rgba(23,18,15,.10);
+  --accent:#73000A; --accent-wash:rgba(115,0,10,.07); --accent-ink:#73000A;
+  --tr:#2a78d6; --pr:#eb6834; --ghost:#ADA69F; --stall:rgba(139,130,125,.13);
+  --shadow:0 1px 2px rgba(23,18,15,.05), 0 8px 24px -16px rgba(23,18,15,.22);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#121110; --surface:#1C1A19; --chart:#1A1A19;
+  --ink:#FFFFFF; --ink2:#C3C2B7; --muted:#8F8880;
+  --grid:#2C2C2A; --axis:#3A3835; --rule:rgba(255,255,255,.11);
+  --accent:#C4485A; --accent-wash:rgba(196,72,90,.13); --accent-ink:#E2798A;
+  --tr:#3987e5; --pr:#d95926; --ghost:#6E6862; --stall:rgba(143,136,128,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+}}
+:root[data-theme="dark"]{
+  --bg:#121110; --surface:#1C1A19; --chart:#1A1A19;
+  --ink:#FFFFFF; --ink2:#C3C2B7; --muted:#8F8880;
+  --grid:#2C2C2A; --axis:#3A3835; --rule:rgba(255,255,255,.11);
+  --accent:#C4485A; --accent-wash:rgba(196,72,90,.13); --accent-ink:#E2798A;
+  --tr:#3987e5; --pr:#d95926; --ghost:#6E6862; --stall:rgba(143,136,128,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);
+  font:400 15px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:28px 44px;
+  display:flex;flex-direction:column;gap:20px}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+  border-bottom:2px solid var(--accent);padding-bottom:12px}
+h1{margin:0;font:700 clamp(30px,5.2vw,44px)/1 "Oswald",system-ui,sans-serif;
+  letter-spacing:.005em;text-transform:uppercase;text-wrap:balance}
+.mast .course{font:600 11.5px/1 "IBM Plex Sans",sans-serif;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent-ink)}
+.lede{margin:0;color:var(--ink2);max-width:66ch;font-size:15px}
+
+/* ---------- aircraft toggle ---------- */
+.craft{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.craft button{all:unset;cursor:pointer;background:var(--surface);
+  border:1px solid var(--rule);border-radius:3px;padding:13px 16px;
+  display:flex;flex-direction:column;gap:3px;transition:border-color .12s,background .12s}
+.craft button:hover{border-color:var(--axis)}
+.craft button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.craft button[aria-pressed="true"]{border-color:var(--accent);
+  background:var(--accent-wash);box-shadow:inset 3px 0 0 var(--accent)}
+.craft .nm{font:600 19px/1.15 "Oswald",system-ui,sans-serif;letter-spacing:.02em;
+  text-transform:uppercase}
+.craft .kd{font-size:12.5px;color:var(--ink2)}
+.craft button[aria-pressed="true"] .kd{color:var(--accent-ink)}
+
+/* ---------- control strip ---------- */
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  box-shadow:var(--shadow)}
+.ctl{padding:16px 18px;display:flex;flex-direction:column;gap:13px}
+.ctl-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
+.ctl-lab{font:600 11px/1 "IBM Plex Sans",sans-serif;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted)}
+.alt-val{font:600 27px/1 "IBM Plex Mono",ui-monospace,monospace;color:var(--ink)}
+.alt-val span{font-size:14px;font-weight:400;color:var(--ink2)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;
+  background:transparent;cursor:pointer;margin:0}
+input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--grid);border-radius:2px}
+input[type=range]::-moz-range-track{height:4px;background:var(--grid);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:19px;height:19px;
+  border-radius:50%;background:var(--accent);border:2.5px solid var(--surface);
+  box-shadow:0 0 0 1px var(--accent);margin-top:-7.5px}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+  background:var(--accent);border:2.5px solid var(--surface);box-shadow:0 0 0 1px var(--accent)}
+.ticks{display:flex;justify-content:space-between;font:400 11px/1 "IBM Plex Mono",monospace;
+  color:var(--muted);margin-top:-6px}
+.atmo{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 10px;
+  background:var(--bg);border:1px solid var(--rule);border-radius:2px;
+  font:500 13px/1 "IBM Plex Mono",monospace;color:var(--ink)}
+.chip b{font:600 10.5px/1 "IBM Plex Sans",sans-serif;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted)}
+.opts{display:flex;flex-wrap:wrap;gap:8px 18px;padding-top:2px;border-top:1px solid var(--rule)}
+.opts label{display:inline-flex;align-items:center;gap:7px;font-size:13px;
+  color:var(--ink2);cursor:pointer;padding-top:10px}
+.opts input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+
+/* ---------- chart ---------- */
+.chartbox{padding:14px 12px 8px}
+svg.plot{display:block;width:100%;height:auto;touch-action:none}
+.hint{padding:0 18px 14px;font-size:12.5px;color:var(--muted)}
+
+/* ---------- readout ---------- */
+.read{padding:0 18px 18px;display:flex;flex-direction:column;gap:12px}
+.read-hd{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;
+  padding-top:14px;border-top:1px solid var(--rule)}
+.read-hd .v{font:600 25px/1 "IBM Plex Mono",monospace}
+.read-hd .u{font-size:13px;color:var(--ink2)}
+.pin{font:500 11px/1 "IBM Plex Sans",sans-serif;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent-ink);background:var(--accent-wash);padding:4px 8px;border-radius:2px}
+.grid-read{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:2px;overflow:hidden}
+.cell{background:var(--surface);padding:9px 11px;display:flex;flex-direction:column;gap:3px}
+.cell .k{font:600 10.5px/1.2 "IBM Plex Sans",sans-serif;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted)}
+.cell .n{font:500 17px/1.1 "IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.cell.tr .n{color:var(--tr)} .cell.pr .n{color:var(--pr)}
+
+/* ---------- lower grid ---------- */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{padding:16px 18px}
+h2{margin:0 0 12px;font:600 12px/1 "IBM Plex Sans",sans-serif;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 0;border-bottom:1px solid var(--rule)}
+tr:last-child th,tr:last-child td{border-bottom:0}
+th{font-weight:400;color:var(--ink2)}
+td{text-align:right;font:500 13.5px/1 "IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.eq{font:400 13.5px/1.9 "IBM Plex Mono",ui-monospace,monospace;color:var(--ink);
+  background:var(--bg);border:1px solid var(--rule);border-radius:2px;
+  padding:11px 13px;overflow-x:auto;white-space:nowrap}
+.eq + .eq{margin-top:8px}
+.note{margin:12px 0 0;font-size:13.5px;color:var(--ink2);line-height:1.6}
+.note strong{color:var(--ink);font-weight:600}
+.src{font-size:12.5px;color:var(--muted);padding-block:4px 0;line-height:1.6}
+sub{font-size:.72em}
+@media (max-width:720px){ .cols{grid-template-columns:1fr} .craft{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="course">AESP 420 · Flight &amp; Orbital Mechanics</div>
+    <h1>Thrust &amp; Power Required</h1>
+  </header>
+  <p class="lede">Steady level flight, so lift equals weight and thrust equals drag. Pick an
+  aircraft and an altitude; the curves below are computed from the drag polar
+  C<sub>D</sub> = C<sub>D,0</sub> + KC<sub>L</sub><sup>2</sup>. Watch what altitude does to each
+  minimum — they do not behave the same way.</p>
+
+  <div class="craft" role="group" aria-label="Select aircraft">
+    <button id="btnProp" type="button" aria-pressed="true">
+      <span class="nm">Cessna T-41A</span>
+      <span class="kd">Propeller · 2,950 lb · piston trainer</span>
+    </button>
+    <button id="btnJet" type="button" aria-pressed="false">
+      <span class="nm">Cessna Citation X</span>
+      <span class="kd">Turbofan · 19,815 lb · business jet</span>
+    </button>
+  </div>
+
+  <div class="panel ctl">
+    <div class="ctl-top">
+      <span class="ctl-lab">Altitude</span>
+      <span class="alt-val"><span id="altTxt">0</span> <span>ft</span></span>
+      <span class="ctl-lab" id="altCeil"></span>
+    </div>
+    <input type="range" id="alt" min="0" max="15000" step="500" value="0" aria-label="Altitude, feet">
+    <div class="ticks" id="altTicks"></div>
+    <div class="atmo" id="atmo"></div>
+    <div class="opts">
+      <label><input type="checkbox" id="optGhost" checked> Sea-level curve for reference</label>
+      <label><input type="checkbox" id="optStall" checked> Shade below stall</label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="chartbox"><svg class="plot" id="plot" viewBox="0 0 760 528"
+      role="img" aria-labelledby="plotTitle"><title id="plotTitle">Thrust required and power
+      required versus flight velocity</title></svg></div>
+    <p class="hint" id="hint">Move the pointer across the plot to read values; click to pin.</p>
+    <div class="read">
+      <div class="read-hd">
+        <span class="ctl-lab">At</span>
+        <span class="v" id="rV">200</span><span class="u">ft/s</span>
+        <span class="pin" id="rPin" hidden>pinned</span>
+      </div>
+      <div class="grid-read">
+        <div class="cell"><span class="k">Mach</span><span class="n" id="rM">—</span></div>
+        <div class="cell"><span class="k">C<sub>L</sub></span><span class="n" id="rCL">—</span></div>
+        <div class="cell"><span class="k">C<sub>D</sub></span><span class="n" id="rCD">—</span></div>
+        <div class="cell"><span class="k">L / D</span><span class="n" id="rLD">—</span></div>
+        <div class="cell tr"><span class="k">T<sub>R</sub> · lb</span><span class="n" id="rTR">—</span></div>
+        <div class="cell pr"><span class="k">P<sub>R</sub> · hp</span><span class="n" id="rPR">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <section class="panel card">
+      <h2 id="specHd">Aircraft</h2>
+      <table id="spec"></table>
+    </section>
+    <section class="panel card">
+      <h2>Governing relations</h2>
+      <div class="eq">T<sub>R</sub> = ½ρV²S·C<sub>D,0</sub> + 2KW² / (ρV²S)</div>
+      <div class="eq">P<sub>R</sub> = T<sub>R</sub>·V &nbsp; (÷550 for hp)</div>
+      <div class="eq">K = 1 / (π·e·AR) &nbsp;&nbsp; AR = b²/S</div>
+      <p class="note" id="insight"></p>
+    </section>
+  </div>
+
+  <p class="src">Standard atmosphere in English units, ρ<sub>SL</sub> = 2.377×10⁻³ slug/ft³.
+  Aircraft data from the AESP 420 lecture examples. Stall speeds use an <em>assumed</em>
+  C<sub>L,max</sub> and are indicative only — the lecture data set does not specify one.</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+var RHO0=2.377e-3, RGAS=1716, GAM=1.4;
+
+var CRAFT={
+  prop:{key:"prop",name:"Cessna T-41A",kind:"Propeller",b:35.8,S:174,W:2950,cd0:0.025,e:0.8,
+        clmax:1.50,hMax:15000,hStep:500,hTicks:[0,5000,10000,15000],
+        vMax:400,yT:800,yP:220,tT:200,tP:50,slideV:200,ceil:"service ceiling ≈ 13,100 ft"},
+  jet: {key:"jet",name:"Cessna Citation X",kind:"Turbofan",b:53.3,S:318,W:19815,cd0:0.02,e:0.81,
+        clmax:1.40,hMax:45000,hStep:1000,hTicks:[0,15000,30000,45000],
+        vMax:1000,yT:4500,yP:4000,tT:1000,tP:1000,slideV:500,ceil:"certified ceiling 51,000 ft"}
+};
+Object.keys(CRAFT).forEach(function(k){var a=CRAFT[k];
+  a.AR=a.b*a.b/a.S; a.K=1/(Math.PI*a.e*a.AR);
+  a.LDmax=1/(2*Math.sqrt(a.K*a.cd0)); a.TRmin=a.W/a.LDmax;});
+
+var ac=CRAFT.prop, alt=0, cursorV=null, pinV=ac.slideV;
+
+function isa(h){
+  var T,s;
+  if(h<=36089){ T=518.67-0.00356616*h; s=Math.pow(T/518.67,4.2559); }
+  else { T=389.97; s=0.297076*Math.exp(-0.0000480634*(h-36089)); }
+  return {T:T, rho:RHO0*s, sig:s, a:Math.sqrt(GAM*RGAS*T)};
+}
+function TR(V,rho){ var q=0.5*rho*V*V;
+  return q*ac.S*ac.cd0 + 2*ac.K*ac.W*ac.W/(rho*V*V*ac.S); }
+function PRhp(V,rho){ return TR(V,rho)*V/550; }
+function vTRmin(rho){ return Math.sqrt(2*ac.W/(rho*ac.S)*Math.sqrt(ac.K/ac.cd0)); }
+function vPRmin(rho){ return Math.sqrt(2*ac.W/(rho*ac.S)*Math.sqrt(ac.K/(3*ac.cd0))); }
+function vStall(rho){ return Math.sqrt(2*ac.W/(rho*ac.S*ac.clmax)); }
+var SUP={"-":"\u207B","0":"\u2070","1":"\u00B9","2":"\u00B2","3":"\u00B3","4":"\u2074",
+  "5":"\u2075","6":"\u2076","7":"\u2077","8":"\u2078","9":"\u2079"};
+function sci(x){ var q=x.toExponential(3).split("e");
+  return q[0]+"\u00D710"+String(parseInt(q[1],10)).split("").map(function(c){return SUP[c];}).join(""); }
+function fmt(x,d){ return x.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+/* ---- geometry ---- */
+var W=760,H=528,PL=64,PRr=16,PW=W-PL-PRr;
+var A={y0:34,y1:224}, B={y0:290,y1:480};
+var SVGNS="http://www.w3.org/2000/svg";
+function el(n,at){var e=document.createElementNS(SVGNS,n);
+  for(var k in at) if(at[k]!==null&&at[k]!==undefined) e.setAttribute(k,at[k]); return e;}
+function txt(x,y,s,at){var t=el("text",at||{}); t.setAttribute("x",x); t.setAttribute("y",y);
+  t.textContent=s; return t;}
+var X=function(v){ return PL+PW*v/ac.vMax; };
+var Xinv=function(px){ return (px-PL)/PW*ac.vMax; };
+function Yf(p,ymax){ return function(y){ return p.y1-(p.y1-p.y0)*Math.min(y,ymax)/ymax; }; }
+
+function curve(p,ymax,fn,rho,vmin){
+  var d="",N=460,up=false,yo=false;
+  var Y=Yf(p,ymax);
+  for(var i=0;i<=N;i++){
+    var v=vmin+(ac.vMax-vmin)*i/N; if(v<=0) continue;
+    var y=fn(v,rho);
+    if(y>ymax){ if(up&&!yo){ d+="L"+X(v).toFixed(1)+","+p.y0.toFixed(1); yo=true; } continue; }
+    yo=false;
+    d+=(up?"L":"M")+X(v).toFixed(1)+","+Y(y).toFixed(1); up=true;
+  }
+  return d;
+}
+
+function draw(){
+  var svg=document.getElementById("plot");
+  while(svg.childNodes.length>1) svg.removeChild(svg.lastChild);
+  var at=isa(alt), rho=at.rho, sl=isa(0).rho;
+  var ghost=document.getElementById("optGhost").checked && alt>0;
+  var showStall=document.getElementById("optStall").checked;
+
+  var defs=el("defs"); 
+  [["cA",A],["cB",B]].forEach(function(c){
+    var cp=el("clipPath",{id:c[0]});
+    cp.appendChild(el("rect",{x:PL,y:c[1].y0,width:PW,height:c[1].y1-c[1].y0}));
+    defs.appendChild(cp);
+  });
+  svg.appendChild(defs);
+
+  var panels=[
+    {p:A,ymax:ac.yT,step:ac.tT,fn:TR,col:"var(--tr)",clip:"cA",
+     title:"Thrust required",unit:"Tʀ  (lb)",
+     vmin:vTRmin,minLab:function(){return fmt(ac.TRmin,0)+" lb";}},
+    {p:B,ymax:ac.yP,step:ac.tP,fn:PRhp,col:"var(--pr)",clip:"cB",
+     title:"Power required",unit:"Pʀ  (hp)",
+     vmin:vPRmin,minLab:function(v){return fmt(PRhp(v,rho),0)+" hp";}}
+  ];
+
+  panels.forEach(function(P){
+    var p=P.p, Y=Yf(p,P.ymax), g=el("g");
+
+    g.appendChild(el("rect",{x:PL,y:p.y0,width:PW,height:p.y1-p.y0,
+      fill:"var(--chart)",stroke:"none"}));
+
+    if(showStall){
+      var vs=Math.min(vStall(rho),ac.vMax);
+      if(vs>0){
+        g.appendChild(el("rect",{x:PL,y:p.y0,width:X(vs)-PL,height:p.y1-p.y0,
+          fill:"var(--stall)",stroke:"none"}));
+        if(X(vs)-PL>46) g.appendChild(txt(X(vs)-7,p.y0+14,"below stall",
+          {fill:"var(--muted)","font-size":10.5,"text-anchor":"end",
+           "letter-spacing":".06em","font-family":'"IBM Plex Sans",sans-serif'}));
+      }
+    }
+
+    for(var y=0;y<=P.ymax+1e-9;y+=P.step){
+      var yy=Y(y);
+      g.appendChild(el("line",{x1:PL,y1:yy,x2:PL+PW,y2:yy,
+        stroke:y===0?"var(--axis)":"var(--grid)","stroke-width":1}));
+      g.appendChild(txt(PL-9,yy+4,y.toLocaleString("en-US"),
+        {fill:"var(--muted)","font-size":11,"text-anchor":"end",
+         "font-family":'"IBM Plex Mono",monospace'}));
+    }
+    var xstep=ac.vMax/8;
+    for(var v=xstep;v<=ac.vMax+1e-9;v+=xstep)
+      g.appendChild(el("line",{x1:X(v),y1:p.y0,x2:X(v),y2:p.y1,
+        stroke:"var(--grid)","stroke-width":1}));
+    g.appendChild(el("line",{x1:PL,y1:p.y0,x2:PL,y2:p.y1,stroke:"var(--axis)","stroke-width":1}));
+
+    var inner=el("g",{"clip-path":"url(#"+P.clip+")"});
+    if(ghost) inner.appendChild(el("path",{d:curve(p,P.ymax,P.fn,sl,1),fill:"none",
+      stroke:"var(--ghost)","stroke-width":1.6,"stroke-linecap":"round"}));
+    inner.appendChild(el("path",{d:curve(p,P.ymax,P.fn,rho,1),fill:"none",
+      stroke:P.col,"stroke-width":2.2,"stroke-linecap":"round","stroke-linejoin":"round"}));
+    g.appendChild(inner);
+
+    var vm=P.vmin(rho), ym=P.fn(vm,rho);
+    if(vm<=ac.vMax && ym<=P.ymax){
+      g.appendChild(el("circle",{cx:X(vm),cy:Y(ym),r:5.6,fill:"none",
+        stroke:"var(--chart)","stroke-width":4}));
+      g.appendChild(el("circle",{cx:X(vm),cy:Y(ym),r:4.2,fill:P.col}));
+      var lx=X(vm)+11, anch="start";
+      if(lx>PL+PW-112){ lx=X(vm)-11; anch="end"; }
+      var ly=Y(ym)-26, below=false;
+      if(ly<p.y0+6){ ly=Y(ym)+20; below=true; }
+      g.appendChild(txt(lx,ly,"min "+P.minLab(vm),
+        {fill:"var(--ink)","font-size":12,"font-weight":600,"text-anchor":anch,
+         "font-family":'"IBM Plex Sans",sans-serif'}));
+      g.appendChild(txt(lx,ly+14,"at "+fmt(vm,0)+" ft/s",
+        {fill:"var(--muted)","font-size":11,"text-anchor":anch,
+         "font-family":'"IBM Plex Mono",monospace'}));
+      g.appendChild(el("line",{x1:X(vm),y1:below?Y(ym)+7:Y(ym)-7,
+        x2:X(vm),y2:below?ly-9:ly+5,stroke:"var(--axis)","stroke-width":1}));
+    }
+
+    g.appendChild(txt(PL,p.y0-12,P.title,{fill:"var(--ink)","font-size":14.5,
+      "font-weight":600,"font-family":'"Oswald",sans-serif',"letter-spacing":".04em",
+      "text-transform":"uppercase"}));
+    var ut=txt(PL+PW,p.y0-12,P.unit,{fill:"var(--muted)","font-size":11.5,
+      "text-anchor":"end","font-family":'"IBM Plex Mono",monospace'});
+    g.appendChild(ut);
+    svg.appendChild(g);
+  });
+
+  /* legend */
+  if(ghost){
+    var lg=el("g");
+    lg.appendChild(el("line",{x1:PL+PW-186,y1:A.y0-16,x2:PL+PW-170,y2:A.y0-16,
+      stroke:"var(--ghost)","stroke-width":1.6}));
+    lg.appendChild(txt(PL+PW-165,A.y0-12,"sea level",{fill:"var(--muted)","font-size":11,
+      "font-family":'"IBM Plex Sans",sans-serif'}));
+    svg.appendChild(lg);
+  }
+
+  /* x axis */
+  var xa=el("g");
+  xa.appendChild(el("line",{x1:PL,y1:B.y1,x2:PL+PW,y2:B.y1,stroke:"var(--axis)","stroke-width":1}));
+  var xs=ac.vMax/8;
+  for(var v2=0;v2<=ac.vMax+1e-9;v2+=xs)
+    xa.appendChild(txt(X(v2),B.y1+18,v2.toLocaleString("en-US"),
+      {fill:"var(--muted)","font-size":11,"text-anchor":"middle",
+       "font-family":'"IBM Plex Mono",monospace'}));
+  xa.appendChild(txt(PL+PW/2,B.y1+40,"Flight velocity  V∞   (ft/s)",
+    {fill:"var(--ink2)","font-size":12.5,"text-anchor":"middle","font-weight":500,
+     "font-family":'"IBM Plex Sans",sans-serif'}));
+  svg.appendChild(xa);
+
+  /* crosshair */
+  var cv=(cursorV!==null?cursorV:pinV);
+  if(cv!==null && cv>0 && cv<=ac.vMax){
+    var ch=el("g");
+    ch.appendChild(el("line",{x1:X(cv),y1:A.y0,x2:X(cv),y2:A.y1,
+      stroke:"var(--accent)","stroke-width":1.4,opacity:.85}));
+    ch.appendChild(el("line",{x1:X(cv),y1:B.y0,x2:X(cv),y2:B.y1,
+      stroke:"var(--accent)","stroke-width":1.4,opacity:.85}));
+    panels.forEach(function(P){
+      var y=P.fn(cv,rho); if(y>P.ymax) return;
+      var Y=Yf(P.p,P.ymax);
+      ch.appendChild(el("circle",{cx:X(cv),cy:Y(y),r:5.4,fill:"none",
+        stroke:"var(--chart)","stroke-width":4}));
+      ch.appendChild(el("circle",{cx:X(cv),cy:Y(y),r:4,fill:"var(--accent)"}));
+    });
+    svg.appendChild(ch);
+  }
+  readout(cv,rho,at);
+}
+
+function readout(v,rho,at){
+  var q=0.5*rho*v*v, CL=ac.W/(q*ac.S), CD=ac.cd0+ac.K*CL*CL;
+  document.getElementById("rV").textContent=fmt(v,0);
+  document.getElementById("rM").textContent=fmt(v/at.a,3);
+  document.getElementById("rCL").textContent=fmt(CL,3);
+  document.getElementById("rCD").textContent=fmt(CD,4);
+  document.getElementById("rLD").textContent=fmt(CL/CD,2);
+  document.getElementById("rTR").textContent=fmt(TR(v,rho),0);
+  document.getElementById("rPR").textContent=fmt(PRhp(v,rho),0);
+  document.getElementById("rPin").hidden=(cursorV!==null);
+}
+
+function paintAtmo(){
+  var a=isa(alt);
+  document.getElementById("altTxt").textContent=alt.toLocaleString("en-US");
+  document.getElementById("atmo").innerHTML=
+    '<span class="chip"><b>ρ</b>'+a.rho.toExponential(3).replace("e-","×10⁻")+' slug/ft³</span>'+
+    '<span class="chip"><b>σ = ρ/ρₛₗ</b>'+fmt(a.sig,3)+'</span>'+
+    '<span class="chip"><b>T</b>'+fmt(a.T,1)+' °R</span>'+
+    '<span class="chip"><b>a</b>'+fmt(a.a,0)+' ft/s</span>'+
+    '<span class="chip"><b>V stall</b>'+fmt(vStall(a.rho),0)+' ft/s</span>';
+}
+
+function paintSpec(){
+  var a=isa(alt);
+  document.getElementById("specHd").textContent=ac.name;
+  var rows=[
+    ["Wingspan  b", fmt(ac.b,1)+" ft"],
+    ["Wing area  S", fmt(ac.S,0)+" ft²"],
+    ["Weight  W", ac.W.toLocaleString("en-US")+" lb"],
+    ["Aspect ratio  AR", fmt(ac.AR,2)],
+    ["Zero-lift drag  Cᴅ,₀", fmt(ac.cd0,3)],
+    ["Oswald efficiency  e", fmt(ac.e,2)],
+    ["Induced factor  K", fmt(ac.K,4)],
+    ["(L/D)ₘₐₓ", fmt(ac.LDmax,2)],
+    ["Tʀ minimum", fmt(ac.TRmin,0)+" lb"],
+    ["V at Tʀ minimum", fmt(vTRmin(a.rho),0)+" ft/s"],
+    ["V at Pʀ minimum", fmt(vPRmin(a.rho),0)+" ft/s"]
+  ];
+  document.getElementById("spec").innerHTML=rows.map(function(r){
+    return "<tr><th>"+r[0]+"</th><td>"+r[1]+"</td></tr>";}).join("");
+  document.getElementById("altCeil").textContent=ac.ceil;
+
+  var a0=isa(0), rho=a.rho;
+  var head="Minimum thrust required is <strong>"+fmt(ac.TRmin,0)+
+    " lb at every altitude</strong> — it equals W/(L/D)<sub>max</sub>, and neither term "+
+    "depends on density. ";
+  var body = alt===0
+    ? "Climb and that minimum only slides to the right, never up: it sits at "+
+      fmt(vTRmin(a0.rho),0)+" ft/s here at sea level. Minimum <em>power</em> will not hold "+
+      "still — P<sub>R</sub> = T<sub>R</sub>·V, so the same thrust at a higher speed costs "+
+      "more power, and the "+fmt(PRhp(vPRmin(a0.rho),a0.rho),0)+
+      " hp needed here climbs with every thousand feet. That gap is why a "
+    : "Climbing only slides that minimum to a higher speed: "+fmt(vTRmin(a0.rho),0)+
+      " ft/s at sea level, "+fmt(vTRmin(rho),0)+" ft/s here. Minimum <em>power</em> behaves "+
+      "differently — P<sub>R</sub> = T<sub>R</sub>·V, so the same thrust at a higher speed "+
+      "costs more power: "+fmt(PRhp(vPRmin(a0.rho),a0.rho),0)+" hp at sea level against "+
+      fmt(PRhp(vPRmin(rho),rho),0)+" hp here. That gap is why a ";
+  document.getElementById("insight").innerHTML= head + body +
+    (ac.key==="prop"?"propeller aircraft, limited by power, loses climb rate with altitude even though its drag has not changed"
+                    :"jet, limited by thrust rather than power, cruises high while a piston aircraft cannot")+".";
+}
+
+function setCraft(k){
+  ac=CRAFT[k];
+  document.getElementById("btnProp").setAttribute("aria-pressed",String(k==="prop"));
+  document.getElementById("btnJet").setAttribute("aria-pressed",String(k==="jet"));
+  var s=document.getElementById("alt");
+  s.max=ac.hMax; s.step=ac.hStep;
+  if(alt>ac.hMax) alt=ac.hMax;
+  alt=Math.round(alt/ac.hStep)*ac.hStep;
+  s.value=alt;
+  document.getElementById("altTicks").innerHTML=
+    ac.hTicks.map(function(t){return "<span>"+t.toLocaleString("en-US")+"</span>";}).join("");
+  pinV=ac.slideV; cursorV=null;
+  paintAtmo(); paintSpec(); draw();
+}
+
+document.getElementById("btnProp").addEventListener("click",function(){setCraft("prop");});
+document.getElementById("btnJet").addEventListener("click",function(){setCraft("jet");});
+document.getElementById("alt").addEventListener("input",function(e){
+  alt=+e.target.value; paintAtmo(); paintSpec(); draw();});
+document.getElementById("optGhost").addEventListener("change",draw);
+document.getElementById("optStall").addEventListener("change",draw);
+
+var svg=document.getElementById("plot");
+function vFromEvent(e){
+  var r=svg.getBoundingClientRect();
+  var px=(e.clientX-r.left)/r.width*W;
+  return Math.max(1,Math.min(ac.vMax,Xinv(px)));
+}
+svg.addEventListener("pointermove",function(e){ cursorV=vFromEvent(e); draw(); });
+svg.addEventListener("pointerleave",function(){ cursorV=null; draw(); });
+svg.addEventListener("pointerdown",function(e){ pinV=vFromEvent(e); cursorV=null;
+  document.getElementById("hint").textContent=
+    "Pinned at "+fmt(pinV,0)+" ft/s. Move the pointer to read elsewhere; click to re-pin."; draw(); });
+
+setCraft("prop");
+})();
+</script>
+
+</body>
+</html>
