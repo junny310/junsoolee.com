@@ -573,7 +573,7 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
           <circle cx="344" cy="374" r="3.2" fill="var(--c-shaft)"></circle>
           <text x="214" y="452" text-anchor="middle" font-family="var(--data)" font-size="11" fill="var(--muted)">unit feedback &mdash; the shaft angle itself</text>
         </svg>
-        <figcaption>The plant is a double integrator with drag: one pole at
+        <figcaption>The plant is an inertia with viscous drag: one pole at
         <span class="num">s = &minus;c/J</span> and, decisively, one at
         <span class="num">s = 0</span>. That second pole is the whole story.</figcaption>
       </figure>
@@ -784,8 +784,11 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
       <div class="q"><h3>4 &middot; Find critical damping by hand</h3>
         <p>Keep <span class="num">K = 114</span>, <span class="num">J = 10</span> and raise
         <span class="num">c</span> until the overshoot readout first reads
-        <span class="num">0.0 %</span>. Check your slider against
-        <span class="num">c = 2&radic;(KJ) = 67.5</span>, and notice the needle now reaches the command
+        <span class="num">0.0 %</span>. You will stop near <span class="num">c = 62.5</span>, short of
+        critical damping <span class="num">c = 2&radic;(KJ) = 67.5</span>: there
+        <span class="num">&zeta; &asymp; 0.93</span> and the overshoot is only about
+        <span class="num">0.05 %</span>, below what the readout can show. Now set
+        <span class="num">c = 67.5</span> and notice the needle reaches the command
         without ever crossing it.</p></div>
       <div class="q"><h3>5 &middot; Prove gain cannot buy settling time</h3>
         <p>Note the settling time at <span class="num">K = 114</span>

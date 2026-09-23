@@ -988,8 +988,9 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
       <div class="q"><h3>2 &middot; Catch the &radic;2 coincidence</h3>
         <p>Starting from <span class="num">Reset</span>, so both of System&nbsp;2&rsquo;s mounts match
         System&nbsp;1&rsquo;s, raise <span class="num">&omega;</span> until System&nbsp;2 reads
-        <span class="num">r = 1.00</span> &mdash; which happens exactly when <span class="num">&omega;</span>
-        reaches that system&rsquo;s own <span class="num">&omega;<sub>n</sub> = 8.9 rad/s</span>, and being
+        <span class="num">r = 1.00</span>. That happens at <span class="num">&omega; = 8.9 rad/s</span>,
+        the slider&rsquo;s closest step to that system&rsquo;s own
+        <span class="num">&omega;<sub>n</sub> = 8.94 rad/s</span>, and being
         able to read that straight off the table is the whole reason for quoting the input in rad/s. Check
         that System&nbsp;1 now reads <span class="num">1.41</span>, its own crossover, where
         <span class="num">|X/U| = 1</span> exactly for every <span class="num">&zeta;</span>. On the strip
@@ -1562,7 +1563,13 @@ function syncLabels(){
 const bump = () => { syncLabels(); resetSim(); };
 el("sM").addEventListener("input", e => { P.m = +e.target.value; bump(); });
 for (const [id, key] of [["sK1","k1"],["sB1","b1"],["sKL","kL"],["sKR","kR"],["sBL","bL"],["sBR","bR"]])
-  el(id).addEventListener("input", e => { P[key] = +e.target.value * 1000; bump(); });
+  el(id).addEventListener("input", e => {
+    P[key] = +e.target.value * 1000;
+    /* System 2 may lose one mount, but with both at k = 0 it has no natural
+       frequency and r, zeta and the period divide by zero: keep 5 kN/m. */
+    if ((key === "kL" || key === "kR") && P.kL + P.kR === 0){ P[key] = 5000; e.target.value = 5; }
+    bump();
+  });
 el("sF").addEventListener("input", e => {
   if (P.pulse) P.Tp = +e.target.value; else P.w = +e.target.value;
   bump();
@@ -1751,14 +1758,15 @@ const REC = { u: [], z: [[],[],[]], peakZ: [0,0,0], peakA: [0,0,0], n: 0 };
   const every = Math.round((1/CFPS) / CDT);
   let t = 0, i = 0;
   while (t < CREC){
+    if (i % every === 0){            /* record x(t) and u(t) at the same instant, before stepping */
+      const u = q(t).u;
+      REC.u.push(u);
+      for (let c = 0; c < 3; c++) REC.z[c].push(sysA[c].x[0] - u);
+    }
     for (let c = 0; c < 3; c++){
-      const g = step(sysA[c], t, CDT, q, CMASS, CFG[c].k, CFG[c].b);
+      const g = step(sysA[c], t, CDT, q, CMASS, CFG[c].k, CFG[c].b);   /* g = ground at t + CDT */
       REC.peakZ[c] = Math.max(REC.peakZ[c], Math.abs(sysA[c].x[0] - g.u));
       REC.peakA[c] = Math.max(REC.peakA[c], Math.abs(sysA[c].a[0]) / 9.80665);
-    }
-    if (i % every === 0){
-      REC.u.push(q(t).u);
-      for (let c = 0; c < 3; c++) REC.z[c].push(sysA[c].x[0] - q(t).u);
     }
     t += CDT; i++;
   }

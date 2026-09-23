@@ -918,7 +918,7 @@ footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
 <footer>
   <div class="wrap">
     <span>EMCH 367 Controls &middot; Example 2-14, a motor connected to a load through gears</span>
-    <span class="sp">RK4 on J<sub>e</sub>&omega;&#775; + b<sub>e</sub>&omega; = T<sub>m</sub> &middot; curves plotted from the closed-form step response</span>
+    <span class="sp">Exact exponential update of J<sub>e</sub>&omega;&#775; + b<sub>e</sub>&omega; = T<sub>m</sub> &middot; curves plotted from the closed-form step response</span>
   </div>
 </footer>
 
@@ -1139,7 +1139,7 @@ function drawStage(){
 
   /* applied torque */
   arcArrow(ctx, MDX, MY, MDR + 17, Math.PI*1.12, Math.PI*1.42, TOK.chrome, 2.6);
-  label(ctx, "Tm", MDX - 52, MY - 44, TOK.chrome, FM, "middle");
+  label(ctx, "Tm", MDX - 52, MY - 44, TOK.chrome, FM, "center");
 
   /* tooth counts and the mesh */
   const xL = GX - Math.max(r1, r2) - mod - 16;      /* one label column, clear of both gears */
