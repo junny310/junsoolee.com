@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Paz Take-off Lab</title>
+<style>
+:root{
+  --ground:#EEF1F5; --panel:#FFFFFF; --ink:#16202C; --ink2:#4A5566; --line:#D5DBE3; --soft:#E4E9F0;
+  --on-accent:#FFFFFF;
+  --accent:#C2410C; --accent2:#9A3412; --earth:#2563A8; --moon:#7C838E; --lp:#B3161C;
+  --forbid:rgba(60,72,90,0.22); --grid:rgba(40,52,70,0.07); --space:#F8FAFC;
+  --good:#1E7A46; --warn:#A86200; --bad:#B3261E;
+  --tarmac:#5B6370; --paint:#FFFFFF; --sky:#F8FAFC;
+  --display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark; --on-accent:#0D1219;
+    --ground:#0D1219; --panel:#141B24; --ink:#E5EAF1; --ink2:#9AA6B6; --line:#27313D; --soft:#1C2530;
+    --accent:#F08A4B; --accent2:#F6A56F; --earth:#5B9BE0; --moon:#A8AEB8; --lp:#F0676C;
+    --forbid:rgba(150,165,185,0.20); --grid:rgba(200,215,235,0.06); --space:#0A0F15;
+    --good:#4CC27E; --warn:#E5A33A; --bad:#F06B63;
+    --tarmac:#3A424E; --paint:#D9DEE6; --sky:#0A0F15;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark; --on-accent:#0D1219;
+  --ground:#0D1219; --panel:#141B24; --ink:#E5EAF1; --ink2:#9AA6B6; --line:#27313D; --soft:#1C2530;
+  --accent:#F08A4B; --accent2:#F6A56F; --earth:#5B9BE0; --moon:#A8AEB8; --lp:#F0676C;
+  --forbid:rgba(150,165,185,0.20); --grid:rgba(200,215,235,0.06); --space:#0A0F15;
+  --good:#4CC27E; --warn:#E5A33A; --bad:#F06B63;
+  --tarmac:#3A424E; --paint:#D9DEE6; --sky:#0A0F15;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:14px/1.5 var(--body);margin:0}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:18px 28px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;margin-bottom:14px}
+h1{font:700 28px/1.1 var(--display);letter-spacing:.01em;margin:0;text-wrap:balance}
+.sub{color:var(--ink2);margin:2px 0 0;max-width:70ch}
+.units{font:12px/1.4 var(--mono);color:var(--ink2);text-align:right}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.presets button{font:500 13px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 11px;border-radius:999px;cursor:pointer}
+.presets button:hover{border-color:var(--accent)}
+.presets button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.presets .lab{font:600 11px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);align-self:center;margin-right:4px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.canvasbox{position:relative;aspect-ratio:4/3;max-width:100%;background:var(--space)}
+canvas{display:block;width:100%;height:100%}
+.legend{position:absolute;right:10px;bottom:8px;font:11px var(--mono);color:var(--ink2);background:color-mix(in srgb,var(--panel) 85%,transparent);padding:4px 8px;border-radius:6px}
+.timebar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line)}
+.timebar button{font:600 12px var(--body);width:72px;padding:5px 0;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer}
+.timebar input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
+.timebar output{font:12px var(--mono);min-width:92px;text-align:right;color:var(--ink2);font-variant-numeric:tabular-nums}
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.ro{background:var(--panel);padding:9px 12px;min-width:0}
+.ro .k{font:600 12px var(--display);letter-spacing:.06em;color:var(--ink2)}
+.ro .v{font:500 16px var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ro .n{font:11px var(--body);color:var(--ink2)}
+.ro.wide{grid-column:1/-1}
+.nt{text-transform:none}
+@media (max-width:600px){.canvasbox{aspect-ratio:10/11}}
+.pill{display:inline-block;white-space:normal;font:600 12px var(--body);padding:2px 9px;border-radius:999px;border:1px solid currentColor}
+.pill.good{color:var(--good)} .pill.warn{color:var(--warn)} .pill.bad{color:var(--bad)} .pill.neutral{color:var(--ink2)}
+aside{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card h2{font:700 15px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.field{display:grid;grid-template-columns:1fr 104px;gap:4px 10px;align-items:center;margin-bottom:9px}
+.field label{font-weight:500}
+.field .hint{grid-column:1/-1;font-size:12px;color:var(--ink2);margin-top:-2px}
+.field input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+input[type=number]{width:100%;font:13px var(--mono);padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--ground);color:var(--ink);text-align:right}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;margin-bottom:10px}
+.seg button{flex:1;font:500 13px var(--body);padding:6px;border:0;background:var(--panel);color:var(--ink2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.note{font-size:12.5px;color:var(--ink2);margin:6px 0 0}
+.ctable{width:100%;border-collapse:collapse;font:12px var(--mono);font-variant-numeric:tabular-nums}
+.ctable td{padding:2px 0;border-bottom:1px solid var(--soft)} .ctable td:last-child{text-align:right;white-space:nowrap;padding-left:8px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.foot{color:var(--ink2);font-size:12px;margin-top:14px;max-width:90ch}
+ul.notice{margin:4px 0 0;padding-left:18px;font-size:13px;color:var(--ink)} ul.notice li{margin-bottom:5px}
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <h1>La Paz Take-off Lab</h1>
+    <p class="sub">Ground roll of a 737-800-class twinjet at El Alto International (La Paz, Bolivia, about 4,060 m) versus sea level and Denver. Change the field, the day's temperature, the weight, the flaps and the thrust, and see where the airplane lifts off on a runway drawn to scale.</p>
+  </div>
+  <div class="units">ISA troposphere · g = 9.807 m/s²<br>ρ₀ = 1.225 kg/m³ · 1 kt = 0.5144 m/s</div>
+</header>
+
+<div class="presets" role="group" aria-label="Presets">
+  <span class="lab">Cases</span>
+  <button data-p="sl" aria-pressed="false">Sea level ISA</button>
+  <button data-p="den" aria-pressed="false">Denver ISA</button>
+  <button data-p="lpb" aria-pressed="true">La Paz ISA</button>
+  <button data-p="hot" aria-pressed="false">La Paz hot afternoon (ISA+15)</button>
+  <button data-p="lim" aria-pressed="false">La Paz weight-limited</button>
+</div>
+
+<div class="main">
+  <section class="stage" aria-label="Runway and ground-roll view">
+    <div class="canvasbox">
+      <canvas id="cv" role="img" aria-label="Runway drawn to scale with the lift-off point, and a plot of speed versus distance."></canvas>
+    </div>
+    <div class="timebar">
+      <button id="play">Play</button>
+      <input type="range" id="scrub" min="0" max="1000" value="1000" aria-label="Time along the ground roll">
+      <output id="tnow" for="scrub" aria-live="off">0.0 s</output>
+    </div>
+    <div class="readouts" aria-live="polite">
+      <div class="ro wide"><div class="k">Verdict (1.15 × s<sub>LO</sub> ≤ runway)</div><div class="v" id="r-out"><span class="pill neutral">—</span></div></div>
+      <div class="ro"><div class="k">Density ratio <span class="nt">σ</span></div><div class="v" id="r-sig">—</div><div class="n" id="r-rho">&nbsp;</div></div>
+      <div class="ro"><div class="k">Density altitude</div><div class="v" id="r-hd">—</div><div class="n" id="r-hdn">&nbsp;</div></div>
+      <div class="ro"><div class="k">Avg. roll thrust</div><div class="v" id="r-thr">—</div><div class="n" id="r-thrn">&nbsp;</div></div>
+      <div class="ro"><div class="k">V<sub>stall</sub> (TAS)</div><div class="v" id="r-vst">—</div><div class="n" id="r-vstn">&nbsp;</div></div>
+      <div class="ro"><div class="k">V<sub>LO</sub> (TAS)</div><div class="v" id="r-vlo">—</div><div class="n" id="r-vlon">&nbsp;</div></div>
+      <div class="ro"><div class="k">V<sub>LO</sub> (EAS ≈ IAS)</div><div class="v" id="r-veas">—</div><div class="n" id="r-veasn">&nbsp;</div></div>
+      <div class="ro"><div class="k">Net force at 0.7 V<sub>LO</sub></div><div class="v" id="r-fav">—</div><div class="n" id="r-favn">&nbsp;</div></div>
+      <div class="ro"><div class="k">s<sub>LO</sub> lecture formula</div><div class="v" id="r-sf">—</div><div class="n" id="r-sfn">1.44 W²/(g ρ<sub>∞</sub> S c<sub>l,max</sub> [T − (D + μ<sub>r</sub>(W − L))]<sub>avg</sub>)</div></div>
+      <div class="ro"><div class="k">s<sub>LO</sub> integrated (check)</div><div class="v" id="r-si">—</div><div class="n" id="r-sin">&nbsp;</div></div>
+      <div class="ro"><div class="k">Runway left at lift-off</div><div class="v" id="r-margin">—</div><div class="n" id="r-marginn">&nbsp;</div></div>
+      <div class="ro wide"><div class="k">Max mass by rule (lecture formula)</div><div class="v" id="r-mmax">—</div><div class="n" id="r-mmaxn">&nbsp;</div></div>
+    </div>
+  </section>
+
+  <aside>
+    <div class="card">
+      <h2>Field and day</h2>
+      <div class="field"><label for="elev">Field elevation (m)</label><input type="number" id="elev-n" step="5" min="0" max="5000" aria-label="Field elevation value in metres"><input type="range" id="elev" min="0" max="5000" step="5"><div class="hint" id="elev-hint">&nbsp;</div></div>
+      <div class="field"><label for="dT">Temperature offset ISA ± (°C)</label><input type="number" id="dT-n" step="1" min="-20" max="35" aria-label="ISA temperature offset value in degrees Celsius"><input type="range" id="dT" min="-20" max="35" step="1"><div class="hint" id="dT-hint">&nbsp;</div></div>
+      <div class="field"><label for="rwy">Runway length (m)</label><input type="number" id="rwy-n" step="10" min="1500" max="5500" aria-label="Runway length value in metres"><input type="range" id="rwy" min="1500" max="5500" step="10"><div class="hint">LPB is about 4,000 m (approximate).</div></div>
+    </div>
+    <div class="card">
+      <h2>Aircraft (737-800-class)</h2>
+      <div class="field"><label for="mass">Take-off mass (kg)</label><input type="number" id="mass-n" step="10" min="40000" max="90000" aria-label="Take-off mass value in kilograms"><input type="range" id="mass" min="40000" max="90000" step="10"><div class="hint">MTOW about 79,000 kg (approximate).</div></div>
+      <div class="field"><label for="clm">c<sub>l,max</sub> (take-off flaps)</label><input type="number" id="clm-n" step="0.01" min="1.2" max="2.8" aria-label="Maximum lift coefficient value"><input type="range" id="clm" min="1.2" max="2.8" step="0.01"><div class="hint">Representative: 2.0.</div></div>
+      <div class="field"><label for="thr">Static thrust per engine, sea level (kN)</label><input type="number" id="thr-n" step="1" min="70" max="150" aria-label="Sea-level static thrust per engine in kilonewtons"><input type="range" id="thr" min="70" max="150" step="1"><div class="hint">Two CFM56-7B-class engines, about 117 kN each.</div></div>
+      <table class="ctable" aria-label="Fixed model parameters">
+        <tr><td>Wing area S</td><td>124.6 m²</td></tr>
+        <tr><td>Avg. roll thrust / static</td><td>0.85</td></tr>
+        <tr><td>Thrust lapse</td><td>T ∝ σ^0.75</td></tr>
+        <tr><td>c<sub>d,0</sub> / e / c<sub>l</sub> in roll</td><td>0.05 / 0.8 / 0.8</td></tr>
+        <tr><td>Ground effect φ (h 2.5 m, b 35.8 m)</td><td>0.555</td></tr>
+        <tr><td>Rolling friction μ<sub>r</sub></td><td>0.02</td></tr>
+      </table>
+      <p class="note">Values marked representative are reasonable textbook numbers, not manufacturer data.</p>
+    </div>
+    <div class="card">
+      <h2>What to notice</h2>
+      <ul class="notice">
+        <li>The dashed EAS curve ends at the <b>same</b> lift-off speed everywhere (85.49 m/s at 79 t): the pilot sees the same indicated speed. The true speed, and so the ground speed, is higher by 1/√σ.</li>
+        <li>Density enters twice: the wing (s ∝ 1/ρ<sub>∞</sub>) and the engines (T ∝ σ<sup>0.75</sup>). At 0.7 V<sub>LO</sub> the dynamic pressure is the same at every field, so D, L and μ<sub>r</sub>(W − L) do not change with altitude: the net force falls faster than the thrust.</li>
+        <li>The lecture formula (forces at 0.7 V<sub>LO</sub>) and the integrated roll agree within about 1 %: the 0.7 V<sub>LO</sub> average is a very good one.</li>
+        <li>On a warm La Paz afternoon the main lever is weight: every +1 °C costs about 229 kg. A headwind or an early-morning (cooler) departure also helps.</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<p class="foot">Model: ISA troposphere, temperature Θ (K; T means thrust), off-standard day ρ = ρ<sub>ISA</sub>·Θ<sub>ISA</sub>/(Θ<sub>ISA</sub>+ΔΘ) (same pressure). V<sub>LO</sub> = 1.2 V<sub>stall</sub>. Lecture formula (primary): s<sub>LO</sub> = 1.44 W²/(g ρ<sub>∞</sub> S c<sub>l,max</sub> [T − (D + μ<sub>r</sub>(W − L))]<sub>avg</sub>) with L = q S c<sub>l</sub>, D = q S [c<sub>d,0</sub> + φ c<sub>l</sub>²/(π e AR)], φ = (16h/b)²/(1+(16h/b)²), AR = b²/S, forces at 0.7 V<sub>LO</sub>, c<sub>l</sub> = 0.8 in the roll; thrust constant, T = 0.85 · T<sub>SL</sub> · σ<sup>0.75</sup>. Check: m dV/dt = T − D − μ<sub>r</sub>(W − L) integrated with RK4, Δt = 0.01 s (the V(s) curves). Classroom field-length rule (lecture formula): 1.15 × s<sub>LO</sub> must fit on the runway (a stand-in for certified take-off distance with engine-out cases). Maximum masses are rounded down to 10 kg (conservative); the "weight-limited" preset loads that mass. Aircraft data are 737-800-class and representative. Companion to the AESP 420 (Fall 2026) take-off and landing lecture, 9/29.</p>
+</div>
+
+<script>
+(()=>{
+// ---------------- model (same as Takeoff_LaPaz_sim.m)
+const g=9.807, rho0=1.225, T0K=288.15, LAPSE=0.0065, KT=0.5144, FT=0.3048;
+const OEW=41000; // kg, approximate 737-800 operating empty mass
+const S=124.6, fT=0.85, NL=0.75, b=35.8, eO=0.8, CD0=0.05, CLr=0.8, hw=2.5, mu=0.02, RULE=1.15;
+const AR=b*b/S, K=1/(Math.PI*eO*AR), x16=(16*hw/b)**2, PHI=x16/(1+x16), CDr=CD0+PHI*K*CLr*CLr;
+// temperatures (Tisa, dT) are Theta, Delta-Theta in the slides; T always means thrust
+const Tisa=h=>T0K-LAPSE*h;
+const rhoF=(h,dT)=>rho0*Math.pow(Tisa(h)/T0K,4.2559)*Tisa(h)/(Tisa(h)+dT);
+const pIsa=h=>101325*Math.pow(Tisa(h)/T0K,5.2559);
+const hDens=sig=>T0K/LAPSE*(1-Math.pow(sig,1/4.2559));
+function solve(p){
+  const rho=rhoF(p.elev,p.dT), sig=rho/rho0, m=p.mass, W=m*g, T=fT*2*p.thr*1000*Math.pow(sig,NL);
+  const Vs=Math.sqrt(2*W/(rho*S*p.clm)), VLO=1.2*Vs;
+  // lecture formula: s_LO = 1.44 W^2/(g rho S c_l,max [T-(D+mu_r(W-L))]_avg), forces at 0.7 V_LO
+  const lec=mm=>{const WW=mm*g, V7=0.7*1.2*Math.sqrt(2*WW/(rho*S*p.clm)), q=0.5*rho*V7*V7, L=q*S*CLr, D=q*S*CDr, Rr=mu*(WW-L), F=T-(D+Rr);
+    return {V7,q,L,D,R:Rr,F,s:F>0?1.44*WW*WW/(g*rho*S*p.clm*F):Infinity};};
+  const LE=lec(m), sL=LE.s, sT=1.44*W*W/(g*rho*S*p.clm*T);
+  const acc=V=>(T-0.5*rho*V*V*S*CDr-mu*(W-0.5*rho*V*V*S*CLr))/m;
+  // RK4 in time, state (s, V)
+  const dt=0.01; let s=0,V=0,t=0; const pts=[[0,0,0]]; let ok=true, n=0;
+  while(V<VLO){
+    const k1s=V,k1v=acc(V), k2s=V+dt/2*k1v,k2v=acc(V+dt/2*k1v), k3s=V+dt/2*k2v,k3v=acc(V+dt/2*k2v), k4s=V+dt*k3v,k4v=acc(V+dt*k3v);
+    let sn=s+dt/6*(k1s+2*k2s+2*k3s+k4s), Vn=V+dt/6*(k1v+2*k2v+2*k3v+k4v), tn=t+dt;
+    if(Vn>=VLO){const fr=(VLO-V)/(Vn-V); sn=s+fr*(sn-s); tn=t+fr*dt; Vn=VLO;}
+    if(Vn<=V && Vn<VLO){ok=false;break;}
+    s=sn;V=Vn;t=tn; n++; if(n%10===0||V>=VLO) pts.push([t,s,V]);
+    if(t>600){ok=false;break;}
+  }
+  // closed form of the integrated roll (check); the weight limit uses the lecture formula
+  const sClosed=mm=>{const WW=mm*g, A=(T-mu*WW)/mm, B=rho*S*(CDr-mu*CLr)/(2*mm), V2=1.44*2*WW/(rho*S*p.clm); const r=A-B*V2; return (A<=0||r<=0)?Infinity:Math.log(A/r)/(2*B);};
+  const sAllow=p.rwy/RULE; let mmax;
+  const bis=f=>{ if(f(20000)>sAllow) return 0; if(f(300000)<=sAllow) return Infinity;
+    let lo=20000,hi=300000; for(let i=0;i<80;i++){const mid=(lo+hi)/2; if(f(mid)>sAllow) hi=mid; else lo=mid;} return lo; };
+  mmax=bis(mm=>lec(mm).s); const mmaxI=bis(sClosed);
+  return {rho,sig,T,Vs,VLO,VE:VLO*Math.sqrt(sig),LE,sL,sT,sI:ok?s:Infinity,tLO:t,pts,ok,hd:hDens(sig),p:pIsa(p.elev),oat:Tisa(p.elev)+p.dT-273.15,mmax,mmaxI,sAllow};
+}
+
+// ---------------- UI
+const $=id=>document.getElementById(id);
+const st={elev:4060,dT:0,rwy:4000,mass:79000,clm:2.0,thr:117};
+const PRE={sl:{elev:0,dT:0,rwy:4000,mass:79000,clm:2.0,thr:117}, den:{elev:1655,dT:0,rwy:4000,mass:79000,clm:2.0,thr:117},
+  lpb:{elev:4060,dT:0,rwy:4000,mass:79000,clm:2.0,thr:117}, hot:{elev:4060,dT:15,rwy:4000,mass:79000,clm:2.0,thr:117},
+  lim:{elev:4060,dT:15,rwy:4000,mass:null,clm:2.0,thr:117}};
+const fmt=(v,d=0)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const setters={};
+function bind(id,dec){
+  const r=$(id), n=$(id+'-n');
+  const set=v=>{v=+v; const lo=+n.min, hi=+n.max; if(!isFinite(v)) v=st[id]; v=Math.min(hi,Math.max(lo,v)); st[id]=v; r.value=v; n.value=v.toFixed(dec);};
+  r.addEventListener('input',()=>{set(r.value); clearPreset(); update();});
+  n.addEventListener('change',()=>{set(n.value); clearPreset(); update();});
+  setters[id]=set;
+}
+bind('elev',0); bind('dT',0); bind('rwy',0); bind('mass',0); bind('clm',2); bind('thr',0);
+function clearPreset(){document.querySelectorAll('.presets button').forEach(b=>b.setAttribute('aria-pressed','false'));}
+function applyPreset(key){
+  const p=Object.assign({},PRE[key]);
+  if(p.mass===null){ const r=solve(Object.assign({},p,{mass:79000})); p.mass=Math.floor(r.mmax/10)*10; }
+  Object.keys(p).forEach(k=>setters[k](p[k]));
+  document.querySelectorAll('.presets button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===key?'true':'false'));
+  update();
+}
+document.querySelectorAll('.presets button').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.p)));
+
+let R=null, REF=null, anim={on:false,t:null};
+function update(){
+  R=solve(st); REF=solve({elev:0,dT:0,rwy:st.rwy,mass:st.mass,clm:st.clm,thr:st.thr});
+  anim.on=false; $('play').textContent='Play'; anim.t=null; $('scrub').value=1000;
+  readouts(); draw();
+}
+function readouts(){
+  const r=R;
+  $('r-sig').textContent=r.sig.toFixed(4); $('r-rho').textContent=`ρ = ${r.rho.toFixed(4)} kg/m³ · p = ${(r.p/1000).toFixed(2)} kPa`;
+  $('r-hd').textContent=fmt(r.hd)+' m'; $('r-hdn').textContent=`${fmt(r.hd/FT)} ft · field ${fmt(st.elev)} m`;
+  $('r-thr').textContent=(r.T/1000).toFixed(1)+' kN'; $('r-thrn').textContent=`0.85 × ${fmt(2*st.thr)} kN × σ^0.75`;
+  $('r-vst').textContent=r.Vs.toFixed(2)+' m/s'; $('r-vstn').textContent=(r.Vs/KT).toFixed(1)+' kt true';
+  $('r-vlo').textContent=r.VLO.toFixed(2)+' m/s'; $('r-vlon').textContent=`${(r.VLO/KT).toFixed(1)} kt true · ×${(1/Math.sqrt(r.sig)).toFixed(3)} vs EAS`;
+  $('r-veas').textContent=r.VE.toFixed(2)+' m/s'; $('r-veasn').textContent=(r.VE/KT).toFixed(1)+' kt · same at any altitude';
+  $('r-fav').textContent=(r.LE.F/1000).toFixed(1)+' kN'; $('r-favn').textContent=`T ${(r.T/1000).toFixed(1)} − D ${(r.LE.D/1000).toFixed(2)} − R ${(r.LE.R/1000).toFixed(2)} kN · q ${fmt(r.LE.q)} Pa · L ${(r.LE.L/1000).toFixed(1)} kN`;
+  $('r-sf').textContent=isFinite(r.sL)?fmt(r.sL)+' m':'no lift-off';
+  if(r.ok){
+    $('r-si').textContent=fmt(r.sI)+' m'; $('r-sin').textContent=`×${(r.sI/r.sL).toFixed(3)} lecture formula · ${r.tLO.toFixed(1)} s · max mass ${fmt(Math.floor(r.mmaxI/10)*10)} kg`;
+  } else { $('r-si').textContent='no lift-off'; $('r-sin').textContent='thrust cannot overcome drag + friction'; }
+  if(isFinite(r.sL)){ const mg=st.rwy-r.sL; $('r-margin').textContent=fmt(mg)+' m'; $('r-marginn').textContent= (mg<0? 'lifts off beyond the runway end' : `1.15 × lift-off distance = ${fmt(RULE*r.sL)} m vs ${fmt(st.rwy)} m`)+(r.ok?` · integrated ${fmt(st.rwy-r.sI)} m`:''); }
+  else { $('r-margin').textContent='—'; $('r-marginn').textContent='net force at 0.7 V_LO ≤ 0'; }
+  if(r.mmax===Infinity){$('r-mmax').textContent='> 300 t';}
+  else if(r.mmax===0){$('r-mmax').textContent='none';}
+  else {$('r-mmax').textContent=fmt(Math.floor(r.mmax/10)*10)+' kg';}
+  const mF=Math.floor(r.mmax/10)*10, dm=mF-st.mass;
+  let mn='';
+  if(isFinite(r.mmax)&&r.mmax>0){
+    if(Math.abs(dm)<50) mn='at the rule limit (= current mass)';
+    else if(dm<0) mn=`${fmt(-dm)} kg less than current mass (fuel/payload off)`;
+    else mn=`+${fmt(dm)} kg vs current mass`;
+    if(mF>79000) mn+=' · above the ≈79 t structural MTOW, so not field-limited';
+    if(mF<OEW) mn='below empty weight (~41 t) – no payload possible';
+  }
+  if(r.mmax===0) mn='below empty weight (~41 t) – no payload possible';
+  $('r-mmaxn').textContent=mn;
+  let o;
+  if(!isFinite(r.sL) || r.sL>st.rwy) o=['bad', isFinite(r.sL)?'Lifts off beyond the runway end':'Cannot reach lift-off speed'];
+  else if(RULE*r.sL>st.rwy) o=['warn','Lifts off on the runway, but fails the 1.15 rule: weight-limited'];
+  else o=['good','Meets the 1.15 rule'];
+  $('r-out').innerHTML=`<span class="pill ${o[0]}">${o[1]}</span>`;
+  $('elev-hint').textContent=`ISA here: ${(Tisa(st.elev)-273.15).toFixed(1)} °C, ${(pIsa(st.elev)/1000).toFixed(2)} kPa (${fmt(st.elev/FT)} ft).`;
+  $('dT-hint').textContent=`Outside air temperature ${r.oat.toFixed(1)} °C.`;
+  $('cv').setAttribute('aria-label',`Runway ${fmt(st.rwy)} m drawn to scale. Lift-off by the lecture formula at ${isFinite(r.sL)?fmt(r.sL)+' m':'never'}, integrated ${r.ok?fmt(r.sI)+' m':'never'}, true lift-off speed ${r.VLO.toFixed(1)} m/s, equivalent ${r.VE.toFixed(1)} m/s.`);
+}
+
+// ---------------- drawing
+const cv=$('cv'), ctx=cv.getContext('2d'); let W=0,H=0,DPR=1;
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function resize(){const r=cv.getBoundingClientRect(); DPR=window.devicePixelRatio||1; W=r.width; H=r.height; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR); draw();}
+function niceStep(range,n){const raw=range/n, p=Math.pow(10,Math.floor(Math.log10(raw))), f=raw/p; return (f<1.5?1:f<3.5?2:f<7.5?5:10)*p;}
+function draw(){
+  if(!W||!R) return; ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,W,H);
+  const small=W<520, fs=small?11:12, L=small?44:56, Rm=small?12:20;
+  const sMax=Math.max(st.rwy, R.ok?R.sI:0, isFinite(R.sL)?R.sL:0, REF.sI)*1.08;
+  const X=s=>L+(s/sMax)*(W-L-Rm);
+  const ink=css('--ink'), ink2=css('--ink2'), acc=css('--accent'), blue=css('--earth'), grey=css('--moon'), bad=css('--bad'), good=css('--good'), warn=css('--warn');
+  ctx.font=`${fs}px ${css('--body')}`;
+  // ---- runway strip (to scale)
+  const ry=26, rh=small?22:28;
+  ctx.fillStyle=css('--tarmac'); ctx.fillRect(X(0),ry,X(st.rwy)-X(0),rh);
+  ctx.strokeStyle=css('--paint'); ctx.lineWidth=1.5; ctx.setLineDash([10,8]); ctx.beginPath(); ctx.moveTo(X(0)+6,ry+rh/2); ctx.lineTo(X(st.rwy)-6,ry+rh/2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle=css('--paint'); for(let i=0;i<4;i++){ctx.fillRect(X(0)+3,ry+3+i*(rh-6)/4,8,(rh-6)/4-2); ctx.fillRect(X(st.rwy)-11,ry+3+i*(rh-6)/4,8,(rh-6)/4-2);}
+  ctx.fillStyle=ink2; ctx.textAlign='left'; ctx.fillText(`Runway ${fmt(st.rwy)} m (to scale)`,X(0),ry-8);
+  // rule line
+  const xa=X(R.sAllow); ctx.strokeStyle=ink; ctx.lineWidth=1.2; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(xa,ry-4); ctx.lineTo(xa,ry+rh+4); ctx.stroke(); ctx.setLineDash([]);
+  { const lw=ctx.measureText(`Runway ${fmt(st.rwy)} m (to scale)`).width, rw=ctx.measureText('rwy/1.15').width; ctx.fillStyle=ink2;
+    if(xa-3-rw < X(0)+lw+8){ ctx.textAlign='center'; ctx.fillText('rwy/1.15',xa,ry+rh+26); } else { ctx.textAlign='right'; ctx.fillText('rwy/1.15',xa-3,ry-8); } }
+  // markers: sea level ref (lecture formula), integrated check; bar = lecture-formula lift-off
+  const mark=(s,color,label,below,shape)=>{ if(!isFinite(s)) return; const x=X(s); ctx.fillStyle=color; ctx.beginPath();
+    if(shape==='tri'){ctx.moveTo(x,ry+rh+2); ctx.lineTo(x-6,ry+rh+12); ctx.lineTo(x+6,ry+rh+12);} else {ctx.moveTo(x,ry-2); ctx.lineTo(x-6,ry-12); ctx.lineTo(x+6,ry-12);} ctx.closePath(); ctx.fill();
+    if(label){ctx.textAlign='center'; ctx.fillText(label,x,below?ry+rh+26:ry-15);} };
+  mark(REF.sL,grey,'',true,'tri'); if(R.ok) mark(R.sI,blue,'',true,'tri');
+  const vcol=!isFinite(R.sL)||R.sL>st.rwy?bad:(RULE*R.sL>st.rwy?warn:good);
+  // animated aircraft position
+  const P=R.pts, tEnd=P[P.length-1][0], tNow=anim.t===null?tEnd:anim.t;
+  let i=0; while(i<P.length-1&&P[i+1][0]<=tNow) i++;
+  const q=P[Math.min(i,P.length-1)];
+  if(isFinite(R.sL)){ const x=X(R.sL); ctx.strokeStyle=vcol; ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(x,ry-6); ctx.lineTo(x,ry+rh+6); ctx.stroke(); }
+  ctx.fillStyle=acc; ctx.beginPath(); const xp=X(q[1]); ctx.moveTo(xp+9,ry+rh/2); ctx.lineTo(xp-7,ry+rh/2-7); ctx.lineTo(xp-4,ry+rh/2); ctx.lineTo(xp-7,ry+rh/2+7); ctx.closePath(); ctx.fill();
+  // ---- V(s) plot
+  const top=ry+rh+(small?44:52), bot=H-(small?34:40), vMax=Math.max(R.VLO,REF.VLO)*(small?1.3:1.12);
+  const Y=v=>bot-(v/vMax)*(bot-top);
+  ctx.strokeStyle=css('--grid'); ctx.lineWidth=1; ctx.fillStyle=ink2; ctx.textAlign='right';
+  const vs=niceStep(vMax,5); ctx.beginPath();
+  for(let v=0;v<=vMax+1e-9;v+=vs){ctx.moveTo(X(0),Y(v)); ctx.lineTo(X(sMax),Y(v)); ctx.fillText(fmt(v),X(0)-5,Y(v)+4);} ctx.stroke();
+  const ss=niceStep(sMax,small?4:6); ctx.textAlign='center'; ctx.beginPath();
+  for(let s=0;s<=sMax+1e-9;s+=ss){ctx.moveTo(X(s),top); ctx.lineTo(X(s),bot); ctx.fillText(fmt(s),X(s),bot+15);} ctx.stroke();
+  ctx.strokeStyle=ink2; ctx.beginPath(); ctx.moveTo(X(0),top); ctx.lineTo(X(0),bot); ctx.lineTo(X(sMax),bot); ctx.stroke();
+  ctx.fillText('distance along the runway (m)',(X(0)+X(sMax))/2,bot+(small?29:32));
+  ctx.save(); ctx.translate(12,(top+bot)/2); ctx.rotate(-Math.PI/2); ctx.fillText('speed (m/s)',0,0); ctx.restore();
+  // runway end + rule in the plot
+  ctx.strokeStyle=ink; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(X(st.rwy),top); ctx.lineTo(X(st.rwy),bot); ctx.stroke();
+  ctx.setLineDash([4,3]); ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(xa,top); ctx.lineTo(xa,bot); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle=ink2; ctx.save(); ctx.translate(X(st.rwy)+fs+2,bot-4); ctx.rotate(-Math.PI/2); ctx.textAlign='left'; ctx.fillText('runway end',0,0); ctx.restore();
+  const curve=(pts,col,wid,dash,f,upto)=>{ctx.strokeStyle=col; ctx.lineWidth=wid; ctx.setLineDash(dash); ctx.beginPath(); let first=true; for(const p of pts){ if(upto!==undefined&&p[0]>upto+1e-9) break; const y=Y(f(p)); if(first){ctx.moveTo(X(p[1]),y); first=false;} else ctx.lineTo(X(p[1]),y);} ctx.stroke(); ctx.setLineDash([]);};
+  curve(REF.pts,grey,1.5,[],p=>p[2]);
+  curve(R.pts,blue,1.8,[6,4],p=>p[2]*Math.sqrt(R.sig),tNow);
+  curve(R.pts,acc,2.4,[],p=>p[2],tNow);
+  // lift-off points
+  const dot=(s,v,col)=>{ctx.fillStyle=col; ctx.beginPath(); ctx.arc(X(s),Y(v),4.5,0,7); ctx.fill();};
+  dot(REF.sI,REF.VLO,grey);
+  const halo=(txt,x,y,col)=>{ctx.lineWidth=4; ctx.strokeStyle=css('--space'); ctx.lineJoin='round'; ctx.strokeText(txt,x,y); ctx.fillStyle=col; ctx.fillText(txt,x,y);};
+  if(R.ok && tNow>=tEnd-1e-9){ dot(R.sI,R.VLO,acc); dot(R.sI,R.VE,blue); }
+  // key (upper left of the plot, where the curves never go)
+  const kx=X(0)+10; let ky=top+14; ctx.textAlign='left';
+  const key=(col,dash,txt)=>{ctx.strokeStyle=col; ctx.lineWidth=2.2; ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(kx,ky-4); ctx.lineTo(kx+22,ky-4); ctx.stroke(); ctx.setLineDash([]); halo(txt,kx+28,ky,ink2); ky+=fs+5;};
+  key(acc,[],`TAS, lift-off ${R.VLO.toFixed(1)} m/s`); key(blue,[6,4],`EAS ≈ IAS, lift-off ${R.VE.toFixed(1)} m/s`); key(grey,[],small?'sea level ISA':'sea level ISA, same aircraft');
+  ctx.fillStyle=blue; ctx.beginPath(); ctx.moveTo(kx+11,ky-10); ctx.lineTo(kx+5,ky); ctx.lineTo(kx+17,ky); ctx.closePath(); ctx.fill(); halo(small?'integrated lift-off (check)':'integrated lift-off, check (marker below runway)',kx+28,ky,ink2); ky+=fs+5;
+  ctx.fillStyle=vcol; ctx.fillRect(kx+10,ky-11,2.5,13); halo(small?'lecture-formula lift-off':'lecture-formula lift-off point (bar on runway)',kx+28,ky,ink2);
+  $('tnow').textContent=q[0].toFixed(1)+' s · '+fmt(q[1])+' m';
+}
+// ---------------- animation of the roll (real time × 4)
+let last=0;
+$('play').addEventListener('click',()=>{ if(!R||!R.ok) return; anim.on=!anim.on; $('play').textContent=anim.on?'Pause':'Play';
+  if(anim.on){ const tEnd=R.pts[R.pts.length-1][0]; if(anim.t===null||anim.t>=tEnd) anim.t=0; last=0; requestAnimationFrame(tick);} });
+function tick(ts){ if(!anim.on) return; const tEnd=R.pts[R.pts.length-1][0]; const dt=last?(ts-last)/1000:0; last=ts; anim.t=Math.min(tEnd,anim.t+4*dt);
+  $('scrub').value=Math.round(1000*anim.t/tEnd); draw(); if(anim.t>=tEnd){anim.on=false; $('play').textContent='Play'; return;} requestAnimationFrame(tick); }
+$('scrub').addEventListener('input',e=>{ if(!R) return; const tEnd=R.pts[R.pts.length-1][0]; anim.t=tEnd*e.target.value/1000; draw(); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+new ResizeObserver(resize).observe(cv);
+// ---------------- init: La Paz ISA at 79,000 kg
+Object.keys(st).forEach(k=>setters[k](st[k]));
+update();
+window.__takeoff={solve,rhoF,hDens,PHI,K,CDr};
+})();
+</script>
+</html>

@@ -8,6 +8,7 @@ file_titles:
   WindTunnelModel_vs_Aircraft: Wind-Tunnel Model vs Full-Scale Aircraft
   MachWaves_dashboard: Subsonic, Transonic, Supersonic
   ThrustPowerRequired_dashboard: Thrust & Power Required
+  Takeoff_LaPaz_dashboard: La Paz Take-off Lab
 ---
 
 Interactive figures and lecture materials for **AESP 420 — Flight & Orbital Mechanics**, Fall 2026. HTML items open as interactive pages in the browser.
