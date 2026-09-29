@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PID Controller Lab</title>
+<meta name="description" content="Unity feedback with a selectable P, I, D, PD, PI or PID controller around G(s) = 1/(Js^2 + cs): closed loop poles, step response and performance readouts. EMCH 367 Controls.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* ============================================================
+   TOKENS — complete light palette on bare :root.
+   Same tokens as the other EMCH 367 demonstrations.
+   Series hues validated (dataviz six checks) in both modes.
+   ============================================================ */
+:root{
+  color-scheme: light;
+
+  --paper:      #F2F5F5;
+  --surface:    #FBFCFC;
+  --raised:     #FFFFFF;
+  --ink:        #121C20;
+  --ink-2:      #46565C;
+  --muted:      #627277;
+  --rule:       #D8E0E1;
+  --grid:       #E7EDED;
+  --hatch:      #C6D1D2;
+
+  --chrome:     #0B6070;   /* interactive affordances only, never data */
+  --chrome-ink: #FFFFFF;
+  --chrome-soft:#E3EEF0;
+
+  --c-cmd:   #2A6FB8;      /* setpoint r */
+  --c-shaft: #BE3A22;      /* thermistor reading y(t) */
+  --c-err:   #4A3AA7;      /* block temperature T(t) */
+  --c-pow:   #8A5A00;      /* heater power P(t) */
+  --c-shaft-wash: rgba(190,58,34,.12);
+
+  --good:     #0A7A52;
+  --warn:     #A9670A;
+  --critical: #B3261E;
+  --good-bg:     #E4F3EC;
+  --warn-bg:     #F7EEDD;
+  --critical-bg: #F8E6E3;
+
+  --shadow: 0 1px 2px rgba(18,28,32,.06), 0 8px 24px -12px rgba(18,28,32,.18);
+
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --prose: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --measure: 68ch;
+  --wide: 1120px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:   #0E1416;
+    --surface: #141A1C;
+    --raised:  #1B2325;
+    --ink:     #EDF2F2;
+    --ink-2:   #A9B8BC;
+    --muted:   #7C8B8F;
+    --rule:    #263033;
+    --grid:    #1E2729;
+    --hatch:   #2C3739;
+
+    --chrome:     #35A2B8;
+    --chrome-ink: #06181C;
+    --chrome-soft:#12292E;
+
+    --c-cmd:   #5595DE;
+    --c-shaft: #E2603F;
+    --c-err:   #9085E9;
+    --c-pow:   #D69A2B;
+    --c-shaft-wash: rgba(226,96,63,.15);
+
+    --good:     #34B27E;
+    --warn:     #D69A2B;
+    --critical: #E56B5C;
+    --good-bg:     #102A22;
+    --warn-bg:     #2C2413;
+    --critical-bg: #2E1A17;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:   #0E1416;
+  --surface: #141A1C;
+  --raised:  #1B2325;
+  --ink:     #EDF2F2;
+  --ink-2:   #A9B8BC;
+  --muted:   #7C8B8F;
+  --rule:    #263033;
+  --grid:    #1E2729;
+  --hatch:   #2C3739;
+
+  --chrome:     #35A2B8;
+  --chrome-ink: #06181C;
+  --chrome-soft:#12292E;
+
+  --c-cmd:   #5595DE;
+  --c-shaft: #E2603F;
+  --c-err:   #9085E9;
+  --c-pow:   #D69A2B;
+  --c-shaft-wash: rgba(226,96,63,.15);
+
+  --good:     #34B27E;
+  --warn:     #D69A2B;
+  --critical: #E56B5C;
+  --good-bg:     #102A22;
+  --warn-bg:     #2C2413;
+  --critical-bg: #2E1A17;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 28px -14px rgba(0,0,0,.7);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--prose);
+  font-size:17px;
+  line-height:1.62;
+  font-optical-sizing:auto;
+}
+img{ max-width:100%; }
+:focus-visible{ outline:2px solid var(--chrome); outline-offset:2px; border-radius:2px; }
+
+.wrap{ max-width:var(--wide); margin:0 auto; padding-inline:24px; }
+.measure{ max-width:var(--measure); }
+p{ margin:0 0 1em; }
+p:last-child{ margin-bottom:0; }
+a{ color:var(--chrome); text-decoration-thickness:1px; text-underline-offset:2px; }
+
+h1,h2,h3,h4{ font-family:var(--display); font-weight:600; text-wrap:balance; margin:0; line-height:1.14; letter-spacing:-.012em; }
+h1{ font-size:clamp(2.1rem,4.6vw,3.3rem); font-weight:700; letter-spacing:-.028em; }
+h2{ font-size:clamp(1.4rem,2.4vw,1.85rem); }
+h3{ font-size:1.06rem; letter-spacing:.005em; }
+
+.eyebrow{
+  font-family:var(--display); font-size:.7rem; font-weight:600;
+  letter-spacing:.15em; text-transform:uppercase; color:var(--muted);
+  margin:0;
+}
+.num{ font-family:var(--data); font-variant-numeric:tabular-nums; }
+
+/* ============================================================
+   MASTHEAD
+   ============================================================ */
+.masthead{
+  border-bottom:1px solid var(--rule);
+  background:var(--surface);
+  padding-block:38px 30px;
+}
+.masthead .wrap{ display:flex; flex-direction:column; gap:14px; }
+.mast-rule{ display:flex; align-items:center; gap:14px; }
+.mast-rule::after{ content:""; flex:1; height:1px; background:var(--rule); }
+.standfirst{ font-size:1.14rem; color:var(--ink-2); max-width:64ch; margin:0; }
+.standfirst strong{ color:var(--ink); font-weight:600; }
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+section{ padding-block:56px; border-bottom:1px solid var(--rule); }
+section:last-of-type{ border-bottom:0; }
+.sec-head{ display:flex; flex-direction:column; gap:10px; margin-bottom:28px; }
+.sec-head .lede{ color:var(--ink-2); max-width:var(--measure); margin:0; }
+
+/* ============================================================
+   INSTRUMENT PANEL
+   ============================================================ */
+.panel{
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.panel-grid{
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size:22px 22px;
+  background-position:-1px -1px;
+}
+.stage{ display:block; width:100%; height:auto; }
+.panel-bar{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px;
+  padding:11px 16px; border-bottom:1px solid var(--rule);
+  background:var(--raised);
+}
+.panel-bar.bottom{ border-bottom:0; border-top:1px solid var(--rule); }
+.panel-title{
+  font-family:var(--display); font-size:.7rem; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-2);
+  margin-right:auto;
+}
+
+.btn{
+  font-family:var(--display); font-size:.8rem; font-weight:600; letter-spacing:.02em;
+  padding:7px 15px; border-radius:2px; border:1px solid var(--rule);
+  background:var(--surface); color:var(--ink); cursor:pointer;
+  transition:background .12s, border-color .12s, color .12s;
+}
+.btn:hover{ border-color:var(--chrome); color:var(--chrome); }
+.btn.primary{ background:var(--chrome); border-color:var(--chrome); color:var(--chrome-ink); }
+.btn.primary:hover{ filter:brightness(1.08); color:var(--chrome-ink); }
+
+.seg{ display:inline-flex; border:1px solid var(--rule); border-radius:2px; overflow:hidden; }
+.seg button{
+  font-family:var(--display); font-size:.76rem; font-weight:600; letter-spacing:.03em;
+  padding:6px 13px; border:0; background:var(--surface); color:var(--ink-2); cursor:pointer;
+  border-right:1px solid var(--rule);
+}
+.seg button:last-child{ border-right:0; }
+.seg button[aria-pressed="true"]{ background:var(--chrome-soft); color:var(--chrome); }
+.seg button:hover:not([aria-pressed="true"]){ color:var(--ink); }
+
+/* slider groups */
+.sgrid{
+  display:grid; grid-template-columns:minmax(0,1fr);
+  border-top:1px solid var(--rule); background:var(--raised);
+}
+@media (min-width:860px){ .sgrid{ grid-template-columns:1fr 2fr; } }
+.sgrp{ padding:14px 16px 16px; border-right:1px solid var(--rule); min-width:0; }
+.sgrp:last-child{ border-right:0; }
+@media (max-width:859px){
+  .sgrp{ border-right:0; border-bottom:1px solid var(--rule); }
+  .sgrp:last-child{ border-bottom:0; }
+}
+.sgrp h4{
+  font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.12em;
+  color:var(--muted); margin:0 0 10px; display:flex; align-items:center; gap:7px;
+}
+.sgrp h4 .chip{ width:9px; height:9px; border-radius:2px; flex:none; }
+.sgrp .pair{ display:grid; grid-template-columns:minmax(0,1fr); gap:10px 22px; }
+@media (min-width:860px){ .sgrp.wide .pair{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+.sgrp .sum{
+  margin-top:12px; padding-top:10px; border-top:1px dashed var(--rule);
+  font-family:var(--data); font-size:.78rem; color:var(--ink-2); font-variant-numeric:tabular-nums;
+}
+.sgrp .sum b{ color:var(--ink); font-weight:600; }
+.slider label{
+  display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  min-height:2.5em;
+  font-family:var(--display); font-size:.76rem; font-weight:600;
+  letter-spacing:.02em; color:var(--muted);
+  margin-bottom:5px;
+}
+.slider label .v{
+  font-family:var(--data); font-size:.84rem; font-weight:500;
+  letter-spacing:0; text-transform:none; color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:18px;
+  background:transparent; cursor:pointer; margin:0; display:block;
+}
+input[type=range]::-webkit-slider-runnable-track{ height:3px; background:var(--rule); border-radius:2px; }
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:15px; height:15px; margin-top:-6px;
+  border-radius:50%; background:var(--chrome); border:2px solid var(--raised);
+  box-shadow:0 0 0 1px var(--chrome);
+}
+input[type=range]::-moz-range-track{ height:3px; background:var(--rule); border-radius:2px; }
+input[type=range]::-moz-range-thumb{
+  width:13px; height:13px; border-radius:50%; background:var(--chrome);
+  border:2px solid var(--raised); box-shadow:0 0 0 1px var(--chrome);
+}
+
+.presets{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:10px; border-top:1px dashed var(--rule); }
+.presets .lbl{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.11em; color:var(--muted); align-self:center; margin-right:2px; }
+.presets button{
+  font-family:var(--data); font-size:.73rem; padding:4px 9px; border-radius:2px;
+  border:1px solid var(--rule); background:var(--surface); color:var(--ink-2); cursor:pointer;
+}
+.presets button:hover{ border-color:var(--chrome); color:var(--chrome); }
+
+/* readouts */
+.readouts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); border-top:1px solid var(--rule); }
+.ro{ padding:12px 16px; border-right:1px solid var(--rule); background:var(--surface); display:flex; flex-direction:column; gap:3px; }
+.ro:last-child{ border-right:0; }
+.ro .k{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.11em; color:var(--muted); }
+.ro .n{ font-family:var(--data); font-size:1.16rem; font-weight:500; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.ro .u{ font-size:.76rem; color:var(--muted); font-weight:400; margin-left:1px; }
+.ro.flag-good{ background:var(--good-bg); }
+.ro.flag-good .n{ color:var(--good); }
+.ro.flag-critical{ background:var(--critical-bg); }
+.ro.flag-critical .n{ color:var(--critical); }
+
+/* legend */
+.legend{ display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; }
+.legend .item{ display:inline-flex; align-items:center; gap:7px; font-family:var(--display); font-size:.74rem; font-weight:500; color:var(--ink-2); }
+.legend .swatch{ width:16px; height:3px; border-radius:2px; flex:none; }
+.legend .swatch.dash{ background:none; border-top:3px dashed var(--c-cmd); height:0; }
+
+.rel{ position:relative; }
+.tt{
+  position:absolute; pointer-events:none; opacity:0; transform:translate(-50%,-118%);
+  background:var(--raised); border:1px solid var(--rule); border-radius:2px;
+  box-shadow:var(--shadow); padding:7px 10px; white-space:nowrap;
+  font-family:var(--data); font-size:.78rem; line-height:1.5; color:var(--ink);
+  font-variant-numeric:tabular-nums; transition:opacity .1s; z-index:5;
+}
+.tt .h{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); display:block; }
+
+/* ============================================================
+   DERIVATION
+   ============================================================ */
+.derive{ display:grid; grid-template-columns:minmax(0,1fr); gap:28px; }
+@media (min-width:900px){ .derive{ grid-template-columns:minmax(0,430px) minmax(0,1fr); gap:40px; align-items:start; } }
+.fig{
+  background:var(--surface); border:1px solid var(--rule); border-radius:3px;
+  padding:14px; box-shadow:var(--shadow); margin:0;
+}
+.fig svg{ display:block; width:100%; height:auto; }
+.fig figcaption{
+  font-family:var(--display); font-size:.72rem; font-weight:500;
+  color:var(--muted); margin-top:10px; letter-spacing:.01em; line-height:1.45;
+}
+.steps{ counter-reset:step; display:flex; flex-direction:column; gap:22px; margin:0; padding:0; list-style:none; }
+.steps li{ counter-increment:step; display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; align-items:start; }
+.steps .body{ min-width:0; }
+.steps li::before{
+  content:counter(step); font-family:var(--data); font-size:.8rem; font-weight:600;
+  color:var(--chrome); border:1px solid var(--rule); border-radius:50%;
+  width:28px; height:28px; display:grid; place-items:center; margin-top:1px;
+}
+.steps h3{ margin:0 0 6px; }
+.steps p{ margin:0 0 .55em; color:var(--ink-2); }
+
+.eq{
+  font-family:var(--data); font-size:.95rem; line-height:2.1;
+  overflow-x:auto; padding:12px 14px; margin:10px 0 12px;
+  background:var(--raised); border:1px solid var(--rule); border-left:2px solid var(--chrome);
+  border-radius:0 2px 2px 0; color:var(--ink);
+}
+.eq.center{ text-align:center; }
+.eq .tag{ float:right; color:var(--muted); font-size:.82rem; }
+.frac{ display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 .28em; line-height:1.35; }
+.frac>span:first-child{ padding:0 .45em .12em; }
+.frac>span:last-child{ padding:.14em .45em 0; border-top:1px solid currentColor; }
+
+/* ============================================================
+   CLOSING
+   ============================================================ */
+.tryit{ display:grid; grid-template-columns:minmax(0,1fr); gap:0; border:1px solid var(--rule); border-radius:3px; overflow:hidden; background:var(--surface); }
+@media (min-width:720px){ .tryit{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.tryit .q{ padding:18px 20px; border-bottom:1px solid var(--rule); }
+@media (min-width:720px){
+  .tryit .q:nth-child(odd){ border-right:1px solid var(--rule); }
+  .tryit .q:nth-last-child(-n+2){ border-bottom:0; }
+}
+@media (max-width:719px){ .tryit .q:last-child{ border-bottom:0; } }
+.tryit h3{ margin-bottom:5px; }
+.tryit p{ color:var(--ink-2); font-size:.96rem; margin:0; }
+
+.caveat{
+  border-left:2px solid var(--warn); background:var(--warn-bg);
+  padding:14px 18px; border-radius:0 2px 2px 0; font-size:.95rem; color:var(--ink);
+}
+.caveat strong{ font-family:var(--display); font-weight:600; }
+
+.keynote{
+  border-left:2px solid var(--good); background:var(--good-bg);
+  padding:16px 20px; border-radius:0 2px 2px 0; color:var(--ink); margin-top:24px;
+}
+.keynote strong{ font-family:var(--display); font-weight:600; }
+
+footer{ padding-block:34px 60px; color:var(--muted); font-size:.86rem; }
+footer .wrap{ display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline; border-top:1px solid var(--rule); padding-top:20px; }
+footer .sp{ margin-left:auto; font-family:var(--data); font-size:.76rem; }
+
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+
+
+/* regulator lab additions */
+.diagram{ padding:18px 16px 8px; background:var(--surface); }
+.diagram svg{ display:block; width:100%; height:auto; max-width:900px; margin:0 auto; }
+.bd-line{ stroke:var(--ink); stroke-width:3; fill:none; }
+.bd-box{ fill:var(--raised); stroke:var(--ink); stroke-width:3; }
+.bd-txt{ fill:var(--ink); font-family:"Cambria Math","Latin Modern Math","STIX Two Math",var(--prose); font-size:30px; }
+.bd-sub{ fill:var(--muted); font-family:var(--data); font-size:15px; }
+.bd-sign{ fill:var(--ink); font-family:var(--display); font-size:17px; font-weight:600; }
+.bd-ctrl{ cursor:pointer; }
+.bd-ctrl .bd-box{ stroke:var(--chrome); fill:var(--chrome-soft); }
+.bd-ctrl:hover .bd-box, .bd-ctrl:focus-visible .bd-box{ stroke-width:4; }
+.bd-ctrl:focus{ outline:none; }
+.bd-ctrl:focus-visible .bd-box{ stroke-dasharray:6 4; }
+.bd-hint{ fill:var(--chrome); font-family:var(--display); font-size:13px; font-weight:600; letter-spacing:.08em; }
+
+.eqs{ display:grid; grid-template-columns:minmax(0,1fr); gap:0; border-top:1px solid var(--rule); background:var(--raised); }
+@media (min-width:860px){ .eqs{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.eqs .cell{ padding:12px 16px; border-bottom:1px solid var(--rule); min-width:0; overflow-x:auto; }
+@media (min-width:860px){ .eqs .cell:nth-child(odd){ border-right:1px solid var(--rule); } }
+.eqs .k{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.11em; color:var(--muted); display:block; margin-bottom:4px; }
+.eqs .m{ font-family:var(--data); font-size:.92rem; color:var(--ink); white-space:nowrap; line-height:1.9; }
+.eqs .note{ font-family:var(--display); font-size:.74rem; color:var(--ink-2); margin-top:4px; white-space:normal; }
+.m sup{ font-size:.7em; }
+.m i{ font-family:var(--prose); font-size:1.05em; }
+
+.sgrid.reg{ grid-template-columns:minmax(0,1fr); }
+@media (min-width:860px){ .sgrid.reg{ grid-template-columns:3fr 2fr 1.3fr; } }
+.slider.off{ opacity:.42; }
+.slider.off label .v::after{ content:" · not used"; font-family:var(--display); font-size:.7rem; color:var(--muted); }
+.slider input:disabled{ cursor:not-allowed; }
+
+.plots{ display:grid; grid-template-columns:minmax(0,1fr); background:var(--surface); border-top:1px solid var(--rule); }
+@media (min-width:900px){ .plots{ grid-template-columns:minmax(0,2.3fr) minmax(0,1fr); } .plots > div:first-child{ border-right:1px solid var(--rule); } }
+.plots canvas{ display:block; width:100%; height:auto; }
+.plots .cap{ font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.12em; color:var(--muted); padding:10px 16px 0; margin:0; display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; }
+.plots .cap .legend{ margin-left:auto; }
+.ro.flag-warn{ background:var(--warn-bg); }
+.ro.flag-warn .n{ color:var(--warn); }
+.ro .sub{ font-family:var(--data); font-size:.7rem; color:var(--muted); }
+.ro .n.small{ font-size:.9rem; line-height:1.45; }
+.alert{ display:none; margin:0; padding:10px 16px; border-top:1px solid var(--rule); font-family:var(--display); font-size:.82rem; }
+.alert.show{ display:block; }
+.alert.crit{ background:var(--critical-bg); color:var(--critical); }
+.alert.info{ background:var(--warn-bg); color:var(--ink); }
+.seg.ctrl button{ font-family:var(--data); font-size:.82rem; padding:6px 12px; }
+.btn.small{ padding:5px 11px; font-size:.74rem; }
+
+[hidden]{ display:none !important; }
+.readouts{ grid-template-columns:repeat(auto-fit,minmax(112px,1fr)); }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <div class="mast-rule"><p class="eyebrow">EMCH 367 &middot; Controls &middot; Fall 2026</p></div>
+    <h1>P, I, D: Pick the Controller</h1>
+    <p class="standfirst">A rotating inertia <i>J</i> with viscous friction <i>c</i> has
+    <strong><i>G</i>(<i>s</i>) = 1/(<i>Js</i><sup>2</sup> + <i>cs</i>)</strong>. Close the loop with unity
+    feedback, choose the controller in the first block, apply a step <i>R</i>(<i>s</i>) and read
+    what each term of the controller does to the closed loop poles and the step response.</p>
+  </div>
+</header>
+
+<section id="lab">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">The instrument</p>
+      <h2>Unity feedback with a selectable controller</h2>
+      <p class="lede">Click the controller block, or use the buttons, to switch between P, I, D, PD, PI and
+      PID. The step is applied at <span class="num">t = 0</span> with zero initial conditions. The response
+      is computed exactly from the closed loop transfer function, and every readout comes from that
+      response.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-bar">
+        <span class="panel-title">Controller</span>
+        <div class="seg ctrl" role="group" aria-label="Controller type" id="modeSeg">
+          <button type="button" data-m="P">P</button>
+          <button type="button" data-m="I">I</button>
+          <button type="button" data-m="D">D</button>
+          <button type="button" data-m="PD">PD</button>
+          <button type="button" data-m="PI">PI</button>
+          <button type="button" data-m="PID">PID</button>
+        </div>
+        <button type="button" class="btn small" id="pinBtn">Pin this response</button>
+        <button type="button" class="btn small" id="clearBtn">Clear pins</button>
+      </div>
+
+      <div class="diagram">
+        <svg id="bd" viewBox="0 0 800 230" role="img" aria-labelledby="bdTitle">
+          <title id="bdTitle">Block diagram: R(s) enters a summing junction (plus), the output C(s) is fed back with a minus sign; the error passes through the controller block and then G(s).</title>
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink)"/>
+            </marker>
+          </defs>
+          <text class="bd-txt" x="10" y="42"><tspan font-style="italic">R</tspan>(<tspan font-style="italic">s</tspan>)</text>
+          <line class="bd-line" x1="8" y1="78" x2="124" y2="78" marker-end="url(#ah)"/>
+          <circle class="bd-box" cx="150" cy="78" r="24"/>
+          <text class="bd-sign" x="136" y="74">+</text>
+          <text class="bd-sign" x="152" y="96">&minus;</text>
+          <line class="bd-line" x1="174" y1="78" x2="224" y2="78" marker-end="url(#ah)"/>
+          <g id="ctrlBlock" class="bd-ctrl" tabindex="0" role="button" aria-label="Controller block, currently P. Press to change controller type.">
+            <rect class="bd-box" id="ctrlRect" x="228" y="36" width="200" height="84" rx="2"/>
+            <text class="bd-txt" id="ctrlTxt" x="328" y="89" text-anchor="middle"></text>
+            <text class="bd-hint" id="ctrlHint" x="328" y="140" text-anchor="middle">CLICK TO CHANGE</text>
+          </g>
+          <line class="bd-line" x1="428" y1="78" x2="484" y2="78" marker-end="url(#ah)"/>
+          <rect class="bd-box" x="488" y="36" width="140" height="84" rx="2"/>
+          <text class="bd-txt" x="558" y="89" text-anchor="middle"><tspan font-style="italic">G</tspan>(<tspan font-style="italic">s</tspan>)</text>
+          <text class="bd-sub" x="558" y="140" text-anchor="middle">1/(Js&#178; + cs)</text>
+          <line class="bd-line" x1="628" y1="78" x2="790" y2="78" marker-end="url(#ah)"/>
+          <text class="bd-txt" x="712" y="42"><tspan font-style="italic">C</tspan>(<tspan font-style="italic">s</tspan>)</text>
+          <circle cx="686" cy="78" r="4.5" style="fill:var(--ink)"/>
+          <polyline class="bd-line" points="686,78 686,200 150,200 150,106" marker-end="url(#ah)"/>
+        </svg>
+      </div>
+
+      <div class="eqs">
+        <div class="cell"><span class="k">CONTROLLER G<sub>c</sub>(s)</span><div class="m" id="eqC"></div></div>
+        <div class="cell"><span class="k">PLANT G(s)</span><div class="m" id="eqG"></div></div>
+        <div class="cell"><span class="k">CLOSED LOOP T(s) = C(s)/R(s) = G<sub>c</sub>G/(1 + G<sub>c</sub>G)</span><div class="m" id="eqT"></div><div class="note" id="eqNote"></div></div>
+        <div class="cell"><span class="k">CHARACTERISTIC EQUATION</span><div class="m" id="eqD"></div><div class="note" id="eqRouth"></div></div>
+      </div>
+
+      <div class="sgrid reg">
+        <div class="sgrp">
+          <h4><span class="chip" style="background:var(--chrome)"></span>CONTROLLER GAINS</h4>
+          <div class="pair">
+            <div class="slider" id="wKp">
+              <label for="sKp"><span>K<sub>p</sub></span> <span class="v" id="vKp"></span></label>
+              <input type="range" id="sKp" min="0" max="40" step="0.1" value="4">
+            </div>
+            <div class="slider" id="wKi">
+              <label for="sKi"><span>K<sub>I</sub></span> <span class="v" id="vKi"></span></label>
+              <input type="range" id="sKi" min="0" max="40" step="0.1" value="2">
+            </div>
+            <div class="slider" id="wKd">
+              <label for="sKd"><span>K<sub>d</sub></span> <span class="v" id="vKd"></span></label>
+              <input type="range" id="sKd" min="0" max="20" step="0.05" value="1">
+            </div>
+          </div>
+        </div>
+        <div class="sgrp">
+          <h4><span class="chip" style="background:var(--c-shaft)"></span>PLANT G(s) = 1/(Js&#178; + cs)</h4>
+          <div class="pair">
+            <div class="slider">
+              <label for="sJ"><span>Inertia J</span> <span class="v"><span id="vJ"></span> kg&middot;m&#178;</span></label>
+              <input type="range" id="sJ" min="0.1" max="5" step="0.05" value="1">
+            </div>
+            <div class="slider">
+              <label for="sc"><span>Damping c</span> <span class="v"><span id="vc"></span> N&middot;m&middot;s/rad</span></label>
+              <input type="range" id="sc" min="0" max="10" step="0.05" value="2">
+            </div>
+          </div>
+        </div>
+        <div class="sgrp">
+          <h4><span class="chip" style="background:var(--c-cmd)"></span>STEP INPUT</h4>
+          <div class="pair">
+            <div class="slider">
+              <label for="sR"><span>Step size R</span> <span class="v"><span id="vR"></span> rad</span></label>
+              <input type="range" id="sR" min="0.1" max="5" step="0.1" value="1">
+            </div>
+            <div class="slider">
+              <label for="sT"><span>Time span</span> <span class="v" id="vT"></span></label>
+              <input type="range" id="sT" min="0" max="60" step="1" value="0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="alert" id="alert" role="status"></p>
+
+      <div class="plots">
+        <div>
+          <p class="cap"><span>STEP RESPONSE c(t)</span>
+            <span class="legend">
+              <span class="item"><span class="swatch" style="background:var(--c-shaft)"></span>c(t)</span>
+              <span class="item"><span class="swatch dash"></span>r(t)</span>
+              <span class="item"><span class="swatch" style="background:var(--hatch)"></span>&plusmn;2% band</span>
+              <span class="item" id="pinLeg" hidden><span class="swatch" style="background:var(--muted)"></span>pinned</span>
+            </span></p>
+          <div class="rel"><canvas id="cvY" width="760" height="360" role="img" aria-label="Step response of the closed loop"></canvas><div class="tt" id="tt"></div></div>
+        </div>
+        <div>
+          <p class="cap"><span>CLOSED LOOP POLES &times; AND ZEROS &#9675;</span></p>
+          <canvas id="cvP" width="360" height="360" role="img" aria-label="Closed loop poles and zeros in the s-plane"></canvas>
+        </div>
+      </div>
+
+      <div class="readouts" id="ro">
+        <div class="ro" id="roStab"><span class="k">STABILITY</span><span class="n" id="nStab"></span></div>
+        <div class="ro"><span class="k">POLES</span><span class="n small" id="nPoles"></span></div>
+        <div class="ro"><span class="k" id="kZeta">DAMPING RATIO &zeta;</span><span class="n" id="nZeta"></span><span class="sub" id="sZeta"></span></div>
+        <div class="ro"><span class="k">RISE TIME 10&ndash;90%</span><span class="n" id="nTr"></span></div>
+        <div class="ro"><span class="k">PEAK TIME</span><span class="n" id="nTp"></span></div>
+        <div class="ro"><span class="k">OVERSHOOT</span><span class="n" id="nMp"></span></div>
+        <div class="ro"><span class="k">SETTLING TIME 2%</span><span class="n" id="nTs"></span></div>
+        <div class="ro"><span class="k">FINAL VALUE</span><span class="n" id="nYss"></span></div>
+        <div class="ro" id="roEss"><span class="k">STEADY STATE ERROR</span><span class="n" id="nEss"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="try">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Try it</p>
+      <h2>Six things to find</h2>
+      <p class="lede">Start from <span class="num">J = 1</span>, <span class="num">c = 2</span>,
+      <span class="num">R = 1</span> and automatic time span. Each card lists the settings; the numbers
+      are what the readouts show.</p>
+    </div>
+    <div class="tryit" id="tryGrid"></div>
+  </div>
+</section>
+
+<section id="notes">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Reading the result</p>
+      <h2>What each term does here</h2>
+    </div>
+    <div class="measure">
+      <p>The plant already contains a pole at <span class="num">s = 0</span>, a free integrator, because
+      a torque produces a speed and the angle is the integral of the speed. With unity feedback that makes
+      the loop type 1, so <strong>P alone already gives zero steady state error to a step</strong>. The
+      proportional gain sets <span class="num">&omega;<sub>n</sub> = &radic;(K<sub>p</sub>/J)</span>, while
+      <span class="num">&zeta;&omega;<sub>n</sub> = c/(2J)</span> does not depend on
+      <span class="num">K<sub>p</sub></span>, so raising the gain adds overshoot without shortening the
+      settling time.</p>
+      <p>The derivative term adds damping: in PD the characteristic equation becomes
+      <span class="num">Js&#178; + (c + K<sub>d</sub>)s + K<sub>p</sub> = 0</span>. On its own, D has no
+      position feedback at all. The <span class="num">s</span> in <span class="num">K<sub>d</sub>s</span>
+      cancels the plant's pole at the origin, the loop only feeds back speed, and the output settles short
+      of the step.</p>
+      <p>The integral term adds a second pole at the origin and raises the order to three. For a step it is
+      not needed with this plant, and it costs stability: I alone is unstable for every
+      <span class="num">K<sub>I</sub> &gt; 0</span>, and PI is stable only while
+      <span class="num">c&middot;K<sub>p</sub> &gt; J&middot;K<sub>I</sub></span> (Routh). Its real job is to
+      remove the error caused by a constant disturbance torque, which this model does not include.</p>
+      <p class="caveat"><strong>What the model leaves out.</strong> The motor torque is unlimited, so large
+      gains give responses a real actuator could not produce. With D in the controller a step in
+      <i>r</i> produces an impulse in the controller output at <span class="num">t = 0</span> (derivative
+      kick); real controllers filter the derivative or act on the measurement only. There is no sensor
+      noise, no delay and no disturbance torque.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>EMCH 367 &middot; Controls &middot; Fall 2026 &middot; lecture 10/8, 10/13</span>
+    <span class="sp">Unity feedback &middot; G(s) = 1/(Js&#178; + cs)</span>
+  </div>
+</footer>
+<script>
+"use strict";
+/* ======================= polynomial helpers (ascending powers) ======================= */
+const conv = (a, b) => { const r = new Array(a.length + b.length - 1).fill(0);
+  a.forEach((x, i) => b.forEach((y, j) => { r[i + j] += x * y; })); return r; };
+const padd = (a, b) => { const n = Math.max(a.length, b.length), r = [];
+  for (let i = 0; i < n; i++) r.push((a[i] || 0) + (b[i] || 0)); return r; };
+const trim = a => { const r = a.slice(); while (r.length > 1 && Math.abs(r[r.length - 1]) < 1e-14) r.pop(); return r; };
+
+/* complex numbers as [re, im] */
+const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]], csub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const cmul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+const cdiv = (a, b) => { const d = b[0] * b[0] + b[1] * b[1]; return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d]; };
+
+/* roots of an ascending-coefficient polynomial (Durand-Kerner + Newton polish) */
+function roots(p){
+  p = trim(p); const n = p.length - 1; if (n < 1) return [];
+  const a = p.map(x => x / p[n]);                       // monic
+  if (n === 1) return [[-a[0], 0]];
+  if (n === 2){ const b = a[1], c = a[0], D = b * b - 4 * c;
+    return D >= 0 ? [[(-b + Math.sqrt(D)) / 2, 0], [(-b - Math.sqrt(D)) / 2, 0]]
+                  : [[-b / 2, Math.sqrt(-D) / 2], [-b / 2, -Math.sqrt(-D) / 2]]; }
+  const ev = z => { let r = [1, 0]; for (let k = n - 1; k >= 0; k--) r = cadd(cmul(r, z), [a[k], 0]); return r; };
+  const R = 1 + Math.max(...a.slice(0, n).map(Math.abs));
+  let z = []; for (let k = 0; k < n; k++){ const th = 2 * Math.PI * k / n + 0.4; z.push([R * Math.cos(th), R * Math.sin(th)]); }
+  for (let it = 0; it < 500; it++){
+    let move = 0;
+    for (let i = 0; i < n; i++){
+      let den = [1, 0]; for (let j = 0; j < n; j++) if (j !== i) den = cmul(den, csub(z[i], z[j]));
+      const d = cdiv(ev(z[i]), den); z[i] = csub(z[i], d); move = Math.max(move, Math.hypot(d[0], d[1]));
+    }
+    if (move < 1e-14 * R) break;
+  }
+  return z.map(r => [r[0], Math.abs(r[1]) < 1e-9 * Math.max(1, Math.abs(r[0])) ? 0 : r[1]]);
+}
+
+/* matrix exponential (scaling and squaring, Taylor) for small dense matrices */
+function matmul(A, B){ const n = A.length, m = B[0].length, k = B.length, C = [];
+  for (let i = 0; i < n; i++){ C.push(new Array(m).fill(0)); for (let l = 0; l < k; l++){ const a = A[i][l]; if (a) for (let j = 0; j < m; j++) C[i][j] += a * B[l][j]; } } return C; }
+function expm(A){
+  const n = A.length; let nrm = 0; A.forEach(r => { nrm = Math.max(nrm, r.reduce((s, x) => s + Math.abs(x), 0)); });
+  const s = Math.max(0, Math.ceil(Math.log2(nrm || 1)) + 1), f = Math.pow(2, -s);
+  const As = A.map(r => r.map(x => x * f));
+  let E = As.map((r, i) => r.map((_, j) => i === j ? 1 : 0)), T = E.map(r => r.slice());
+  for (let k = 1; k <= 18; k++){ T = matmul(T, As).map(r => r.map(x => x / k)); E = E.map((r, i) => r.map((x, j) => x + T[i][j])); }
+  for (let k = 0; k < s; k++) E = matmul(E, E);
+  return E;
+}
+
+/* ======================= model ======================= */
+const P = { mode: "P", Kp: 4, Ki: 2, Kd: 1, J: 1, c: 2, R: 1, T: 0 };
+const USES = { P: ["Kp"], I: ["Ki"], D: ["Kd"], PD: ["Kp", "Kd"], PI: ["Kp", "Ki"], PID: ["Kp", "Ki", "Kd"] };
+const ORDER = ["P", "I", "D", "PD", "PI", "PID"];
+
+function controller(m, Kp, Ki, Kd){
+  switch (m){
+    case "P":   return { n: [Kp], d: [1] };
+    case "I":   return { n: [Ki], d: [0, 1] };
+    case "D":   return { n: [0, Kd], d: [1] };
+    case "PD":  return { n: [Kp, Kd], d: [1] };
+    case "PI":  return { n: [Ki, Kp], d: [0, 1] };
+    default:    return { n: [Ki, Kp, Kd], d: [0, 1] };
+  }
+}
+
+/* closed loop T(s) with common factors of s cancelled; returns everything the page shows */
+function closedLoop(p){
+  const C = controller(p.mode, p.Kp, p.Ki, p.Kd);
+  const Gn = [1], Gd = [0, p.c, p.J];
+  let Ln = trim(conv(C.n, Gn)), Ld = trim(conv(C.d, Gd));
+  let cancelled = 0;
+  while (Ln.length > 1 && Ld.length > 1 && Ln[0] === 0 && Ld[0] === 0){ Ln = Ln.slice(1); Ld = Ld.slice(1); cancelled++; }
+  const allZero = Ln.every(x => x === 0);
+  const Tn = trim(Ln), Td = trim(padd(Ld, Ln));
+  return { C, Ln, Ld, Tn, Td, cancelled, allZero };
+}
+
+function simulate(cl, R, tEnd, N){
+  const n = cl.Td.length - 1, lead = cl.Td[n];
+  const a = cl.Td.map(x => x / lead), b = cl.Tn.map(x => x / lead);
+  const t = new Float64Array(N + 1), y = new Float64Array(N + 1);
+  const dt = tEnd / N; for (let k = 0; k <= N; k++) t[k] = k * dt;
+  if (n === 0){ const g = (cl.Tn[0] || 0) / cl.Td[0]; y.fill(g * R); return { t, y }; }
+  /* controllable canonical form, augmented with the constant input for exact ZOH */
+  const M = []; for (let i = 0; i <= n; i++) M.push(new Array(n + 1).fill(0));
+  for (let i = 0; i < n - 1; i++) M[i][i + 1] = dt;
+  for (let j = 0; j < n; j++) M[n - 1][j] = -a[j] * dt;
+  M[n - 1][n] = dt;
+  const E = expm(M);
+  const Cv = []; for (let j = 0; j < n; j++) Cv.push(b[j] || 0);
+  let x = new Array(n).fill(0);
+  for (let k = 0; k <= N; k++){
+    let yy = 0; for (let j = 0; j < n; j++) yy += Cv[j] * x[j]; y[k] = yy;
+    const xn = new Array(n).fill(0);
+    for (let i = 0; i < n; i++){ let s = E[i][n] * R; for (let j = 0; j < n; j++) s += E[i][j] * x[j]; xn[i] = s; }
+    x = xn;
+    if (!isFinite(x[0]) || Math.abs(x[0]) > 1e12){ for (let q = k + 1; q <= N; q++) y[q] = NaN; break; }
+  }
+  return { t, y };
+}
+
+function metrics(t, y, yss){
+  const N = y.length - 1, out = { tr: null, tp: null, Mp: 0, ts: null, tsOver: false };
+  const cross = lvl => { for (let k = 1; k <= N; k++) if ((y[k - 1] - lvl) * (y[k] - lvl) <= 0 && y[k] !== y[k - 1] && (y[k] - lvl) * Math.sign(yss) >= 0)
+      return t[k - 1] + (lvl - y[k - 1]) / (y[k] - y[k - 1]) * (t[k] - t[k - 1]); return null; };
+  const t10 = cross(0.1 * yss), t90 = cross(0.9 * yss);
+  if (t10 !== null && t90 !== null) out.tr = t90 - t10;
+  let kmax = 0; for (let k = 0; k <= N; k++) if (Math.sign(yss) * y[k] > Math.sign(yss) * y[kmax]) kmax = k;
+  const over = (y[kmax] - yss) / yss;
+  if (over > 1e-6 && kmax < N){
+    /* parabolic refinement of the peak */
+    let tp = t[kmax], yp = y[kmax];
+    if (kmax > 0){ const y0 = y[kmax - 1], y1 = y[kmax], y2 = y[kmax + 1], den = y0 - 2 * y1 + y2;
+      if (den !== 0){ const d = 0.5 * (y0 - y2) / den; tp = t[kmax] + d * (t[1] - t[0]); yp = y1 - 0.25 * (y0 - y2) * d; } }
+    out.tp = tp; out.Mp = 100 * (yp - yss) / yss;
+  }
+  const band = 0.02 * Math.abs(yss);
+  let last = -1; for (let k = 0; k <= N; k++) if (Math.abs(y[k] - yss) > band) last = k;
+  if (last === N) out.tsOver = true;
+  else if (last >= 0){ const k = last, lvl = y[k] > yss ? yss + band : yss - band;
+    out.ts = t[k] + (lvl - y[k]) / (y[k + 1] - y[k]) * (t[k + 1] - t[k]); }
+  else out.ts = 0;
+  return out;
+}
+
+function analyse(p){
+  const cl = closedLoop(p);
+  const poles = roots(cl.Td), zeros = cl.Tn.length > 1 ? roots(cl.Tn) : [];
+  const maxRe = poles.length ? Math.max(...poles.map(r => r[0])) : -Infinity;
+  const scale = Math.max(1, ...poles.map(r => Math.hypot(r[0], r[1])));
+  let stab = cl.allZero ? "none" : maxRe < -1e-7 * scale ? "stable" : maxRe <= 1e-7 * scale ? "marginal" : "unstable";
+  /* time span */
+  let tEnd = p.T;
+  if (!tEnd){
+    if (stab === "stable"){
+      const sig = Math.min(...poles.map(r => -r[0]));
+      const wmax = Math.max(0, ...poles.map(r => Math.abs(r[1])));
+      tEnd = Math.min(200, Math.max(1.5 * 4.6 / sig, wmax > 0 ? 3 * 2 * Math.PI / wmax : 0));
+      tEnd = niceUp(tEnd);
+    } else tEnd = 20;
+  }
+  const sim = simulate(cl, p.R, tEnd, 4000);
+  const g0 = cl.Td[0] !== 0 ? (cl.Tn[0] || 0) / cl.Td[0] : NaN;
+  const yss = stab === "stable" ? g0 * p.R : NaN;
+  const met = stab === "stable" && Math.abs(yss) > 1e-12 ? metrics(sim.t, sim.y, yss) : null;
+  return { cl, poles, zeros, stab, tEnd, sim, yss, met };
+}
+function niceUp(x){ const e = Math.pow(10, Math.floor(Math.log10(x))), m = x / e;
+  const s = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find(v => v >= m - 1e-9); return s * e; }
+
+/* ======================= formatting ======================= */
+function fnum(x, sig = 3){
+  if (!isFinite(x)) return "&mdash;";
+  if (x === 0) return "0";
+  const a = Math.abs(x);
+  if (a >= 1e4 || a < 1e-3) return x.toExponential(2).replace("e", "&times;10<sup>").replace(/$/, "</sup>").replace("<sup>+", "<sup>");
+  let s = x.toPrecision(sig); if (s.includes(".")) s = s.replace(/0+$/, "").replace(/\.$/, "");
+  return s.replace("-", "&minus;");
+}
+function polyHTML(p){  /* ascending -> "Js² + 2s + 4" */
+  const terms = [];
+  for (let k = p.length - 1; k >= 0; k--){
+    const c = p[k]; if (Math.abs(c) < 1e-14) continue;
+    const pw = k === 0 ? "" : k === 1 ? "<i>s</i>" : `<i>s</i><sup>${k}</sup>`;
+    let coef = fnum(Math.abs(c)); if (coef === "1" && k > 0) coef = "";
+    terms.push({ neg: c < 0, txt: coef + pw });
+  }
+  if (!terms.length) return "0";
+  return terms.map((t, i) => (i === 0 ? (t.neg ? "&minus;" : "") : (t.neg ? " &minus; " : " + ")) + t.txt).join("");
+}
+const frac = (n, d) => `<span class="frac"><span>${n}</span><span>${d}</span></span>`;
+const CTRL_SYM = {
+  P: "<i>K</i><sub>p</sub>", I: frac("<i>K</i><sub>I</sub>", "<i>s</i>"), D: "<i>K</i><sub>d</sub><i>s</i>",
+  PD: "<i>K</i><sub>p</sub> + <i>K</i><sub>d</sub><i>s</i>", PI: "<i>K</i><sub>p</sub> + " + frac("<i>K</i><sub>I</sub>", "<i>s</i>"),
+  PID: "<i>K</i><sub>p</sub> + " + frac("<i>K</i><sub>I</sub>", "<i>s</i>") + " + <i>K</i><sub>d</sub><i>s</i>"
+};
+/* SVG label for the controller block */
+const K = sub => `<tspan font-style="italic">K</tspan><tspan baseline-shift="sub" font-size="62%">${sub}</tspan>`;
+const S = `<tspan font-style="italic">s</tspan>`;
+const SVG_LBL = {
+  P: K("p"), I: `${K("I")}/${S}`, D: `${K("d")}${S}`, PD: `${K("p")} + ${K("d")}${S}`,
+  PI: `${K("p")} + ${K("I")}/${S}`, PID: `${K("p")} + ${K("I")}/${S} + ${K("d")}${S}`
+};
+const SVG_W = { P: 110, I: 120, D: 120, PD: 190, PI: 190, PID: 250 };
+const fcx = r0 => { const r = [Math.abs(r0[0]) < 1e-9 * Math.max(1, Math.abs(r0[1])) ? 0 : r0[0], r0[1]]; return r[1] === 0 ? fnum(r[0]) : (r[0] === 0 ? "" : fnum(r[0]) + " ") + `${r[1] > 0 ? (r[0] === 0 ? "" : "+ ") : "&minus; "}${fnum(Math.abs(r[1]))}<i>j</i>`; };
+
+/* ======================= DOM ======================= */
+const el = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let A = null; const pins = [];
+
+function setMode(m){
+  P.mode = m;
+  document.querySelectorAll("#modeSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === m ? "true" : "false"));
+  for (const [k, w] of [["Kp", "wKp"], ["Ki", "wKi"], ["Kd", "wKd"]]){
+    const on = USES[m].includes(k); el(w).classList.toggle("off", !on); el("s" + k).disabled = !on;
+  }
+  /* resize the controller block and move the arrows around it */
+  const w = SVG_W[m], x0 = 228, x1 = x0 + w, gx = x1 + 60;
+  el("ctrlRect").setAttribute("width", w);
+  el("ctrlTxt").setAttribute("x", x0 + w / 2); el("ctrlHint").setAttribute("x", x0 + w / 2);
+  el("ctrlTxt").innerHTML = SVG_LBL[m];
+  layoutDiagram(x1, gx);
+  el("ctrlBlock").setAttribute("aria-label", `Controller block, currently ${m}. Press to change controller type.`);
+  update();
+}
+function layoutDiagram(x1, gx){
+  const svg = el("bd"), lines = svg.querySelectorAll("line.bd-line");
+  /* lines: [0] input, [1] sum->ctrl, [2] ctrl->G, [3] output */
+  lines[2].setAttribute("x1", x1); lines[2].setAttribute("x2", gx - 4);
+  const rects = svg.querySelectorAll("rect.bd-box"); const gRect = rects[1];
+  gRect.setAttribute("x", gx);
+  const txts = svg.querySelectorAll("text.bd-txt");
+  txts[2].setAttribute("x", gx + 70);                         // G(s)
+  svg.querySelector("text.bd-sub").setAttribute("x", gx + 70);
+  const gOut = gx + 140, tap = gOut + 58, end = tap + 110;
+  lines[3].setAttribute("x1", gOut); lines[3].setAttribute("x2", end);
+  txts[3].setAttribute("x", tap + 26);                        // C(s)
+  svg.querySelector("circle:not(.bd-box)").setAttribute("cx", tap);
+  svg.querySelector("polyline").setAttribute("points", `${tap},78 ${tap},200 150,200 150,106`);
+  svg.setAttribute("viewBox", `0 0 ${end + 8} 230`);
+}
+
+function readSliders(){
+  P.Kp = +el("sKp").value; P.Ki = +el("sKi").value; P.Kd = +el("sKd").value;
+  P.J = +el("sJ").value; P.c = +el("sc").value; P.R = +el("sR").value; P.T = +el("sT").value;
+  el("vKp").textContent = P.Kp.toFixed(1); el("vKi").textContent = P.Ki.toFixed(1); el("vKd").textContent = P.Kd.toFixed(2);
+  el("vJ").textContent = P.J.toFixed(2); el("vc").textContent = P.c.toFixed(2); el("vR").textContent = P.R.toFixed(1);
+  el("vT").textContent = P.T ? P.T + " s" : "auto";
+}
+
+function update(){
+  readSliders();
+  A = analyse(P);
+  const { cl, poles, stab, met } = A;
+  /* equations */
+  const cRat = cl.C.d.length === 1 ? polyHTML(cl.C.n) : frac(polyHTML(cl.C.n), polyHTML(cl.C.d));
+  el("eqC").innerHTML = `<i>G</i><sub>c</sub>(<i>s</i>) = ${CTRL_SYM[P.mode]} = ${cRat}`;
+  el("eqG").innerHTML = `<i>G</i>(<i>s</i>) = ${frac("1", "<i>Js</i><sup>2</sup> + <i>cs</i>")} = ${frac("1", polyHTML([0, P.c, P.J]))}`;
+  el("eqT").innerHTML = `<i>T</i>(<i>s</i>) = ${frac(polyHTML(cl.Tn), polyHTML(cl.Td))}`;
+  el("eqD").innerHTML = `${polyHTML(cl.Td)} = 0`;
+  let note = "";
+  if (cl.cancelled) note = `The <i>s</i> of the controller cancels the plant pole at <i>s</i> = 0, so the closed loop is order ${cl.Td.length - 1}.`;
+  if (cl.allZero) note = "All gains used by this controller are zero: the loop is open and the output stays at zero.";
+  el("eqNote").innerHTML = note;
+  let routh = "";
+  if (P.mode === "PI" || P.mode === "PID"){
+    const lhs = (P.c + (P.mode === "PID" ? P.Kd : 0)) * P.Kp, rhs = P.J * P.Ki;
+    routh = `Routh: stable only if ${P.mode === "PID" ? "(c + K<sub>d</sub>)" : "c"}&middot;K<sub>p</sub> &gt; J&middot;K<sub>I</sub>: ${fnum(lhs)} ${lhs > rhs ? "&gt;" : lhs < rhs ? "&lt;" : "="} ${fnum(rhs)}.`;
+  } else if (P.mode === "I"){
+    routh = "Routh: the s<sup>1</sup> coefficient is zero, so there is no K<sub>I</sub> &gt; 0 that makes this stable.";
+  }
+  el("eqRouth").innerHTML = routh;
+
+  /* alert */
+  const al = el("alert"); al.className = "alert"; al.textContent = "";
+  if (stab === "unstable"){ al.className = "alert show crit"; al.textContent = "Unstable: at least one closed loop pole is in the right half plane, so the response grows without bound. The plot is clipped."; }
+  else if (stab === "marginal"){ al.className = "alert show info"; al.textContent = "Marginally stable: closed loop poles on the imaginary axis give an oscillation that neither grows nor decays (or a response that drifts). No settling time or final value exists."; }
+  else if (stab === "none"){ al.className = "alert show info"; al.textContent = "The loop is open (all active gains are zero)."; }
+
+  /* readouts */
+  const roS = el("roStab"); roS.className = "ro " + (stab === "stable" ? "flag-good" : stab === "unstable" ? "flag-critical" : "flag-warn");
+  el("nStab").textContent = stab === "none" ? "open loop" : stab;
+  el("nPoles").innerHTML = poles.length ? poles.map(fcx).join("<br>") : "none";
+  const n = cl.Td.length - 1; let zt = "&mdash;", zs = "";
+  el("kZeta").innerHTML = "DAMPING RATIO &zeta;";
+  if (n === 1 && stab === "stable"){ el("kZeta").innerHTML = "TIME CONSTANT &tau;"; zt = fnum(cl.Td[1] / cl.Td[0]) + '<span class="u">s</span>'; zs = "first order: no &zeta;"; }
+  else if (n === 2){ const a0 = cl.Td[0] / cl.Td[2], a1 = cl.Td[1] / cl.Td[2];
+    if (a0 > 0){ const wn = Math.sqrt(a0), z = Math.abs(a1) < 1e-12 ? 0 : a1 / (2 * wn); zt = fnum(z);
+      zs = `&omega;<sub>n</sub> = ${fnum(wn)} rad/s` + (z < 1 && z > 0 ? ` &middot; Mp formula ${fnum(100 * Math.exp(-Math.PI * z / Math.sqrt(1 - z * z)))}%` : z >= 1 ? " &middot; no oscillation" : ""); } }
+  else if (n === 3){ const cx = poles.filter(r => r[1] > 0);
+    if (cx.length){ const r = cx[0], wn = Math.hypot(r[0], r[1]); let z = -r[0] / wn; if (Math.abs(z) < 1e-9) z = 0; zt = fnum(z); zs = `&omega;<sub>n</sub> = ${fnum(wn)} rad/s &middot; complex pair of a 3rd order loop`; }
+    else zs = "3rd order, all poles real"; }
+  el("nZeta").innerHTML = zt; el("sZeta").innerHTML = zs;
+  const sec = v => v === null ? "&mdash;" : fnum(v) + '<span class="u">s</span>';
+  if (met){
+    el("nTr").innerHTML = sec(met.tr); el("nTp").innerHTML = met.tp === null ? "none" : sec(met.tp);
+    el("nMp").innerHTML = met.tp === null ? "none" : fnum(met.Mp) + '<span class="u">%</span>';
+    el("nTs").innerHTML = met.tsOver ? `&gt; ${fnum(A.tEnd)}<span class="u">s</span>` : sec(met.ts);
+  } else ["nTr", "nTp", "nMp", "nTs"].forEach(id => { el(id).innerHTML = "&mdash;"; });
+  el("nYss").innerHTML = isFinite(A.yss) ? fnum(A.yss) + '<span class="u">rad</span>' : "&mdash;";
+  const ess = isFinite(A.yss) ? P.R - A.yss : NaN;
+  el("nEss").innerHTML = isFinite(ess) ? (Math.abs(ess) < 1e-9 * P.R ? "0" : fnum(ess)) + '<span class="u">rad</span>' : "&mdash;";
+  el("roEss").className = "ro " + (isFinite(ess) ? (Math.abs(ess) < 1e-9 * P.R ? "flag-good" : "flag-warn") : "");
+  drawY(); drawPZ();
+}
+
+/* ======================= plots ======================= */
+function prep(cv){
+  const dpr = Math.min(3, window.devicePixelRatio || 1), w = cv.clientWidth || cv.width, h = Math.round(w * cv.height / cv.width);
+  if (cv._w !== w || cv._d !== dpr){ cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv._w = w; cv._d = dpr; cv._h = h; cv.style.height = h + "px"; }
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, cv._h); return { g, w, h: cv._h };
+}
+function ticks(lo, hi, n){ const span = hi - lo, st0 = span / n, e = Math.pow(10, Math.floor(Math.log10(st0)));
+  const st = [1, 2, 2.5, 5, 10].map(v => v * e).find(v => v >= st0); const out = [];
+  for (let v = Math.ceil(lo / st) * st; v <= hi + st * 1e-6; v += st) out.push(Math.abs(v) < st * 1e-9 ? 0 : v); return out; }
+let YV = null;
+function drawY(){
+  const cv = el("cvY"); if (!cv.clientWidth) return; cv.height = 360 * cv.width / 760 || cv.height;
+  const { g, w, h } = prep(cv);
+  const { t, y } = A.sim, R = P.R;
+  const narrow = w < 520;
+  const L = narrow ? 44 : 56, Rm = 14, T = 12, B = 38;
+  let ymin = 0, ymax = R * 1.2;
+  const fin = []; for (let k = 0; k < y.length; k++) if (isFinite(y[k])) fin.push(y[k]);
+  pins.forEach(pn => pn.y.forEach(v => { if (isFinite(v)) fin.push(v); }));
+  const clip = A.stab === "stable" ? Infinity : 3 * R;
+  for (const v of fin){ const vv = Math.max(-clip, Math.min(clip, v)); ymin = Math.min(ymin, vv); ymax = Math.max(ymax, vv * 1.08); }
+  const tEnd = A.tEnd;
+  const X = v => L + (v / tEnd) * (w - L - Rm), Y = v => T + (ymax - v) / (ymax - ymin) * (h - T - B);
+  YV = { X, Y, L, Rm, T, B, w, h, tEnd, ymin, ymax };
+  g.font = `${narrow ? 10 : 11.5}px ${css("--data")}`; g.fillStyle = css("--muted"); g.strokeStyle = css("--grid"); g.lineWidth = 1;
+  for (const v of ticks(ymin, ymax, 5)){ g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(w - Rm, Y(v)); g.stroke(); g.textAlign = "right"; g.textBaseline = "middle"; g.fillText(+v.toFixed(3) + "", L - 6, Y(v)); }
+  for (const v of ticks(0, tEnd, narrow ? 4 : 8)){ g.beginPath(); g.moveTo(X(v), T); g.lineTo(X(v), h - B); g.stroke(); g.textAlign = "center"; g.textBaseline = "top"; g.fillText(+v.toFixed(3) + "", X(v), h - B + 6); }
+  g.fillStyle = css("--ink-2"); g.font = `600 ${narrow ? 10 : 11}px ${css("--display")}`; g.textAlign = "right"; g.fillText("t (s)", w - Rm, h - 14);
+  g.save(); g.translate(12, T + (h - T - B) / 2); g.rotate(-Math.PI / 2); g.textAlign = "center"; g.fillText("c(t) (rad)", 0, 0); g.restore();
+  g.save(); g.beginPath(); g.rect(L, T, w - L - Rm, h - T - B); g.clip();
+  if (isFinite(A.yss)){ g.fillStyle = css("--hatch"); g.globalAlpha = .45; const b = 0.02 * Math.abs(A.yss);
+    g.fillRect(L, Y(A.yss + b), w - L - Rm, Math.max(1, Y(A.yss - b) - Y(A.yss + b))); g.globalAlpha = 1; }
+  g.strokeStyle = css("--c-cmd"); g.lineWidth = 2; g.setLineDash([7, 5]); g.beginPath(); g.moveTo(X(0), Y(0)); g.lineTo(X(0), Y(R)); g.lineTo(X(tEnd), Y(R)); g.stroke(); g.setLineDash([]);
+  const line = (tt, yy, col, lw, te) => { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); let pen = false;
+    for (let k = 0; k < yy.length; k++){ if (tt[k] > tEnd) break; const v = yy[k];
+      if (!isFinite(v)){ pen = false; continue; } const Yv = Y(Math.max(ymin - 10 * (ymax - ymin), Math.min(ymax + 10 * (ymax - ymin), v)));
+      if (!pen){ g.moveTo(X(tt[k]), Yv); pen = true; } else g.lineTo(X(tt[k]), Yv); } g.stroke(); };
+  pins.forEach(pn => line(pn.t, pn.y, css("--muted"), 1.6));
+  line(t, y, css("--c-shaft"), 2.6);
+  if (A.met && A.met.tp !== null){ g.fillStyle = css("--c-shaft"); g.beginPath(); g.arc(X(A.met.tp), Y(A.yss * (1 + A.met.Mp / 100)), 4, 0, 7); g.fill(); }
+  if (A.met && A.met.ts && !A.met.tsOver){ g.strokeStyle = css("--ink-2"); g.lineWidth = 1; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(X(A.met.ts), T); g.lineTo(X(A.met.ts), h - B); g.stroke(); g.setLineDash([]); }
+  g.restore();
+  /* pin labels */
+  g.font = `500 10.5px ${css("--data")}`; g.fillStyle = css("--muted"); g.textAlign = "left"; g.textBaseline = "bottom";
+  pins.forEach((pn, i) => { let k = Math.min(pn.y.length - 1, Math.floor(pn.y.length * (0.55 + 0.1 * (i % 4)))); while (k > 0 && (!isFinite(pn.y[k]) || pn.t[k] > tEnd)) k--;
+    if (k > 0) { const yy = Math.max(ymin, Math.min(ymax, pn.y[k])); g.fillText(pn.lbl, Math.min(w - Rm - 90, X(pn.t[k]) + 4), Y(yy) - 3); } });
+  if (A.stab !== "stable" && A.stab !== "none"){ g.fillStyle = css("--critical"); g.font = `600 11px ${css("--display")}`; g.textAlign = "left"; g.textBaseline = "top"; g.fillText(A.stab === "unstable" ? "clipped: grows without bound" : "no steady state", L + 8, T + 6); }
+}
+function drawPZ(){
+  const cv = el("cvP"); if (!cv.clientWidth) return;
+  const { g, w, h } = prep(cv);
+  const pts = A.poles.concat(A.zeros);
+  let m = Math.max(1, ...pts.map(r => Math.max(Math.abs(r[0]), Math.abs(r[1])))) * 1.25;
+  m = niceUp(m);
+  const cx = w * 0.62, cy = h / 2, sc = Math.min(cx - 16, h / 2 - 16) / m;
+  const X = v => cx + v * sc, Y = v => cy - v * sc;
+  g.fillStyle = css("--critical-bg"); g.fillRect(cx, 8, w - cx - 6, h - 16);
+  g.strokeStyle = css("--grid"); g.lineWidth = 1;
+  for (const v of ticks(-m, m, 4)){ g.beginPath(); g.moveTo(X(v), 8); g.lineTo(X(v), h - 8); g.stroke(); g.beginPath(); g.moveTo(6, Y(v)); g.lineTo(w - 6, Y(v)); g.stroke(); }
+  g.strokeStyle = css("--ink-2"); g.beginPath(); g.moveTo(6, cy); g.lineTo(w - 6, cy); g.moveTo(cx, 8); g.lineTo(cx, h - 8); g.stroke();
+  g.font = `10.5px ${css("--data")}`; g.fillStyle = css("--muted"); g.textAlign = "center"; g.textBaseline = "top";
+  const tk = ticks(-m, m, 4).filter(v => v !== 0 && X(v) > 14 && X(v) < w - 14);
+  tk.forEach(v => g.fillText(+v.toFixed(3) + "", X(v), cy + 4));
+  g.textAlign = "left"; g.fillText("Re", w - 24, cy + 4); g.textBaseline = "top"; g.fillText("Im", cx + 5, 10);
+  g.fillStyle = css("--critical"); g.font = `600 10px ${css("--display")}`; g.textAlign = "right"; g.fillText("RHP", w - 10, h - 22);
+  g.strokeStyle = css("--c-shaft"); g.lineWidth = 2.4;
+  A.poles.forEach(r => { const x = X(r[0]), y = Y(r[1]), s = 6; g.beginPath(); g.moveTo(x - s, y - s); g.lineTo(x + s, y + s); g.moveTo(x + s, y - s); g.lineTo(x - s, y + s); g.stroke(); });
+  g.strokeStyle = css("--c-cmd"); g.lineWidth = 2;
+  A.zeros.forEach(r => { g.beginPath(); g.arc(X(r[0]), Y(r[1]), 5.5, 0, 7); g.stroke(); });
+}
+
+/* hover readout on the step response */
+el("cvY").addEventListener("pointermove", e => {
+  if (!YV) return; const rc = e.target.getBoundingClientRect(), px = e.clientX - rc.left;
+  const tt = el("tt"); if (px < YV.L || px > YV.w - YV.Rm){ tt.style.opacity = 0; return; }
+  const tv = (px - YV.L) / (YV.w - YV.L - YV.Rm) * YV.tEnd, k = Math.round(tv / A.tEnd * (A.sim.t.length - 1));
+  const v = A.sim.y[k]; if (!isFinite(v)){ tt.style.opacity = 0; return; }
+  tt.innerHTML = `<span class="h">t = ${fnum(tv)} s</span>c = ${fnum(v, 4)} rad`;
+  tt.style.left = px + "px"; tt.style.top = Math.max(20, YV.Y(Math.max(YV.ymin, Math.min(YV.ymax, v)))) + "px"; tt.style.opacity = 1;
+});
+el("cvY").addEventListener("pointerleave", () => { el("tt").style.opacity = 0; });
+
+/* ======================= wiring ======================= */
+["sKp", "sKi", "sKd", "sJ", "sc", "sR", "sT"].forEach(id => el(id).addEventListener("input", update));
+document.querySelectorAll("#modeSeg button").forEach(b => b.addEventListener("click", () => setMode(b.dataset.m)));
+const cycle = () => setMode(ORDER[(ORDER.indexOf(P.mode) + 1) % ORDER.length]);
+el("ctrlBlock").addEventListener("click", cycle);
+el("ctrlBlock").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); cycle(); } });
+el("pinBtn").addEventListener("click", () => {
+  const g = USES[P.mode].map(k => `${k === "Kp" ? "Kp" : k === "Ki" ? "KI" : "Kd"}=${P[k]}`).join(" ");
+  pins.push({ t: A.sim.t, y: A.sim.y, lbl: `${P.mode} ${g}` }); if (pins.length > 6) pins.shift();
+  el("pinLeg").hidden = false; drawY();
+});
+el("clearBtn").addEventListener("click", () => { pins.length = 0; el("pinLeg").hidden = true; drawY(); });
+let rz = 0; window.addEventListener("resize", () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { drawY(); drawPZ(); }); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { drawY(); drawPZ(); });
+
+/* ======================= try it ======================= */
+const TRY = [
+  { h: "P already removes the step error", set: { mode: "P", Kp: 4 }, p: "P with K<sub>p</sub> = 4: &zeta; = 0.5, &omega;<sub>n</sub> = 2 rad/s, overshoot {Mp}%, final value exactly 1. The pole at <i>s</i> = 0 in <i>G</i>(<i>s</i>) makes the loop type 1." },
+  { h: "More gain, same settling time", set: { mode: "P", Kp: 16 }, p: "Raise K<sub>p</sub> to 16: overshoot grows from 16.3% to {Mp}%, while the settling time barely moves (4.04 s to {ts} s). The real part of the poles stays at &minus;c/(2J) = &minus;1 whatever K<sub>p</sub> is." },
+  { h: "I alone cannot be stabilized", set: { mode: "I", Ki: 2 }, p: "I with any K<sub>I</sub>: the characteristic equation <i>Js</i><sup>3</sup> + <i>cs</i><sup>2</sup> + K<sub>I</sub> = 0 has no <i>s</i> term, so Routh finds two right half plane poles every time." },
+  { h: "D alone stops short", set: { mode: "D", Kd: 2 }, p: "D with K<sub>d</sub> = 2: first order with &tau; = {tau} s, and the output settles at {yss} rad, an error of {ess} rad. Only speed is fed back." },
+  { h: "PD adds damping", set: { mode: "PD", Kp: 4, Kd: 1 }, p: "PD with K<sub>p</sub> = 4, K<sub>d</sub> = 1: &zeta; rises from 0.5 to 0.75. The overshoot is {Mp}%, more than the 2.8% the formula gives for &zeta; = 0.75, because of the zero at <i>s</i> = &minus;4." },
+  { h: "Find the PI stability limit", set: { mode: "PI", Kp: 4, Ki: 8 }, p: "PI with K<sub>p</sub> = 4: Routh says K<sub>I</sub> &lt; c&middot;K<sub>p</sub>/J = 8. At K<sub>I</sub> = 8 the poles sit at &plusmn;2<i>j</i>: a steady oscillation with a period of {per} s." }
+];
+function fillTry(){
+  const save = Object.assign({}, P);
+  const grid = el("tryGrid"); grid.innerHTML = "";
+  TRY.forEach((q, i) => {
+    Object.assign(P, { J: 1, c: 2, R: 1, T: 0, Kp: 4, Ki: 2, Kd: 1 }, q.set);
+    const r = analyse(P);
+    const vals = { Mp: r.met && r.met.tp !== null ? r.met.Mp.toFixed(1) : "0", ts: r.met && r.met.ts ? r.met.ts.toFixed(2) : "&mdash;",
+      tau: (r.cl.Td[1] / r.cl.Td[0]).toFixed(2), yss: isFinite(r.yss) ? r.yss.toFixed(2) : "&mdash;", ess: isFinite(r.yss) ? (1 - r.yss).toFixed(2) : "&mdash;",
+      per: (2 * Math.PI / Math.max(...r.poles.map(z => Math.abs(z[1])))).toFixed(2) };
+    const d = document.createElement("div"); d.className = "q";
+    d.innerHTML = `<h3>${i + 1}. ${q.h}</h3><p>${q.p.replace(/\{(\w+)\}/g, (_, k) => vals[k])}</p>
+      <p style="margin-top:8px"><button type="button" class="btn small" data-i="${i}">Set this up</button></p>`;
+    grid.appendChild(d);
+  });
+  Object.assign(P, save);
+  grid.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    const q = TRY[+b.dataset.i]; const s = Object.assign({ J: 1, c: 2, R: 1, T: 0, Kp: 4, Ki: 2, Kd: 1 }, q.set);
+    el("sKp").value = s.Kp; el("sKi").value = s.Ki; el("sKd").value = s.Kd; el("sJ").value = s.J; el("sc").value = s.c; el("sR").value = s.R; el("sT").value = s.T;
+    setMode(s.mode); el("lab").scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+}
+window.__reg = { P, analyse, closedLoop, roots, simulate, setMode, get A(){ return A; } };
+fillTry();
+setMode("P");
+</script>
+
+</html>
