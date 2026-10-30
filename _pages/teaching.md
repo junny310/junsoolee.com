@@ -9,12 +9,13 @@ nav_order: 6
 
 ## Courses
 
-As an instructor at the University of South Carolina, I have taught:
+Courses I teach at the University of South Carolina:
 
-- **AESP 420 — Flight & Orbital Mechanics**
-- **AESP 466 — Flight Dynamics & Control**
+- **AESP 420 — Flight & Orbital Mechanics** — Fall 2026
+- **AESP 466 — Flight Dynamics & Control** — Spring 2025; Spring 2027
 - **EMCH 367 — Controls**
-- **EMCH 792 — Nonlinear Control**
+- **EMCH 792 — Nonlinear Control** — Spring 2025
+- **ENCP 101 — Honors Introduction to Engineering** — co-instructor
 
 Earlier, I served as a teaching assistant for the *Dynamics and Control Laboratory* at the Georgia Institute of Technology and for *Theory of Flight Vehicle Guidance and Control* at Seoul National University.
 
