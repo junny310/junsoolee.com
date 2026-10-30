@@ -27,6 +27,12 @@ nav_order: 2
   .member-degree { font-size: 0.85rem; color: var(--global-text-color-light); }
   .member-bio { font-size: 0.9rem; margin: 0.5rem 0 0.35rem; }
   .member-topic { font-size: 0.85rem; color: var(--global-text-color-light); }
+  .member-initials {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--global-bg-color); color: var(--global-text-color-light);
+    border: 1px solid var(--global-divider-color);
+    font-size: 2.6rem; font-weight: 600; letter-spacing: 0.02em; user-select: none;
+  }
 </style>
 
 {% assign groups = "Director,Ph.D. Candidate,Undergraduate Researchers,Alumni" | split: "," %}
@@ -37,7 +43,12 @@ nav_order: 2
 <div class="members-grid">
   {% for m in people %}
   <div class="member-card">
+    {% if m.image %}
     <img class="member-photo" src="{{ m.image | relative_url }}" alt="{{ m.name }}" loading="lazy">
+    {% else %}
+    {% assign np = m.name | split: " " %}
+    <div class="member-photo member-initials" role="img" aria-label="{{ m.name }}">{{ np[0] | slice: 0 }}{{ np[1] | slice: 0 }}</div>
+    {% endif %}
     <div class="member-name">{{ m.name }}</div>
     {% if m.degree %}<div class="member-degree">{{ m.degree }}</div>{% endif %}
     <p class="member-bio">{{ m.bio }}</p>

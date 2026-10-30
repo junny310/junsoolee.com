@@ -56,6 +56,21 @@
   bio: Undergraduate researcher applying thermodynamic particle swarm optimization to autonomous reconnaissance and search.
   topic: Swarm optimization for autonomous search.
 
+- name: Jack Sullivan
+  group: Undergraduate Researchers
+  bio: Undergraduate researcher building the bench setup for retractable-tether UAV testing.
+  topic: Retractable-tether UAV testbed.
+
+- name: Jeremy Glasgow
+  group: Undergraduate Researchers
+  bio: Undergraduate researcher implementing digital fixed-time control on a robotic arm.
+  topic: Digital fixed-time control.
+
+- name: Ryan Tiburzi
+  group: Undergraduate Researchers
+  bio: Undergraduate researcher developing a grid digital twin for geomagnetically induced current.
+  topic: Grid digital twin for geomagnetic disturbance.
+
 - name: Shruti Jadhav
   group: Alumni
   image: /assets/img/members/shruti-jadhav.jpg
@@ -83,6 +98,11 @@
   degree: B.S. in Aerospace Engineering
   bio: Worked on realizing digital finite-time control via implicit discretization.
   topic: Digital finite-time control.
+
+- name: Mattie Eckenrode
+  group: Alumni
+  bio: Worked on collaborative tethered unmanned aerial vehicles (2024–2025).
+  topic: Collaborative tethered UAVs.
 
 - name: Tyler Hilbert
   group: Alumni
