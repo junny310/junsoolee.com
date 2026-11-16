@@ -5,4 +5,4 @@ inline: true
 related_posts: false
 ---
 
-Our paper *Closed-Form Consistent Discretization of Exponential Predefined-Time Controllers* was accepted at **IEEE Control Systems Letters (L-CSS)**. 🎉
+Our paper *On the Exact Discretization of Exponential Predefined-Time Controllers* was accepted at **IEEE Control Systems Letters (L-CSS)**. 🎉
